@@ -305,7 +305,9 @@
       "description": "十字螺丝刀，手柄开裂。",
       "usage": "使用：撬柜/拆电器/当近战（伤害低、无噪声）；可作开罐器。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 1,
+        "durability": 3
       }
     },
     {
@@ -315,7 +317,9 @@
       "description": "羊角锤，木柄有血渍。",
       "usage": "使用：近战（伤害中、噪声大）；可钉门/砸锁。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 2,
+        "durability": 5
       }
     },
     {
@@ -325,7 +329,9 @@
       "description": "刀片还剩两节，很锋利。",
       "usage": "使用：裁纸/割绳；近战伤害低但安静，耐久 4。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 1,
+        "durability": 4
       }
     },
     {
@@ -415,7 +421,9 @@
       "description": "一米长的铁撬棍，缠着防滑布。",
       "usage": "左键挥击：近战武器，耐久 8；也可撬门/撬柜，发出大噪声。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 2,
+        "durability": 8
       }
     },
     {
@@ -425,7 +433,9 @@
       "description": "刀柄松动但刀刃锋利。",
       "usage": "左键挥击：近战武器，伤害高、耐久 4；挥舞时几乎无声。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 3,
+        "durability": 4
       }
     },
     {
@@ -435,7 +445,9 @@
       "description": "食堂用长柄剪刀，锈了一点。",
       "usage": "使用：剪布/剪线/包扎辅助；近战只算轻击（伤害低）。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 1,
+        "durability": 2
       }
     },
     {
@@ -445,7 +457,10 @@
       "description": "一把陌生的手枪，弹匣是空的。",
       "usage": "左键：有弹时射击（巨大噪声，吸引整层）；无弹时只能当钝器砸。",
       "effect": {
-        "equip": "firearm"
+        "equip": "firearm",
+        "damage": 3,
+        "magazine": 6,
+        "ammo": "ammo_9mm"
       }
     },
     {
@@ -456,13 +471,23 @@
       "usage": "在背包里与手枪组合：装填 6 发；射击一次消耗 1 发。"
     },
     {
+      "id": "ammo_rifle",
+      "name": "7.62 子弹",
+      "category": "weapon",
+      "description": "五发步枪弹，底火完好。",
+      "usage": "在背包里按 R 装填步枪：一次装填 5 发。"
+    },
+    {
       "id": "rifle",
       "name": "步枪",
       "category": "weapon",
       "description": "旧步枪，枪管有锈，但还能打响。",
       "usage": "左键：远程射击（射程远、噪声极大）；需要对应步枪弹。",
       "effect": {
-        "equip": "firearm"
+        "equip": "firearm",
+        "damage": 5,
+        "magazine": 5,
+        "ammo": "ammo_rifle"
       }
     },
     {
@@ -711,7 +736,9 @@
       "description": "软质橡胶制品，手感沉重，来历不明。",
       "usage": "左键挥击：侮辱性极强的钝器，伤害低但会让对手短暂僵直；挥动时会发出沉闷的啪啪声。",
       "effect": {
-        "equip": "melee"
+        "equip": "melee",
+        "damage": 1,
+        "durability": 6
       }
     },
     {

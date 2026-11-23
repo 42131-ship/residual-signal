@@ -185,7 +185,9 @@ func _load_items(path: String) -> bool:
 		var effect_row: Dictionary = effect if effect is Dictionary else {}
 		for key: Variant in effect_row:
 			var effect_key := str(key)
-			if effect_key not in ["supplies", "health", "noise", "equip", "contaminate"]:
+			if effect_key not in ["supplies", "health", "noise", "equip", "contaminate",
+					"damage", "durability", "magazine", "ammo",
+					"wound", "poison", "infection", "addiction", "heal_wound"]:
 				_load_error = "LOOT_ITEM_EFFECT_UNKNOWN: %s.%s" % [item_id, effect_key]
 				return false
 		if effect_row.has("equip"):
@@ -193,6 +195,15 @@ func _load_items(path: String) -> bool:
 			if kind != "melee" and kind != "firearm":
 				_load_error = "LOOT_ITEM_EQUIP_INVALID: " + item_id
 				return false
+		for numeric_key: String in ["damage", "durability", "magazine"]:
+			if effect_row.has(numeric_key):
+				var numeric_value: Variant = effect_row[numeric_key]
+				if not (numeric_value is int or numeric_value is float) or int(numeric_value) < 0:
+					_load_error = "LOOT_ITEM_EFFECT_NUMBER_INVALID: %s.%s" % [item_id, numeric_key]
+					return false
+		if effect_row.has("ammo") and str(effect_row["ammo"]).is_empty():
+			_load_error = "LOOT_ITEM_AMMO_EMPTY: " + item_id
+			return false
 		_items[item_id] = {
 			"id": item_id,
 			"name": name,
@@ -201,6 +212,12 @@ func _load_items(path: String) -> bool:
 			"usage": usage,
 			"effect": effect_row.duplicate(true),
 		}
+	# 装填引用的弹药必须是真实物品。
+	for item_id: String in _items:
+		var effect: Dictionary = _items[item_id].get("effect", {})
+		if effect.has("ammo") and not _items.has(str(effect["ammo"])):
+			_load_error = "LOOT_ITEM_AMMO_UNKNOWN: " + item_id
+			return false
 	return true
 
 

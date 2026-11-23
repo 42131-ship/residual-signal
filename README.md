@@ -35,7 +35,8 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 | `V` | 查看文本 / 关闭检查框 |
 | `Esc` | 关闭 / 取消 |
 | `F` | 手电开关 |
-| 鼠标左键 | 攻击 / 挥击（已装备武器；占位，无敌人） |
+| 鼠标左键 | 攻击：近战命中/耐久消耗；枪械需先装填，命中消耗 1 发 |
+| `R` | 装填（消耗背包里的对应弹药） |
 
 物资与容器规则见 [`design/LOOT.md`](design/LOOT.md)：**剧情模式下容器搜过一次就永久为空（不刷新）**，
 每栋建筑只有一个高珍惜容器（学校 = 急救柜），物品详情不写价值/稀有度，玩家自己判断。
@@ -101,6 +102,8 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_inventory.gd -- CORRIDOR-INV
 # 门门禁（真渲染；开关门 / 挂锁 / 钥匙）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_doors.gd -- CORRIDOR-DOOR
+# 战斗门禁（真渲染；追击 / 命中 / 耐久 / 弹匣 / 装填）
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_combat.gd -- CORRIDOR-COMBAT
 # 呈现尺寸门禁（真窗口：1920×1080 = 5× 整数放大）
 & $G --path . --script res://game/tests/display.gd
 ```

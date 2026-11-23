@@ -66,6 +66,7 @@
 | P23 | 玩家视角 1920×1080（5× 整数最近邻） | `DISPLAY_OK native=384x216 present=1920x1080 scale=5x` + 两张证据图 | **DONE** |
 | P24 | A/B/C 各区容器（档位不同：常见/标准/高珍惜） | `LOOT_OK containers=3` + `CORRIDOR_LOOT_OK containers=3` | **DONE** |
 | P25 | 可交互门：开关/碰撞/挂锁上锁/钥匙撬开 | `CORRIDOR_DOORS_OK` + 三张截图 | **DONE**（无内侧锁/破门） |
+| P26 | 战斗：感染体追击/抓伤、命中判定、武器耐久、枪械弹匣与装填 | `CORRIDOR_COMBAT_OK enemies=2 melee=damage2 durability=8 firearm=magazine6 reload=ammo` | **DONE**（无寻路/死亡动画/玩家死亡后果） |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）

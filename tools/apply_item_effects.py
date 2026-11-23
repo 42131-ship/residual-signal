@@ -59,16 +59,16 @@ EFFECTS: dict[str, dict] = {
     "whistle": {"noise": 2},
     "flare": {"noise": 2},
     "firecracker": {"noise": 3},
-    # 武器（equip，不消耗）
-    "crowbar": {"equip": "melee"},
-    "kitchen_knife": {"equip": "melee"},
-    "scissors": {"equip": "melee"},
-    "screwdriver": {"equip": "melee"},
-    "hammer": {"equip": "melee"},
-    "box_cutter": {"equip": "melee"},
-    "dildo_bat": {"equip": "melee"},
-    "pistol": {"equip": "firearm"},
-    "rifle": {"equip": "firearm"},
+    # 武器（equip，不消耗）：伤害/耐久/弹匣；枪械弹匣需要装填
+    "crowbar": {"equip": "melee", "damage": 2, "durability": 8},
+    "kitchen_knife": {"equip": "melee", "damage": 3, "durability": 4},
+    "scissors": {"equip": "melee", "damage": 1, "durability": 2},
+    "screwdriver": {"equip": "melee", "damage": 1, "durability": 3},
+    "hammer": {"equip": "melee", "damage": 2, "durability": 5},
+    "box_cutter": {"equip": "melee", "damage": 1, "durability": 4},
+    "dildo_bat": {"equip": "melee", "damage": 1, "durability": 6},
+    "pistol": {"equip": "firearm", "damage": 3, "magazine": 6, "ammo": "ammo_9mm"},
+    "rifle": {"equip": "firearm", "damage": 5, "magazine": 5, "ammo": "ammo_rifle"},
 }
 
 

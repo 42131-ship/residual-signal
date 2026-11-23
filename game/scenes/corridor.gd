@@ -35,6 +35,12 @@ const ROOM_PARTITION_WIDTH := 32
 const DOOR_TOP := 80.0
 const DOOR_BOTTOM := 216.0
 const DOOR_REACH_X := 44.0
+## 战斗：近战/枪械的够到距离与敌人深度容差。
+const MELEE_REACH := 36.0
+const FIREARM_REACH := 320.0
+const ENEMY_DEPTH_TOLERANCE := 30.0
+## 初始感染体位置（B 区 / C 区各一只）。
+const ENEMY_SPAWNS: Array[Vector2] = [Vector2(300, 168), Vector2(520, 160)]
 
 var _world: Node2D
 var _player: Player
@@ -77,6 +83,16 @@ var _equipped := ""
 var _attacks := 0
 var _attack_frames := 0
 var _inventory_toast := ""
+## 战斗状态：武器伤害/耐久/弹匣/弹药物品；敌人与击杀数。
+var _weapon_damage := 0
+var _weapon_durability := 0
+var _weapon_magazine := 0
+var _weapon_ammo := ""
+var _magazine := 0
+var _enemies: Array[Enemy] = []
+var _enemies_killed := 0
+var _combat_message := ""
+var _combat_message_frames := 0
 ## 面板当前内容（测试与调试用，不参与渲染）。
 var _panel_title := ""
 var _panel_lines: Array = []
@@ -90,6 +106,7 @@ func _ready() -> void:
 	_build_corridor()
 	_build_actor()
 	_apply_depth_sort()
+	_spawn_enemies()
 	_load_inspections()
 	_load_loot()
 	_inventory = InventoryService.new(INVENTORY_CAPACITY)
@@ -510,6 +527,7 @@ func _ensure_actions() -> void:
 	_add_action("cancel_inspect", [KEY_ESCAPE])
 	_add_action("toggle_light", [KEY_F])
 	_add_action("drop", [KEY_Q])
+	_add_action("reload", [KEY_R])
 	# 战斗与背包键位已按 v0.2 定下，系统未实现，先注册 InputMap。
 	_add_mouse_action("attack", MOUSE_BUTTON_LEFT)
 	_add_action("inventory", [KEY_TAB])
@@ -877,8 +895,23 @@ func _refresh_hud_stats() -> void:
 		return
 	for child: Node in _hud_stats_root.get_children():
 		child.queue_free()
-	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_supplies * 100.0)), Vector2(8, 20), Color("#9fb2bd"))
-	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 30), Color("#9fb2bd"))
+	var alive := 0
+	for enemy: Enemy in _enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			alive += 1
+	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_supplies * 100.0)), Vector2(8, 42), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 52), Color("#9fb2bd"))
+	var weapon_text := "空手"
+	if not _equipped.is_empty():
+		weapon_text = _loot.item_name(_equipped)
+		if _weapon_durability > 0:
+			weapon_text += " 耐久 %d" % _weapon_durability
+		elif _weapon_magazine > 0:
+			weapon_text += " 弹 %d/%d" % [_magazine, _weapon_magazine]
+	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 62), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, "敌人 %d" % alive, Vector2(8, 72), Color("#9fb2bd"))
+	if _combat_message_frames > 0 and not _combat_message.is_empty():
+		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 82), Color("#f6f6f0"))
 
 
 func _open_inventory() -> void:
@@ -960,7 +993,7 @@ func _use_selected_item() -> void:
 	var effect := _loot.item_effect(item_id)
 	var item_name := _loot.item_name(item_id)
 	if effect.has("equip"):
-		_equipped = item_id
+		_equip_item(item_id)
 		_inventory_toast = "已装备 " + item_name
 		_refresh_hud_stats()
 		_render_inventory()
@@ -998,13 +1031,125 @@ func _drop_selected_item() -> void:
 func _perform_attack() -> void:
 	_attacks += 1
 	_attack_frames = ATTACK_FRAMES
-	var noise := 0
-	if not _equipped.is_empty():
-		var effect := _loot.item_effect(_equipped)
-		noise = 1 if str(effect.get("equip", "")) == "melee" else 3
-	_noise += noise
 	_attack_visual.visible = true
 	_update_attack_visual()
+	var damage := 1
+	var noise := 0
+	var reach := MELEE_REACH
+	var melee := true
+	if not _equipped.is_empty():
+		var effect := _loot.item_effect(_equipped)
+		damage = int(effect.get("damage", 1))
+		melee = str(effect.get("equip", "melee")) == "melee"
+		if melee:
+			noise = 1
+		else:
+			noise = 3
+			reach = FIREARM_REACH
+			if _magazine <= 0:
+				damage = 0
+				_toast_combat("没有子弹，按 R 装填")
+			else:
+				_magazine -= 1
+	_noise += noise
+	var target := _enemy_in_reach(reach)
+	if target != null and damage > 0:
+		target.take_damage(damage)
+		if melee and not _equipped.is_empty():
+			_weapon_durability -= 1
+			if _weapon_durability <= 0:
+				_break_weapon()
+	_refresh_hud_stats()
+
+
+func _enemy_in_reach(reach: float) -> Enemy:
+	var best: Enemy = null
+	var best_distance := INF
+	for enemy: Enemy in _enemies:
+		if not is_instance_valid(enemy) or enemy.dead:
+			continue
+		var dx := enemy.global_position.x - _player.global_position.x
+		var dy := absf(enemy.global_position.y - _player.global_position.y)
+		if dy > ENEMY_DEPTH_TOLERANCE:
+			continue
+		if dx * _player.facing_x < -4.0:
+			continue
+		var distance := absf(dx)
+		if distance > reach:
+			continue
+		if distance < best_distance:
+			best_distance = distance
+			best = enemy
+	return best
+
+
+func _equip_item(item_id: String) -> void:
+	_equipped = item_id
+	var effect := _loot.item_effect(item_id)
+	_weapon_damage = int(effect.get("damage", 1))
+	_weapon_durability = int(effect.get("durability", 0))
+	_weapon_magazine = int(effect.get("magazine", 0))
+	_weapon_ammo = str(effect.get("ammo", ""))
+	_magazine = 0
+
+
+func _break_weapon() -> void:
+	var broken := _loot.item_name(_equipped)
+	_equipped = ""
+	_weapon_damage = 0
+	_weapon_durability = 0
+	_weapon_magazine = 0
+	_weapon_ammo = ""
+	_magazine = 0
+	_toast_combat(broken + " 坏了")
+
+
+func _reload_weapon() -> void:
+	if _equipped.is_empty():
+		return
+	var effect := _loot.item_effect(_equipped)
+	if str(effect.get("equip", "")) != "firearm":
+		return
+	var ammo_id := str(effect.get("ammo", ""))
+	if ammo_id.is_empty() or not _inventory.has(ammo_id):
+		_toast_combat("没有子弹")
+		return
+	_inventory.remove(ammo_id, 1)
+	_magazine = int(effect.get("magazine", 6))
+	_toast_combat("装填完成 %d 发" % _magazine)
+	_refresh_hud_stats()
+
+
+func _toast_combat(text: String) -> void:
+	_combat_message = text
+	_combat_message_frames = 120
+	_refresh_hud_stats()
+
+
+func _spawn_enemies() -> void:
+	for index: int in ENEMY_SPAWNS.size():
+		var enemy := Enemy.new()
+		enemy.name = "Enemy_%d" % index
+		enemy.position = ENEMY_SPAWNS[index]
+		enemy.player = _player
+		enemy.attacked.connect(_on_enemy_attacked)
+		enemy.died.connect(_on_enemy_died)
+		add_child(enemy)
+		_enemies.append(enemy)
+
+
+func _on_enemy_attacked(damage: int) -> void:
+	_health = clampf(_health - 0.15 * float(damage), 0.0, 1.0)
+	_toast_combat("你被感染体抓伤了")
+	_refresh_hud_stats()
+
+
+func _on_enemy_died(enemy: Enemy) -> void:
+	_enemies_killed += 1
+	_toast_combat("感染体倒下了")
+	# 不立刻 queue_free：保留节点（已隐藏、已停物理），门禁和调试仍能读到 dead 状态。
+	if enemy != null:
+		enemy.visible = false
 	_refresh_hud_stats()
 
 
@@ -1063,6 +1208,11 @@ func _process(_delta: float) -> void:
 	_update_flashlight()
 	_update_depth_order()
 	_update_doors()
+	if _combat_message_frames > 0:
+		_combat_message_frames -= 1
+		if _combat_message_frames == 0:
+			_combat_message = ""
+			_refresh_hud_stats()
 	if _attack_frames > 0:
 		_attack_frames -= 1
 		if _attack_frames <= 0:
@@ -1122,6 +1272,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("inventory") and not _inspection_open:
 		_open_inventory()
+		get_viewport().set_input_as_handled()
+		return
+	# R = 装填（当前装备是枪械时）。
+	if event.is_action_pressed("reload") and not _inspection_open and not _inventory_open:
+		_reload_weapon()
 		get_viewport().set_input_as_handled()
 		return
 	if _inspection_open:

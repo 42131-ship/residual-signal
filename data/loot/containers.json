@@ -142,11 +142,13 @@
     "firearm": [
       { "item": "pistol", "weight": 2 },
       { "item": "ammo_9mm", "weight": 3 },
+      { "item": "ammo_rifle", "weight": 2 },
       { "item": "rifle", "weight": 1 }
     ],
     "high_value": [
       { "item": "pistol", "weight": 3 },
       { "item": "ammo_9mm", "weight": 3 },
+      { "item": "ammo_rifle", "weight": 2 },
       { "item": "rifle", "weight": 1 },
       { "item": "flare", "weight": 1 },
       { "item": "firecracker", "weight": 1 },

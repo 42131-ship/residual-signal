@@ -109,6 +109,14 @@ def _effect_text(effect: dict) -> str:
         parts.append(f"噪声 +{int(effect['noise'])}")
     if "equip" in effect:
         parts.append("装备·" + ("近战" if effect["equip"] == "melee" else "枪械"))
+    if "damage" in effect:
+        parts.append(f"伤害 {int(effect['damage'])}")
+    if "durability" in effect:
+        parts.append(f"耐久 {int(effect['durability'])}")
+    if "magazine" in effect:
+        parts.append(f"弹匣 {int(effect['magazine'])}")
+    if "ammo" in effect:
+        parts.append("弹药 " + str(effect["ammo"]))
     if effect.get("contaminate"):
         parts.append("有风险")
     return "、".join(parts) if parts else "—"
