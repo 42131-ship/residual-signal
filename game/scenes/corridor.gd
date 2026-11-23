@@ -101,6 +101,13 @@ var _travel: TravelService
 var _at_exit := false
 ## 走到这个 x 就算站在出口（尽头墙在 576，玩家被夹在 ~600）。
 const EXIT_HINT_X := 596.0
+## 出口选楼：当前在哪栋、手上多少燃料、面板状态。
+var _current_building := "school"
+var _fuel := 0
+var _exit_choice_open := false
+var _exit_choice_index := 0
+var _exit_choices: Array[Dictionary] = []
+var _exit_choice_root: Node2D
 ## 会成瘾的消耗品（吃污染食物中毒之外再加一层成瘾）。
 const ADDICTIVE_ITEMS := ["painkillers", "sleeping_pills"]
 ## 面板当前内容（测试与调试用，不参与渲染）。
@@ -163,6 +170,7 @@ func _ready() -> void:
 	_build_hud()
 	_build_search_ui($HUD)
 	_build_status_fx()
+	_build_exit_choice_ui($HUD)
 	_build_inventory_ui()
 	_build_door_prompt()
 	_build_attack_visual()
@@ -576,6 +584,11 @@ func _ensure_actions() -> void:
 	_add_action("crouch", [KEY_CTRL])
 	# E = 上下文交互（搜索/拾取），V = 查看文本，F = 手电。
 	_add_action("pickup", [KEY_E])
+	# 出口选楼面板复用菜单那套语义动作（与 main_menu 注册同一批，幂等）。
+	_add_action("menu_up", [KEY_W, KEY_UP])
+	_add_action("menu_down", [KEY_S, KEY_DOWN])
+	_add_action("menu_confirm", [KEY_E, KEY_ENTER])
+	_add_action("menu_back", [KEY_ESCAPE])
 	_add_action("view", [KEY_V])
 	_add_action("cancel_inspect", [KEY_ESCAPE])
 	_add_action("toggle_light", [KEY_F])
@@ -1390,12 +1403,115 @@ func _on_enemy_died(enemy: Enemy) -> void:
 
 
 ## 主角动作：受击优先 → 走动播 walk → 静止播 idle。帧由精灵表按 fps 推进。
-## 离场：把今天折算进 DayCycle，翻页，然后把结算写在面板上。
-## 注意：现在走廊的 _supplies/_health 仍是本地状态，这里只是把它们喂给结算；
-## M2 会把这两个字段整个删掉，改由 world_state 持有。
+## 离场：先让玩家选去哪一栋（读 TravelService 的邻接与门槛），选完再结算翻页。
+## 场景切换还没做，所以选完是把「当前楼」换掉 + 回入口，结算面板上说明这一点。
 func _leave_building() -> void:
-	if _day == null:
+	if _day == null or _travel == null:
 		return
+	_open_exit_choices()
+
+
+func _build_exit_choice_ui(parent: Node) -> void:
+	_exit_choice_root = Node2D.new()
+	_exit_choice_root.name = "ExitChoice"
+	_exit_choice_root.visible = false
+	parent.add_child(_exit_choice_root)
+
+
+func _reason_text(reason: String) -> String:
+	match reason:
+		"not_enough_fuel":
+			return "燃料不够"
+		"no_action_left":
+			return "今天已经出去过了"
+		"no_route":
+			return "没有直达路线"
+		"same_building":
+			return "已经在这里"
+		_:
+			return "走不了"
+
+
+func _open_exit_choices() -> void:
+	_exit_choices.clear()
+	for id: String in _travel.neighbors(_current_building):
+		var route := _travel.route(_current_building, id)
+		var verdict := _travel.can_travel(_current_building, id, {"fuel": _fuel, "actions_left": 1, "hour": 12})
+		_exit_choices.append({
+			"id": id,
+			"label": _travel.label_of(id),
+			"ok": bool(verdict.get("ok", false)),
+			"reason": str(verdict.get("reason", "")),
+			"fuel": int(route.get("fuel", 0)),
+			"risk": int(route.get("risk", 0)),
+		})
+	if _exit_choices.is_empty():
+		_toast_combat("这里没有可走的路。")
+		return
+	_exit_choice_index = 0
+	_exit_choice_open = true
+	_player._movement_locked = true
+	_render_exit_choices()
+
+
+func _render_exit_choices() -> void:
+	if _exit_choice_root == null:
+		return
+	for child: Node in _exit_choice_root.get_children():
+		child.queue_free()
+	_exit_choice_root.visible = _exit_choice_open
+	if not _exit_choice_open:
+		return
+	var x := 8.0
+	var y := 40.0
+	var width := 368.0
+	var row_height := 22.0
+	var height := 44.0 + row_height * _exit_choices.size()
+	_add_rect_polygon(_exit_choice_root, "ChoiceBg", Vector2(x, y), Vector2(width, height), Color("#0b1119"))
+	_add_ui_frame(_exit_choice_root, Vector2(x, y), Vector2(width, height), Color("#635e57"))
+	PixelFont.draw(_exit_choice_root, "去哪一栋 · 燃料 %d" % _fuel, Vector2(x + 8, y + 6), Color("#f6f6f0"))
+	for index in range(_exit_choices.size()):
+		var choice: Dictionary = _exit_choices[index]
+		var row_y := y + 26.0 + index * row_height
+		if index == _exit_choice_index:
+			_add_rect_polygon(_exit_choice_root, "Sel%d" % index, Vector2(x + 4, row_y - 2), Vector2(width - 8, 20), Color("#354b60"))
+		var suffix := ""
+		if not bool(choice["ok"]):
+			suffix = "（%s）" % _reason_text(str(choice["reason"]))
+		var line := "%d %s · 燃料%d · 风险%d%s" % [
+			index + 1, str(choice["label"]), int(choice["fuel"]), int(choice["risk"]), suffix]
+		var tint := Color("#f6f6f0") if bool(choice["ok"]) else Color("#6b7c88")
+		PixelFont.draw(_exit_choice_root, line, Vector2(x + 10, row_y), tint)
+	PixelFont.draw(_exit_choice_root, "W/S 选择 · E 出发 · Esc 留下", Vector2(x + 8, y + height - 18), Color("#9fb2bd"))
+
+
+func _move_exit_choice(delta: int) -> void:
+	if not _exit_choice_open or _exit_choices.is_empty():
+		return
+	_exit_choice_index = wrapi(_exit_choice_index + delta, 0, _exit_choices.size())
+	_render_exit_choices()
+
+
+func _close_exit_choices() -> void:
+	_exit_choice_open = false
+	_exit_choices.clear()
+	_player._movement_locked = false
+	if _exit_choice_root != null:
+		_exit_choice_root.visible = false
+		for child: Node in _exit_choice_root.get_children():
+			child.queue_free()
+
+
+func _confirm_exit_choice() -> void:
+	if not _exit_choice_open or _exit_choices.is_empty():
+		return
+	var choice: Dictionary = _exit_choices[_exit_choice_index]
+	if not bool(choice["ok"]):
+		_toast_combat("去不了：%s" % _reason_text(str(choice["reason"])))
+		return
+	var target := str(choice["id"])
+	var label := str(choice["label"])
+	var spent := int(choice["fuel"])
 	var result := _day.settle({
 		"extracted": true,
 		"supplies": _supplies,
@@ -1405,8 +1521,15 @@ func _leave_building() -> void:
 	})
 	_supplies = float(result["supplies"])
 	_health = float(result["health"])
+	_fuel = maxi(0, _fuel - spent)
+	_current_building = target
+	_close_exit_choices()
 	_at_exit = false
+	# 场景切换还没接：先回入口，把「明天在哪」写在结算面板上。
+	_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
+	_player.velocity = Vector2.ZERO
 	var lines: Array = result["lines"]
+	lines.append("明天在%s（场景切换待接）" % label)
 	_show_panel("第 %d 天结束" % (int(result["day"]) + 1), lines.slice(1), "exit")
 	if bool(result["finished"]):
 		_toast_combat("三十天到了。")
@@ -1580,6 +1703,19 @@ func _update_depth_order() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _inspection_ui_enabled:
+		return
+	# 出口选楼面板是模态的：先吃掉它的按键，别让下面搜索/门/攻击抢走。
+	if _exit_choice_open:
+		if event is InputEventKey and not event.is_echo() and event.is_pressed():
+			if event.is_action_pressed("menu_up"):
+				_move_exit_choice(-1)
+			elif event.is_action_pressed("menu_down"):
+				_move_exit_choice(1)
+			elif event.is_action_pressed("menu_confirm"):
+				_confirm_exit_choice()
+			elif event.is_action_pressed("menu_back"):
+				_close_exit_choices()
+			get_viewport().set_input_as_handled()
 		return
 	# 左键攻击：背包/检查面板打开时不响应。
 	if event is InputEventMouseButton:

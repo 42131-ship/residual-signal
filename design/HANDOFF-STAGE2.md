@@ -625,6 +625,27 @@ python tools/quantize_map.py --in raw.png --out art/.../maps/school_d1.png --siz
 2. **TravelMap 场景**：五楼节点图 + 去程/回程判定（天黑未归 ×2）。
 3. **生图接入**（等你挂上生成工具）：先出图 → `quantize_map.py` → 过门禁 → 放进 `art/generated_candidates/maps/` → 菜单/旅行图引用。
 
+---
+
+## 二十四、Stage 3.3 · 出口自由选楼（2026-11-24 凌晨）
+
+> 顺序按拍板：先 3（选楼逻辑）再 1（旅行图）。
+
+| 件 | 做法 | 验收 |
+|---|---|---|
+| 选楼面板 | 走到出口按 E → 模态面板列出 `TravelService.neighbors(当前楼)`，每行显示 **燃料 / 风险**；不可达的灰掉并注明原因（燃料不够 / 没有直达路线） | `CORRIDOR_EXIT_OK chooser=2 picked=gas_station day=1 sediment=1 fuel_gate=blocked` |
+| 选完才结算 | 确认 → `DayCycle.settle(extracted=true)` → 换 `_current_building` → 扣燃料 → 玩家回入口 → 结算面板写明「明天在 X」 | 同上 |
+| 按键 | 面板模态：W/S 选择、E 出发、Esc 留下；面板期间锁移动，且不会漏给搜索/门/攻击 | 门禁里先测了「出口外按 E 不面板」与「Esc 不结算」 |
+| 燃料门槛 | 在加油站、手上 0 燃料时，医院灰掉且确认不推进天数 | 门禁第 ⑤ 段 |
+
+**仍然存在的一处妥协**：场景切换没做，所以「去加油站」目前只是换状态 + 回入口 +
+面板上一句「场景切换待接」。这不是隐藏——门禁和文档都标着。
+
+下一步（1）：旅行图。需要一张五楼分布底图（生图 → `quantize_map.py` → 门禁），
+节点与连线用程序画在底图上，坐标可断言；选楼面板将来并入旅行图，走廊出口只负责「打开旅行图」。
+
+全量 21 条门禁全绿（新增 main_menu；corridor_exit 改为选楼流程）。
+
 
 
 
