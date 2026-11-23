@@ -117,6 +117,14 @@ const STATUS_FX_COLORS := {
 }
 ## 搜索时敌人靠到多近算被打断。
 const SEARCH_THREAT_RANGE := 40.0
+## 命中顿帧：普通命中 3 帧（50ms）、击杀 5 帧；抖屏 1px。
+const HITSTOP_FRAMES := 3
+const HITSTOP_KILL_FRAMES := 5
+const SHAKE_PX := 1
+var _hitstop_frames := 0
+var _shake_frames := 0
+var _flash_frames := 0
+var _flash_targets: Array[Enemy] = []
 ## 主角动作状态（walk/idle/hurt）与计时；受击后 0.22 秒锁在 hurt 帧。
 var _player_anim_time := 0.0
 var _player_anim_id := "idle"
@@ -1266,7 +1274,10 @@ func _perform_attack() -> void:
 	_noise += noise
 	var target := _enemy_in_reach(reach)
 	if target != null and damage > 0:
+		var killed := target.hp - damage <= 0
 		target.take_damage(damage)
+		# 命中反馈：顿帧 + 闪白 + 1px 抖屏。击杀给更重的反馈。
+		_play_hit_feedback(target, killed)
 		if melee and not _equipped.is_empty():
 			_weapon_durability -= 1
 			if _weapon_durability <= 0:
@@ -1391,6 +1402,50 @@ func _update_player_anim(delta: float) -> void:
 	sprite.flip_h = _player.facing_x < 0.0
 
 
+## 命中反馈：顿帧（短暂冻结）+ 受击者闪白 + 1px 抖屏。
+## 击杀比普通命中多冻 2 帧、多抖 1 次，读起来更“重”。
+func _play_hit_feedback(target: Enemy, killed: bool) -> void:
+	_hitstop_frames = HITSTOP_KILL_FRAMES if killed else HITSTOP_FRAMES
+	_shake_frames = 4 if killed else 2
+	_set_actors_frozen(true)
+	var sprite := target.get_node_or_null("BodySprite") as Sprite2D
+	if sprite != null:
+		sprite.modulate = Color(2.2, 2.2, 2.2)
+		_flash_targets = [target]
+		# 至少留 2 帧：输入处理发生在 _process 之前，只给 1 帧会被同一帧就清掉。
+		_flash_frames = 3 if killed else 2
+
+
+func _set_actors_frozen(frozen: bool) -> void:
+	if _player != null:
+		_player.set_physics_process(not frozen)
+	for enemy: Enemy in _enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			enemy.set_physics_process(not frozen)
+
+
+func _update_hit_feedback() -> void:
+	if _shake_frames > 0:
+		_shake_frames -= 1
+		if _camera != null:
+			_camera.offset = Vector2(SHAKE_PX if _shake_frames % 2 == 0 else -SHAKE_PX, 0.0)
+	elif _camera != null and _camera.offset != Vector2.ZERO:
+		_camera.offset = Vector2.ZERO
+	if _hitstop_frames > 0:
+		_hitstop_frames -= 1
+		if _hitstop_frames == 0:
+			_set_actors_frozen(false)
+	if _flash_frames > 0:
+		_flash_frames -= 1
+		if _flash_frames == 0:
+			for enemy: Enemy in _flash_targets:
+				if is_instance_valid(enemy):
+					var sprite := enemy.get_node_or_null("BodySprite") as Sprite2D
+					if sprite != null:
+						sprite.modulate = Color.WHITE
+			_flash_targets.clear()
+
+
 func _update_attack_visual() -> void:
 	if _attack_visual == null or _player == null:
 		return
@@ -1442,6 +1497,10 @@ func _build_flashlight() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_hit_feedback()
+	if _hitstop_frames > 0:
+		# 顿帧：世界停住，只有反馈在动。镜头也刻意不跟，让这一下“钉”在屏幕上。
+		return
 	_follow_player()
 	_update_flashlight()
 	_update_depth_order()

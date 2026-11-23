@@ -56,6 +56,21 @@ func _run() -> void:
 	await process_frame
 	_check(first.hp == 2, "first crowbar hit should deal 2, hp=%d" % first.hp)
 	_check(_corridor._weapon_durability == 7, "durability should drop to 7, got %d" % _corridor._weapon_durability)
+
+	# 命中反馈：顿帧冻结双方、受击者闪白、镜头抖 1px。
+	_check(_corridor._hitstop_frames > 0, "a landed hit must freeze the world for a few frames")
+	_check(absf(_corridor._camera.offset.x) >= 1.0, "a landed hit must shake the camera by 1px")
+	var hit_sprite := first.get_node_or_null("BodySprite") as Sprite2D
+	_check(hit_sprite != null and hit_sprite.modulate.r > 1.5, "the struck enemy must flash")
+	_check(not _actor.is_physics_processing(), "player physics must be frozen during hitstop")
+	for _frame in range(8):
+		await process_frame
+	_check(_corridor._hitstop_frames == 0, "hitstop must end on its own")
+	_check(_corridor._camera.offset == Vector2.ZERO, "camera must return to zero offset")
+	if hit_sprite != null:
+		_check(hit_sprite.modulate == Color.WHITE, "flash must be cleared after the feedback window")
+	_check(_actor.is_physics_processing(), "player physics must resume after hitstop")
+
 	_corridor._unhandled_input(_mouse_left())
 	await process_frame
 	_check(first.dead, "second hit should kill the enemy")
