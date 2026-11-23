@@ -1,5 +1,6 @@
 ; 残余信号 · Godot 工程
 ; 规格见 design/PIXEL_SPEC.md：原生 384×216（×5 = 1920×1080），最近邻，整数倍缩放
+; 玩家实际看到的是 1920×1080：窗口客户区 1920×1080，viewpoint 384×216 按整数 5× 放大。
 config_version=5
 
 [application]
@@ -12,8 +13,8 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 window/size/viewport_width=384
 window/size/viewport_height=216
-window/size/window_width_override=1152
-window/size/window_height_override=648
+window/size/window_width_override=1920
+window/size/window_height_override=1080
 window/stretch/mode="viewport"
 window/stretch/aspect="keep"
 window/stretch/scale_mode="integer"

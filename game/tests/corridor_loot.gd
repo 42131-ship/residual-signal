@@ -8,6 +8,7 @@ extends SceneTree
 const SCENE: PackedScene = preload("res://game/scenes/corridor.tscn")
 const CONTAINERS := {
 	"locker_bank": {"x": 80.0, "y": 136.0},
+	"trash_bin": {"x": 384.0, "y": 160.0},
 	"first_aid_cabinet": {"x": 416.0, "y": 136.0},
 }
 
@@ -120,7 +121,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("CORRIDOR_LOOT_OK containers=2 story=never panel=ok")
+		print("CORRIDOR_LOOT_OK containers=%d story=never panel=ok" % CONTAINERS.size())
 		quit(0)
 		return
 	print("CORRIDOR_LOOT_FAILED count=%d" % _failures.size())

@@ -20,7 +20,8 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 .tools/Godot_v4.7-stable_win64.exe --path .
 ```
 
-主场景是 `game/scenes/corridor.tscn`。走廊分成 **A 区 / B 区 / C 区** 三个房间区块（门洞连通），
+主场景是 `game/scenes/corridor.tscn`。走廊分成 **A 区 / B 区 / C 区** 三个房间区块（带可开关/上锁的门）；
+玩家实际看到的是 **1920×1080**（原生 384×216 的 5× 整数最近邻放大，见 `game/tests/display.gd`）。
 完整键位见 [`design/CONTROLS.md`](design/CONTROLS.md)：
 
 | 键 | 动作 |
@@ -29,7 +30,7 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 | 不按速度键 | 步行（24 px/s） |
 | `Shift`（按住） | 疾跑（44 px/s，逃跑用，噪声最高） |
 | `Ctrl`（按住） | 蹲下潜行（12 px/s，最慢，噪声最低） |
-| `E` | 拾取 / 搜索（物品自动进背包，容量 10） |
+| `E` | 拾取 / 搜索（A/B/C 三区各一个容器）；无容器可搜时开关/锁最近的门 |
 | `Tab` | 背包：`W/S` 选择、`E` 使用、`Q` 丢弃、`Tab`/`Esc` 关闭 |
 | `V` | 查看文本 / 关闭检查框 |
 | `Esc` | 关闭 / 取消 |
@@ -98,6 +99,10 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_loot.gd -- CORRIDOR-LOOT
 # 背包与使用门禁（真渲染；Tab 背包 / E 使用 / Q 丢弃 / 左键攻击）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_inventory.gd -- CORRIDOR-INV
+# 门门禁（真渲染；开关门 / 挂锁 / 钥匙）
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_doors.gd -- CORRIDOR-DOOR
+# 呈现尺寸门禁（真窗口：1920×1080 = 5× 整数放大）
+& $G --path . --script res://game/tests/display.gd
 ```
 
 ---

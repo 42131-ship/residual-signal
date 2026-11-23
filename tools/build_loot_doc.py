@@ -135,14 +135,15 @@ def build() -> str:
     lines.append(POOLS_NOTE)
 
     lines.append("\n## 三、容器实例表\n")
-    lines.append("| 容器 | 建筑 | 档位 | 说明 |")
-    lines.append("|---|---|---|---|")
+    lines.append("| 容器 | 建筑 | 房间 | 档位 | 说明 |")
+    lines.append("|---|---|---|---|---|")
     for container in containers.get("containers", []):
         tier_id = container.get("tier", "")
         note = container.get("note", "")
         lines.append(
             f"| {container.get('label', '')} (`{container.get('id', '')}`) | "
-            f"{container.get('building', '')} | {tiers.get(tier_id, {}).get('label', tier_id)} | {note} |"
+            f"{container.get('building', '')} | {container.get('room', '-')} | "
+            f"{tiers.get(tier_id, {}).get('label', tier_id)} | {note} |"
         )
     lines.append(CONTAINER_NOTE)
 

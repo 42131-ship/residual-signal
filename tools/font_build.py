@@ -28,7 +28,7 @@ LOOT_UI_TEXT = "找到：共件已经搜过一次剧情模式不会刷新里面�
 # 背包与使用界面的固定文案（与 corridor.gd 的 _render_inventory / _use_selected_item 一致）。
 INVENTORY_UI_TEXT = (
     "背包装备物资体力使用丢弃关闭搜柜子会拿到东西已放入背包满了剩件没拿用了丢掉"
-    "这件东西现在用不上已经装备区"
+    "这件东西现在用不上已经装备区开关门锁着撬钥匙挂上了或"
 )
 ASCII_EXTRA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/×()"
 PAL = ROOT / "art" / "palettes" / "master.gpl"

@@ -31,6 +31,10 @@ const ROOM_LABELS: Array[String] = ["A 区", "B 区", "C 区"]
 ## 墙垛高度：门洞净空从 y=80 一直到地面，玩家 40px 身高（脚底 128..216）可以通过。
 const ROOM_LINTEL_Y := 80
 const ROOM_PARTITION_WIDTH := 32
+## 门：E 开关；关闭时挡路；挂锁可锁；钥匙/近战武器可撬开。
+const DOOR_TOP := 80.0
+const DOOR_BOTTOM := 216.0
+const DOOR_REACH_X := 44.0
 
 var _world: Node2D
 var _player: Player
@@ -57,6 +61,14 @@ var _inventory_layer: CanvasLayer
 var _inventory_panel_root: Node2D
 var _hud_stats_root: Node2D
 var _attack_visual: Polygon2D
+## 门状态：{tile_x, center_x, leaf, shape, handle, open, locked}
+var _doors: Array[Dictionary] = []
+var _nearest_door := -1
+var _door_prompt_layer: CanvasLayer
+var _door_prompt_root: Node2D
+var _door_prompt_text := ""
+var _door_toast_text := ""
+var _door_toast_frames := 0
 ## 玩家状态：物资/体力/噪声/已装备武器/挥击次数（背包与使用系统的落地数据）。
 var _supplies := 0.8
 var _health := 1.0
@@ -84,6 +96,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_hud()
 	_build_inventory_ui()
+	_build_door_prompt()
 	_build_attack_visual()
 	_build_flashlight()
 	_refresh_hud_stats()
@@ -192,6 +205,7 @@ func _build_room_partitions() -> void:
 		])
 		threshold.color = Color("#354b60")
 		_world.add_child(threshold)
+		_build_door(tile_x)
 		# 区块标签（A 区 / B 区 / C 区），标在下一段墙面上
 	# 标签放在每个房间起点：A 区最左，B/C 区在各自门洞后两格
 	var label_tiles: Array[int] = [
@@ -201,6 +215,163 @@ func _build_room_partitions() -> void:
 	]
 	for index: int in mini(ROOM_LABELS.size(), label_tiles.size()):
 		PixelFont.draw(_world, ROOM_LABELS[index], Vector2(label_tiles[index] * TILE_SIZE, 44), Color("#354b60"))
+
+
+func _build_door(tile_x: int) -> void:
+	var center_x := float(tile_x * TILE_SIZE + ROOM_PARTITION_WIDTH / 2)
+	# 门板（关闭时可见）：整块门洞高度的板子 + 一个暖色门把手
+	var leaf := Polygon2D.new()
+	leaf.name = "DoorLeaf_%d" % tile_x
+	leaf.position = Vector2(tile_x * TILE_SIZE, DOOR_TOP)
+	leaf.polygon = PackedVector2Array([
+		Vector2.ZERO, Vector2(ROOM_PARTITION_WIDTH, 0),
+		Vector2(ROOM_PARTITION_WIDTH, DOOR_BOTTOM - DOOR_TOP), Vector2(0, DOOR_BOTTOM - DOOR_TOP),
+	])
+	leaf.color = Color("#1f2e3f")
+	leaf.visible = false
+	_world.add_child(leaf)
+	var handle := Polygon2D.new()
+	handle.name = "DoorHandle_%d" % tile_x
+	handle.position = Vector2(tile_x * TILE_SIZE + ROOM_PARTITION_WIDTH - 9, DOOR_TOP + 58)
+	handle.polygon = PackedVector2Array([Vector2.ZERO, Vector2(3, 0), Vector2(3, 7), Vector2(0, 7)])
+	handle.color = Color("#b0702e")
+	handle.visible = false
+	_world.add_child(handle)
+	# 碰撞体：门关上时挡住整条门洞（玩家高 40px，脚底 128..216 都过不去）
+	var body := StaticBody2D.new()
+	body.name = "DoorBody_%d" % tile_x
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	shape.name = "DoorShape_%d" % tile_x
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(ROOM_PARTITION_WIDTH, DOOR_BOTTOM - DOOR_TOP)
+	shape.shape = rect
+	shape.position = Vector2(center_x, (DOOR_TOP + DOOR_BOTTOM) / 2.0)
+	shape.disabled = true
+	body.add_child(shape)
+	add_child(body)
+	_doors.append({
+		"tile_x": tile_x,
+		"center_x": center_x,
+		"leaf": leaf,
+		"handle": handle,
+		"shape": shape,
+		"open": true,
+		"locked": false,
+	})
+
+
+func _build_door_prompt() -> void:
+	_door_prompt_layer = CanvasLayer.new()
+	_door_prompt_layer.name = "DoorPrompt"
+	_door_prompt_layer.layer = 31
+	add_child(_door_prompt_layer)
+	_door_prompt_root = Node2D.new()
+	_door_prompt_root.name = "DoorPromptRoot"
+	_door_prompt_layer.add_child(_door_prompt_root)
+
+
+func _update_doors() -> void:
+	var previous := _nearest_door
+	_nearest_door = -1
+	if _player != null:
+		for index: int in _doors.size():
+			if absf(_player.global_position.x - float(_doors[index]["center_x"])) <= DOOR_REACH_X:
+				_nearest_door = index
+				break
+	if _nearest_door != previous:
+		_draw_door_prompt()
+	if _door_toast_frames > 0:
+		_door_toast_frames -= 1
+		if _door_toast_frames == 0:
+			_door_toast_text = ""
+			_draw_door_prompt()
+
+
+func _draw_door_prompt() -> void:
+	if _door_prompt_root == null:
+		return
+	for child: Node in _door_prompt_root.get_children():
+		child.queue_free()
+	_door_prompt_root.visible = false
+	_door_prompt_text = ""
+	if _inspection_ui_enabled and not _inspection_open and not _inventory_open and _nearest_door >= 0:
+		var door: Dictionary = _doors[_nearest_door]
+		_door_prompt_text = _door_action_text(door)
+		if not _door_prompt_text.is_empty():
+			_door_prompt_root.visible = true
+			var width := 44 + PixelFont.width_of(_door_prompt_text)
+			var screen_x := float(door["center_x"]) - _camera.position.x + VIEW_SIZE.x / 2.0
+			var x := clampf(screen_x - width / 2.0, 4.0, VIEW_SIZE.x - width - 4.0)
+			var y := 20.0
+			_add_rect_polygon(_door_prompt_root, "DoorBg", Vector2(x, y), Vector2(width, 20), Color("#0b1119"))
+			_add_ui_frame(_door_prompt_root, Vector2(x, y), Vector2(width, 20), Color("#354b60"))
+			PixelFont.draw(_door_prompt_root, _door_prompt_text, Vector2(x + 6, y + 4), Color("#f6f6f0"))
+	if _door_toast_frames > 0 and not _door_toast_text.is_empty():
+		PixelFont.draw(_door_prompt_root, _door_toast_text, Vector2(16, 44), Color("#f6f6f0"))
+
+
+func _door_action_text(door: Dictionary) -> String:
+	if bool(door["locked"]):
+		if _inventory != null and (_inventory.has("keys") or _is_melee_equipped()):
+			return "E 撬开"
+		return "锁着"
+	if bool(door["open"]):
+		return "E 关门"
+	if _inventory != null and _inventory.has("padlock"):
+		return "E 锁门"
+	return "E 开门"
+
+
+func _is_melee_equipped() -> bool:
+	if _equipped.is_empty():
+		return false
+	return str(_loot.item_effect(_equipped).get("equip", "")) == "melee"
+
+
+func _toggle_door(index: int) -> void:
+	if index < 0 or index >= _doors.size():
+		return
+	var door: Dictionary = _doors[index]
+	if bool(door["locked"]):
+		if _inventory.has("keys") or _is_melee_equipped():
+			door["locked"] = false
+			door["open"] = true
+			_apply_door_state(index)
+			_door_toast("撬开了锁")
+		else:
+			_door_toast("锁着，需要钥匙或撬棍")
+		return
+	if bool(door["open"]):
+		door["open"] = false
+		_apply_door_state(index)
+		_door_toast("关上了门")
+	elif _inventory.has("padlock"):
+		_inventory.remove("padlock", 1)
+		door["locked"] = true
+		door["open"] = false
+		_apply_door_state(index)
+		_door_toast("挂锁锁上了")
+	else:
+		door["open"] = true
+		_apply_door_state(index)
+		_door_toast("打开了门")
+
+
+func _apply_door_state(index: int) -> void:
+	var door: Dictionary = _doors[index]
+	var is_open := bool(door["open"])
+	(door["shape"] as CollisionShape2D).disabled = is_open
+	(door["leaf"] as Polygon2D).visible = not is_open
+	(door["handle"] as Polygon2D).visible = not is_open
+	_draw_door_prompt()
+
+
+func _door_toast(text: String) -> void:
+	_door_toast_text = text
+	_door_toast_frames = 90
+	_draw_door_prompt()
 
 
 func _build_floor_seams() -> void:
@@ -891,6 +1062,7 @@ func _process(_delta: float) -> void:
 	_follow_player()
 	_update_flashlight()
 	_update_depth_order()
+	_update_doors()
 	if _attack_frames > 0:
 		_attack_frames -= 1
 		if _attack_frames <= 0:
@@ -960,13 +1132,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action("cancel_inspect"):
 		return
-	# E = 上下文拾取/搜索：只有可搜索容器有效果。
+	# E = 上下文交互：优先搜索容器；否则开关/锁最近的门。
 	if event.is_action_pressed("pickup"):
 		var pickup_target := _nearest_inspection_id()
-		if pickup_target.is_empty() or _loot == null or not _loot.has_container(pickup_target):
+		if not pickup_target.is_empty() and _loot != null and _loot.has_container(pickup_target):
+			_search_container(pickup_target)
+			get_viewport().set_input_as_handled()
 			return
-		_search_container(pickup_target)
-		get_viewport().set_input_as_handled()
+		if _nearest_door >= 0:
+			_toggle_door(_nearest_door)
+			get_viewport().set_input_as_handled()
 		return
 	# V = 查看文本（检查框）。
 	if event.is_action_pressed("view"):

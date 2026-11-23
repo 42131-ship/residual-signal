@@ -63,6 +63,9 @@
 | P20 | 背包与使用系统：容量 10、堆叠、拾取入包、E 使用 / Q 丢弃 / Tab 界面、玩家物资/体力/噪声状态 | `INVENTORY_OK effects=41` + `CORRIDOR_INVENTORY_OK` | **DONE** |
 | P21 | 左键攻击占位：装备近战/枪械后挥击、按武器抬噪声、4 帧挥击条 | `CORRIDOR_INVENTORY_OK ... attack=left_click` | **DONE**（无敌人/命中/耐久） |
 | P22 | 房间分隔墙 + 门洞（A/B/C 三区，常开门洞） | `TRAVERSE_OK waypoints=8` + `corridor_preview._verify_rooms()` + 截图 | **DONE**（门不可交互、区块状态未做） |
+| P23 | 玩家视角 1920×1080（5× 整数最近邻） | `DISPLAY_OK native=384x216 present=1920x1080 scale=5x` + 两张证据图 | **DONE** |
+| P24 | A/B/C 各区容器（档位不同：常见/标准/高珍惜） | `LOOT_OK containers=3` + `CORRIDOR_LOOT_OK containers=3` | **DONE** |
+| P25 | 可交互门：开关/碰撞/挂锁上锁/钥匙撬开 | `CORRIDOR_DOORS_OK` + 三张截图 | **DONE**（无内侧锁/破门） |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）

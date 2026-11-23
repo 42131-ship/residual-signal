@@ -160,14 +160,25 @@
       "id": "locker_bank",
       "label": "储物柜",
       "building": "school",
-      "tier": "common"
+      "tier": "common",
+      "room": "A",
+      "note": "A 区（走廊入口）的常见容器，只出日用品。"
+    },
+    {
+      "id": "trash_bin",
+      "label": "垃圾桶",
+      "building": "school",
+      "tier": "standard",
+      "room": "B",
+      "note": "B 区（教室段）的标准容器，日用品 + 垃圾/恶趣味。"
     },
     {
       "id": "first_aid_cabinet",
       "label": "急救柜",
       "building": "school",
       "tier": "treasure",
-      "note": "学校建筑唯一的高珍惜容器（校医上锁柜）。可能出枪械或关键药品；其余容器只出日用品/工具/普通医疗。"
+      "room": "C",
+      "note": "C 区（走廊尽头）的高珍惜容器（校医上锁柜）。可能出枪械或关键药品；其余容器只出日用品/工具/普通医疗。"
     }
   ]
 }

@@ -33,19 +33,24 @@ func _initialize() -> void:
 				_fail("item detail leaks value field %s on %s" % [forbidden, str(item_id)])
 				return
 
-	# ② 容器：每栋建筑只能有一个高珍惜容器（学校 = 急救柜）。
+	# ② 容器：每栋建筑只能有一个高珍惜容器（学校 = 急救柜），且 A/B/C 三个房间各有容器。
 	var containers := loot.container_ids()
-	if containers.size() != 2:
-		_fail("expected 2 containers, got %d" % containers.size())
+	if containers.size() != 3:
+		_fail("expected 3 containers, got %d" % containers.size())
 		return
 	var treasure_count := 0
 	var treasure_id := ""
+	var tier_seen: Dictionary = {}
 	for id: String in containers:
+		tier_seen[loot.tier_of(id)] = true
 		if loot.tier_of(id) == "treasure":
 			treasure_count += 1
 			treasure_id = id
 	if treasure_count != 1 or treasure_id != "first_aid_cabinet":
 		_fail("school must have exactly one treasure container, got %d (%s)" % [treasure_count, treasure_id])
+		return
+	if tier_seen.size() < 3:
+		_fail("three rooms should use different container tiers, got %s" % str(tier_seen))
 		return
 
 	# ③ 剧情模式不刷新：搜过一次后，不管过多少世界日都拒绝。
