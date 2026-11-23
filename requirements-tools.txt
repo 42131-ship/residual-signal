@@ -1,0 +1,3 @@
+#see-through 分层资产的依赖（只给 tools/ 用，不进游戏运行时）
+# 锁版本：psd-tools 的小版本改过层写入 API，不锁会漂。
+psd-tools==1.27.0

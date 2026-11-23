@@ -121,6 +121,7 @@ const SEARCH_THREAT_RANGE := 40.0
 var _player_anim_time := 0.0
 var _player_anim_id := "idle"
 var _player_hurt_t := 0.0
+var _attack_anim_t := 0.0
 var _panel_lines: Array = []
 ## 走廊 demo 的世界日（HUD 写死 DAY 3，等接入 WorldState 后替换）。
 var _world_day := 3
@@ -1241,6 +1242,7 @@ func _drop_selected_item() -> void:
 func _perform_attack() -> void:
 	_attacks += 1
 	_attack_frames = ATTACK_FRAMES
+	_attack_anim_t = 0.0
 	_attack_visual.visible = true
 	_update_attack_visual()
 	var damage := 1
@@ -1373,12 +1375,18 @@ func _update_player_anim(delta: float) -> void:
 	_player_anim_time += delta
 	_player_hurt_t = maxf(0.0, _player_hurt_t - delta)
 	var anim_id := "idle"
+	var anim_time := _player_anim_time
 	if _player_hurt_t > 0.0:
 		anim_id = "hurt"
-	elif _player_hurt_t <= 0.0 and sprite != null and absf(_player.velocity.x) + absf(_player.velocity.y) > 1.0:
+	elif _attack_frames > 0:
+		# 挥击：独立时间轴，按下左键那一帧从头播，不跟走路相位混。
+		_attack_anim_t += delta
+		anim_id = "attack"
+		anim_time = _attack_anim_t
+	elif absf(_player.velocity.x) + absf(_player.velocity.y) > 1.0:
 		anim_id = "walk"
 	_player_anim_id = anim_id
-	var frame := CharAnim.frame_at("player", anim_id, _player_anim_time)
+	var frame := CharAnim.frame_at("player", anim_id, anim_time)
 	sprite.texture = CharAnim.frame_texture("player", frame)
 	sprite.flip_h = _player.facing_x < 0.0
 

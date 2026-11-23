@@ -103,6 +103,61 @@ def write_ora(path: Path, image: Image.Image, layers: list[tuple[str, Image.Imag
         merged.unlink()
 
 
+def write_psd(path: Path, image: Image.Image, layers: list[tuple[str, Image.Image, list[int]]]) -> None:
+    """写真正的分层 PSD（psd-tools 1.27 的 create_pixel_layer_from_array）。
+
+    层名直接写官方语义名 —— 下游 Stretchy Studio / Anime2.5DRig 按名字认层。
+    """
+    import numpy as np
+    from psd_tools import PSDImage
+
+    psd = PSDImage.new("RGB", image.size)
+    for name, layer, rect in layers:
+        array = np.array(layer, dtype=np.uint8)
+        psd.create_pixel_layer_from_array(array, name=name, top=rect[1], left=rect[0], opacity=255)
+    psd.save(str(path))
+
+
+def verify_psd(path: Path, image: Image.Image, expected: list[tuple[str, list[int]]]) -> None:
+    """把刚写出的 PSD 读回来：层名、顺序、bbox、合成必须都对得上。
+
+    PSD 是二进制容器，写坏了 Godot 那边毫无提示，所以这里必须回读核对。
+    """
+    from psd_tools import PSDImage
+
+    reopened = PSDImage.open(str(path))
+    found = [(layer.name, list(layer.bbox)) for layer in reopened.descendants()]
+    if len(found) != len(expected):
+        raise SystemExit(f"{path.name}: {len(found)} layers written, expected {len(expected)}")
+    for (want_name, want_rect), (got_name, got_rect) in zip(expected, found):
+        if want_name != got_name:
+            raise SystemExit(f"{path.name}: layer name {got_name!r} != {want_name!r}")
+        if [int(v) for v in want_rect[:2]] != got_rect[:2]:
+            raise SystemExit(f"{path.name}: layer {want_name} offset {got_rect[:2]} != {want_rect[:2]}")
+
+
+def verify_psd_pixels(path: Path, layers: list[tuple[str, Image.Image, list[int]]]) -> None:
+    """逐层比对像素：PSD 里读出来的每一层必须与导出的层图完全一致。
+
+    psd-tools 的合成图是 RGB（不带 alpha），所以不能用 composite 比；
+    要验的是**层本身**——下游工具拿走的也正是层。
+    """
+    import numpy as np
+    from psd_tools import PSDImage
+
+    reopened = PSDImage.open(str(path))
+    by_name = {layer.name: layer for layer in reopened.descendants()}
+    for name, source, _rect in layers:
+        layer = by_name.get(name)
+        if layer is None:
+            raise SystemExit(f"{path.name}: layer {name!r} missing after round trip")
+        restored = layer.topil()
+        if restored is None:
+            raise SystemExit(f"{path.name}: layer {name!r} has no pixels")
+        if np.array(restored.convert("RGBA")).tobytes() != np.array(source.convert("RGBA")).tobytes():
+            raise SystemExit(f"{path.name}: layer {name!r} pixels changed in the PSD round trip")
+
+
 def main() -> int:
     if not TAGS.exists():
         raise SystemExit(f"missing layer names, run tools/see_through_sync.py first: {TAGS}")
@@ -146,6 +201,8 @@ def main() -> int:
             raise SystemExit(f"{char_id}: layers do not reassemble into the source sprite")
 
         write_ora(OUT / f"{char_id}.ora", image, layers)
+        write_psd(OUT / f"{char_id}.psd", image, layers)
+        verify_psd(OUT / f"{char_id}.psd", image, [(name, rect) for name, _layer, rect in layers])
         (OUT / f"{char_id}.json").write_text(json.dumps({
             "schema": "see-through-layers.v1",
             "character": char_id,

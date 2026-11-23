@@ -476,6 +476,46 @@ python tools/see_through_export.py   # characters=31 layers_written=217
 2. **PSD 直出**：目前导 ORA；直接写 PSD 需要上面的 PSD 库。
 3. **真模型跑图**：需要 8GB+ 显存的机器；跑完把 PSD 丢进同一条链路即可。
 
+---
+
+## 十九、Stage 2.15 · PSD 双向打通 + 动作加到 20 帧（2026-11-23 深夜）
+
+> 反馈：「那就装；这个模型如果我们接不行，那就找找 GitHub 上差不多的项目；帧动画做了跟不做完全是两种手感」。
+
+### 一、PSD 双向（装了 psd-tools==1.27.0，锁版本见 requirements-tools.txt）
+
+| 方向 | 工具 | 验收 |
+|---|---|---|
+| 写 | `tools/see_through_export.py` 现在同时出 **PSD**（层名 = 官方语义名）与 ORA | 31 个角色 217 层，导出后立即回读 |
+| 读 | `tools/see_through_import.py`：PSD → 层表 + 层 PNG，`--strict` 校验层名在官方表内 | `VERIFY_OK layers=7 exact=SPR-player_32x48.png`（逐像素等于原图） |
+| 门禁 | 导出内置 `verify_psd`（层名/顺序/偏移）+ `verify_psd_pixels`（每层像素在 PSD 往返后不变） | 每次导出都跑 |
+
+一个踩到的坑记下来：`psd-tools` 写出的 PSD，`composite()` 是 **RGB 无 alpha**（合并预览不带透明通道），
+所以**不能**用合成图验保真；要验的是**每一层**——下游工具拿走的也正是层。
+
+### 二、为什么不追别的项目（结论与依据）
+
+| 方案 | 对 32×32 像素角色 | 结论 |
+|---|---|---|
+| see-through / [ComfyUI-See-through](https://github.com/jtydhr88/ComfyUI-See-through) | 训练分布是高分辨率动漫立绘；32×32 属分布外，8GB 卡跑了也没意义 | 只用于将来高分辨率美术，已按契约接好 |
+| [Stretchy Studio](https://github.com/MangoLion/stretchystudio) / [rigby2d](https://github.com/jaisurya-dev-art/rigby2d) / PuppetLoom | 自动绑定靠部件旋转；像素块旋转会破坏网格，32px 下部件只有 3–5px | 不做 |
+| **加帧 + 加节拍**（自有生成器） | 像素动画手感的有效变量：接触/下沉/过渡/上抬、预备/命中/收招 | **本轮已做** |
+
+### 三、动作 10 帧 → 20 帧
+
+| 动作 | 之前 | 现在 | 帧率 | 说明 |
+|---|---|---|---|---|
+| idle | 2 | **4** | 5fps | 吸气-停顿-呼气-停顿 |
+| walk | 4 | **6** | 10fps | contact/down/passing/up 的像素化版本 |
+| attack | 无 | **3** | 12fps | 预备（后拉 1px）→ 命中（前推 2px + 压 1px）→ 收招 |
+| hurt | 1 | **2** | 14fps | 后仰 1px → 2px |
+| death | 3 | **5** | 8fps | 1/2/4/6/9px 逐级下沉 |
+
+运行时：主角挥击有**独立时间轴**（按下左键从头播，不跟走路相位混），受击优先于走动。
+
+验收：`ANIMATION_OK characters=31 anims=5 frames_per_char=20 checked=620`，
+全量 16 条门禁全绿（含新加的 PSD 往返与逐层像素校验）。
+
 
 
 

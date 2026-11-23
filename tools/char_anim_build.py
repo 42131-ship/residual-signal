@@ -38,12 +38,13 @@ PREVIEW = ROOT / "design" / "previews"
 
 # 10 帧固定顺序：列号 = 帧号
 ANIMS = [
-    {"id": "idle", "label": "待机", "start": 0, "count": 2, "fps": 4, "loop": True},
-    {"id": "walk", "label": "行走", "start": 2, "count": 4, "fps": 10, "loop": True},
-    {"id": "hurt", "label": "受击", "start": 6, "count": 1, "fps": 12, "loop": False},
-    {"id": "death", "label": "倒地", "start": 7, "count": 3, "fps": 8, "loop": False},
+    {"id": "idle", "label": "待机", "start": 0, "count": 4, "fps": 5, "loop": True},
+    {"id": "walk", "label": "行走", "start": 4, "count": 6, "fps": 10, "loop": True},
+    {"id": "attack", "label": "挥击", "start": 10, "count": 3, "fps": 12, "loop": False},
+    {"id": "hurt", "label": "受击", "start": 13, "count": 2, "fps": 14, "loop": False},
+    {"id": "death", "label": "倒地", "start": 15, "count": 5, "fps": 8, "loop": False},
 ]
-FRAME_COUNT = 10
+FRAME_COUNT = 20
 
 # 已经是动画产物、不用再当输入的角色文件
 SKIP_PREFIX = ("SPR-player_walk",)
@@ -90,27 +91,48 @@ def body_metrics(img: Image.Image) -> tuple[int, int, int]:
     return top, top + int(round(visible * 0.55)), bottom - 1
 
 
+def shift_frame(img: Image.Image, dx: int, dy: int) -> Image.Image:
+    out = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    out.alpha_composite(img, (dx, dy))
+    return out
+
+
 def build_frames(base: Image.Image) -> list[Image.Image]:
     top, hip, feet = body_metrics(base)
     frames: list[Image.Image] = []
-    # idle：呼吸（上半身 1px 起伏，脚不动）
+
+    # ── idle 4 帧：吸气-停顿-呼气-停顿（呼吸靠上半身 1px，脚底不动）──
     frames.append(base.copy())
     frames.append(shift_rows(base, hip, -1))
-    # walk：迈步 + 轻微上下
-    for index, (front, back, bob) in enumerate([(1, -1, 0), (0, 0, -1), (-1, 1, 0), (0, 0, -1)]):
+    frames.append(base.copy())
+    frames.append(shift_rows(base, hip, -1))
+
+    # ── walk 6 帧：contact / down / passing / up 的像素化版本 ──
+    # (前腿, 后腿, 上半身偏移)　上下起伏只在「down」帧压 1px，避免整段抖。
+    steps = [(2, -2, 0), (1, -1, 1), (0, 0, 0), (-2, 2, 0), (-1, 1, 1), (0, 0, 0)]
+    for front, back, bob in steps:
         step = split_legs(base, hip, front, back)
         if bob:
             step = shift_rows(step, 0, bob)
         frames.append(step)
-    # hurt：整帧后仰 1px（只搬像素，不换色）
-    hurt = Image.new("RGBA", base.size, (0, 0, 0, 0))
-    hurt.alpha_composite(base, (-1, 0))
-    frames.append(hurt)
-    # death：逐帧下沉、越来越贴地
-    for drop in (1, 3, 6):
+
+    # ── attack 3 帧：预备（后拉 1px）→ 命中（前推 2px + 压 1px）→ 收招（回中 1px）──
+    frames.append(shift_frame(base, -1, 0))
+    strike = shift_frame(base, 2, 0)
+    strike = shift_rows(strike, hip, -1)
+    frames.append(strike)
+    frames.append(shift_frame(base, 1, 0))
+
+    # ── hurt 2 帧：后仰 1px → 2px ──
+    frames.append(shift_frame(base, -1, 0))
+    frames.append(shift_frame(base, -2, 0))
+
+    # ── death 5 帧：逐帧下沉并截短，最后贴地 ──
+    for drop in (1, 2, 4, 6, 9):
         fallen = Image.new("RGBA", base.size, (0, 0, 0, 0))
         fallen.alpha_composite(base.crop((0, 0, base.width, max(1, base.height - drop))), (0, drop))
         frames.append(fallen)
+
     if len(frames) != FRAME_COUNT:
         raise SystemExit(f"expected {FRAME_COUNT} frames, built {len(frames)}")
     return frames

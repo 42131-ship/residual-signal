@@ -1,36 +1,44 @@
 {
   "schema": "char-anim.v1",
-  "frame_count": 10,
+  "frame_count": 20,
   "anims": [
     {
       "id": "idle",
       "label": "待机",
       "start": 0,
-      "count": 2,
-      "fps": 4,
+      "count": 4,
+      "fps": 5,
       "loop": true
     },
     {
       "id": "walk",
       "label": "行走",
-      "start": 2,
-      "count": 4,
+      "start": 4,
+      "count": 6,
       "fps": 10,
       "loop": true
     },
     {
+      "id": "attack",
+      "label": "挥击",
+      "start": 10,
+      "count": 3,
+      "fps": 12,
+      "loop": false
+    },
+    {
       "id": "hurt",
       "label": "受击",
-      "start": 6,
-      "count": 1,
-      "fps": 12,
+      "start": 13,
+      "count": 2,
+      "fps": 14,
       "loop": false
     },
     {
       "id": "death",
       "label": "倒地",
-      "start": 7,
-      "count": 3,
+      "start": 15,
+      "count": 5,
       "fps": 8,
       "loop": false
     }

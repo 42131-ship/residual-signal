@@ -13,6 +13,7 @@ static var _anims: Dictionary = {}
 static var _order: Array[String] = []
 static var _sheets: Dictionary = {}
 static var _cache: Dictionary = {}
+static var _frame_count := 0
 
 
 static func _ensure() -> void:
@@ -24,6 +25,7 @@ static func _ensure() -> void:
 		push_error("CHAR_ANIM_MANIFEST_UNREADABLE")
 		return
 	var data: Dictionary = raw
+	_frame_count = int(data.get("frame_count", 0))
 	for entry: Variant in data.get("anims", []):
 		if entry is Dictionary:
 			_anims[str((entry as Dictionary).get("id", ""))] = entry
@@ -55,6 +57,11 @@ static func anim_ids() -> Array[String]:
 		out.append(id)
 	out.sort()
 	return out
+
+
+static func frames_per_character() -> int:
+	_ensure()
+	return _frame_count
 
 
 static func anim_meta(anim_id: String) -> Dictionary:
