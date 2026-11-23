@@ -14,6 +14,8 @@ const WALK_RIGHT := 602.0
 ## 纵深容差：玩家脚底与交互锚点的 y 差超过它就不算「站在道具前面」。
 ## 水平距离仍是 28px 主判据（同距时按朝向裁决），保持 Stage 2 的 28px 边界语义。
 const INTERACT_DEPTH_TOLERANCE := 24.0
+## 手电开灯时的光锥半径（关灯 = 归零，画面整体压暗）。
+const FLASHLIGHT_RADIUS := 240.0
 const TILE_INDEX := {
 	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
 	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
@@ -25,6 +27,7 @@ var _camera: Camera2D
 var _light_material: ShaderMaterial
 var _last_step_was_running := false
 var _steps := 0
+var _flashlight_on := true
 var _inspection_range_x := 0.0
 var _inspection_records: Dictionary = {}
 var _inspection_ui: Dictionary = {}
@@ -238,6 +241,7 @@ func _ensure_actions() -> void:
 	_add_action("walk", [KEY_SHIFT])
 	_add_action("inspect", [KEY_E])
 	_add_action("cancel_inspect", [KEY_ESCAPE])
+	_add_action("toggle_light", [KEY_F])
 
 
 func _add_action(action_name: String, keys: Array) -> void:
@@ -525,7 +529,7 @@ func _build_flashlight() -> void:
 		return
 	_light_material = ShaderMaterial.new()
 	_light_material.shader = shader
-	_light_material.set_shader_parameter("radius_px", 240.0)
+	_light_material.set_shader_parameter("radius_px", FLASHLIGHT_RADIUS)
 	_light_material.set_shader_parameter("softness_px", 48.0)
 	_light_material.set_shader_parameter("cone_half", 0.42)
 	_light_material.set_shader_parameter("cone_feather", 0.16)
@@ -570,6 +574,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	# 检查框唯一的按键入口：echo（按住重复）与松开都不算一次按下。
 	if not _inspection_ui_enabled or not event is InputEventKey or event.is_echo() or not event.is_pressed():
 		return
+	# 手电开关（F）：面板打开时不响应，避免和检查交互抢键。
+	if event.is_action_pressed("toggle_light") and not _inspection_open:
+		_set_flashlight(not _flashlight_on)
+		get_viewport().set_input_as_handled()
+		return
 	if _inspection_open:
 		if event.is_action("inspect") or event.is_action("cancel_inspect"):
 			_close_inspection()
@@ -595,6 +604,15 @@ func _follow_player() -> void:
 	_camera.position.x = roundf(clampf(_player.position.x + 64.0, half_view, rightmost_center))
 	# 玩家走进房间下缘时相机轻微下移（最多 8px），保证脚底不出画；世界只有 14 行，不能露空。
 	_camera.position.y = clampf(_player.position.y - 56.0, 108.0, 116.0)
+
+
+func _set_flashlight(on: bool) -> void:
+	_flashlight_on = on
+	if _light_material == null:
+		return
+	# 关灯不是隐藏遮罩（那是反的），而是把光锥半径与羽化归零：整屏落到 outside_tint。
+	_light_material.set_shader_parameter("radius_px", FLASHLIGHT_RADIUS if on else 0.0)
+	_light_material.set_shader_parameter("softness_px", 48.0 if on else 0.0)
 
 
 func _update_flashlight() -> void:

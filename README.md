@@ -20,8 +20,16 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 .tools/Godot_v4.7-stable_win64.exe --path .
 ```
 
-主场景是 `game/scenes/corridor.tscn`。走廊里 `A/D` 左右走、`W/S` 纵深走进下方房间（384×216 里 y=128..216 是可走地面），
-`Shift` 慢走，靠近道具按 `E` 查看，`Esc` / `E` 关闭。
+主场景是 `game/scenes/corridor.tscn`。完整键位见 [`design/CONTROLS.md`](design/CONTROLS.md)：
+
+| 键 | 动作 |
+|---|---|
+| `A` / `D`（或 `←` / `→`） | 左右走 |
+| `W` / `S`（或 `↑` / `↓`） | 纵深走进下方房间 |
+| `Shift`（按住） | 慢走（12 px/s，无声） |
+| `E` | 查看 / 关闭检查框 |
+| `Esc` | 关闭 / 取消 |
+| `F` | 手电开关 |
 
 ---
 

@@ -27,6 +27,7 @@ const PROP_NAMES := [
 var _corridor: Node2D
 var _actor: Player
 var _props: Node2D
+var _light_material: ShaderMaterial
 var _prefix := "CORRIDOR"
 var _without_hud := false
 var _evidence: Dictionary[String, int] = {}
@@ -53,6 +54,7 @@ func _run() -> void:
 	if _actor == null or _props == null or hud == null or light == null or not light.material is ShaderMaterial:
 		_fail("missing player, props, HUD or flashlight")
 		return
+	_light_material = light.material as ShaderMaterial
 	if not _verify_props() or not _verify_character() or not _verify_doorway() or not _verify_readability_structures():
 		return
 	hud.visible = not _without_hud
@@ -92,6 +94,25 @@ func _run() -> void:
 	await physics_frame
 	if absf(_actor.position.y - floor_y) > 0.5:
 		_fail("player did not return to the floor line: %.1f" % _actor.position.y)
+		return
+	# 手电开关（F）：关灯 = 光锥半径归零、整屏压暗；再按恢复。
+	if not _corridor._flashlight_on:
+		_fail("flashlight should start on")
+		return
+	_corridor._unhandled_input(_key_press(KEY_F))
+	await process_frame
+	if _corridor._flashlight_on:
+		_fail("F did not turn the flashlight off")
+		return
+	if not is_equal_approx(float(_light_material.get_shader_parameter("radius_px")), 0.0):
+		_fail("flashlight radius did not go to 0")
+		return
+	if not await _snapshot("light_off"):
+		return
+	_corridor._unhandled_input(_key_press(KEY_F))
+	await process_frame
+	if not _corridor._flashlight_on or not is_equal_approx(float(_light_material.get_shader_parameter("radius_px")), 240.0):
+		_fail("F did not restore the flashlight")
 		return
 	Input.action_press("move_right")
 	if not await _walk_to(184.0, true):
@@ -390,6 +411,27 @@ func _capture(label: String, expected_left: int) -> bool:
 	_actor.set_physics_process(true)
 	print("RENDER_OK %s camera_x=%d player_x=%.1f fully_visible=%s" % [
 		file, expected_left + VIEW_SIZE.x / 2, _actor.position.x, ",".join(fully_visible)])
+	return true
+
+
+func _key_press(keycode: Key) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.physical_keycode = keycode
+	event.keycode = keycode
+	event.pressed = true
+	return event
+
+
+func _snapshot(label: String) -> bool:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var rendered := root.get_texture().get_image()
+	if rendered == null or rendered.is_empty() or rendered.get_size() != VIEW_SIZE:
+		return _fail("snapshot %s is not native 384x216" % label)
+	var file := ProjectSettings.globalize_path("res://design/previews").path_join("%s_%s.png" % [_prefix, label])
+	if rendered.save_png(file) != OK:
+		return _fail("could not save %s" % file)
+	print("SNAPSHOT_OK %s" % file)
 	return true
 
 

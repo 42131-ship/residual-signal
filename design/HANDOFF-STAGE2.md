@@ -140,6 +140,7 @@ python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd
 | 4 | 纵深遮挡 | 道具与玩家 `z_index = 脚底 y`；贴图按 `facing_x` 翻转 | 门禁断言 z_index 跟随 y |
 | 5 | 检查交互适配纵深 | 交互锚点：墙面道具落到房间内缘 y=136，地面道具用自身 y；水平 28px 主判据 + 24px 纵深容差 | `CORRIDOR_INSPECT_OK records=15 ties=8 boundary=28px` |
 | 6 | 测试同步 | preview 去掉 camera y=0 假设；inspect 的 `_place` 带 y；新增深度移动/边界/遮挡断言 | 两个图形门禁全绿 |
+| 7 | 手电开关 | 新增 `F`（`toggle_light` 动作）：关灯 = 光锥半径/羽化归零，整屏压暗；面板打开时不响应。键位总表落在 `design/CONTROLS.md` | preview 断言 + `CORRIDOR-QA_light_off.png` |
 
 ### 还没做（下一轮）
 

@@ -53,6 +53,7 @@
 | P10 | 输入台账 20/23 | `validate.py --inventory` → 23/23 | **DONE**（`cf290af`） |
 | P11 | 主角放大（32×48 原生帧，可见 41px） | `pixelpipe gate` 三帧 PASS + `corridor_preview` 角色断言 | **DONE**（Stage 2.5） |
 | P12 | WASD 纵深移动 + 下方区域可走 | `CORRIDOR_OK` 深度移动断言 + `CORRIDOR-QA_depth.png` | **DONE**（Stage 2.5） |
+| P13 | 键位总表 + 手电开关 F | `design/CONTROLS.md` + `CORRIDOR-QA_light_off.png` | **DONE**（键位 v0.1；战斗/背包等 ⏳ 待系统） |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）
