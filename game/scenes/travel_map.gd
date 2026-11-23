@@ -34,6 +34,11 @@ const BLOCKS := {
 var current_building := "school"
 ## 作为走廊的叠加层时由走廊统一转发按键，地图自己不处理输入（避免两边抢键）。
 var interactive := true
+## 今天去过哪几栋（走廊传进来），用于地图上的「去过」标记。
+var _visited: Array[String] = []
+## 每栋楼的标记：{fuel, risk, visited, known}
+## known = 是否相邻：不相邻的楼你不知道去一趟多贵，所以不标油耗与危险。
+var _marks: Dictionary = {}
 var _travel := TravelService.new()
 var _blocks: Dictionary = {}
 var _edges: Array[Dictionary] = []
@@ -42,10 +47,12 @@ var _neighbors: Array[String] = []
 var _selected := 0
 var _cursor: Node2D
 var _hint_root: Node2D
+var _marks_root: Node2D
 
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_ensure_actions()
 	_build_background()
 	if not _travel.load_all():
 		push_error("TRAVEL_LOAD_FAILED: " + _travel.load_error())
@@ -54,8 +61,33 @@ func _ready() -> void:
 	_build_labels()
 	_hint_root = _node("Hints")
 	_cursor = _node("Cursor")
+	_marks_root = _node("Marks")
 	PixelFont.draw(_hint_root, "W/S 选楼 · E 出发 · Esc 留下", Vector2(8, 200), LABEL)
 	setup(current_building)
+
+
+## 地图可以单独跑（门禁），所以自己保证这几个语义动作存在；与走廊/菜单重复注册也无害。
+func _ensure_actions() -> void:
+	var bindings := {
+		"menu_up": [KEY_W, KEY_UP],
+		"menu_down": [KEY_S, KEY_DOWN],
+		"menu_confirm": [KEY_E, KEY_ENTER],
+		"menu_back": [KEY_ESCAPE],
+	}
+	for action: String in bindings:
+		if not InputMap.has_action(action):
+			InputMap.add_action(action)
+		for keycode: int in bindings[action]:
+			var exists := false
+			for event: InputEvent in InputMap.action_get_events(action):
+				if event is InputEventKey and (event as InputEventKey).physical_keycode == keycode:
+					exists = true
+					break
+			if exists:
+				continue
+			var key := InputEventKey.new()
+			key.physical_keycode = keycode
+			InputMap.action_add_event(action, key)
 
 
 func _node(node_name: String) -> Node2D:
@@ -156,16 +188,27 @@ func _build_labels() -> void:
 		PixelFont.draw(self, _travel.label_of(id), Vector2(at.x, at.y + 4), LABEL)
 
 
-## 走廊把「现在在哪栋、还有多少燃料」告诉地图；地图自己算可去哪几栋。
+## 走廊把「现在在哪栋、还有多少燃料、今天去过哪」告诉地图；地图自己算可去哪几栋。
 ## 相邻但不可达的楼仍然画出来（灰着），玩家能看见"那里有医院，但没燃料去"。
-func setup(from: String, fuel := 0) -> void:
+func setup(from: String, fuel := 0, visited: Array[String] = []) -> void:
 	current_building = from if BLOCKS.has(from) else "school"
+	_visited = visited.duplicate()
 	_neighbors.clear()
 	_selectable.clear()
+	_marks.clear()
+	for id: String in BLOCKS:
+		_marks[id] = {"fuel": 0, "risk": 0, "visited": id in _visited, "known": false}
 	for id: String in _travel.neighbors(current_building):
 		if not BLOCKS.has(id):
 			continue
 		_neighbors.append(id)
+		var route := _travel.route(current_building, id)
+		_marks[id] = {
+			"fuel": int(route.get("fuel", 0)),
+			"risk": int(route.get("risk", 0)),
+			"visited": id in _visited,
+			"known": true,
+		}
 		var verdict := _travel.can_travel(current_building, id, {"fuel": fuel, "actions_left": 1, "hour": 12})
 		if bool(verdict.get("ok", false)):
 			_selectable.append(id)
@@ -180,6 +223,7 @@ func setup(from: String, fuel := 0) -> void:
 	_selected = clampi(_selected, 0, maxi(0, _selectable.size() - 1))
 	_refresh_reachability()
 	_refresh_cursor()
+	_refresh_marks()
 
 
 func _refresh_reachability() -> void:
@@ -192,6 +236,47 @@ func _refresh_reachability() -> void:
 				continue
 			var base: Color = {"Top": TOP_FACE, "Front": FRONT_FACE, "Side": SIDE_FACE}[face_name]
 			face.color = Color(base.r * factor, base.g * factor, base.b * factor)
+
+
+func _refresh_marks() -> void:
+	if _marks_root == null:
+		return
+	for child: Node in _marks_root.get_children():
+		child.queue_free()
+	for id: String in BLOCKS:
+		var mark: Dictionary = _marks.get(id, {})
+		if mark.is_empty():
+			continue
+		var spec: Dictionary = BLOCKS[id]
+		var at: Vector2 = spec["at"]
+		var size: Vector2 = spec["size"]
+		var height: float = spec["height"]
+		var top_y := at.y - height - size.y
+		# 燃料需求：每个点 = 1 燃料，点在块顶正上方
+		for index in range(int(mark.get("fuel", 0))):
+			_add_mark_rect("Fuel_%s_%d" % [id, index], Vector2(at.x + index * 4, top_y - 6), Vector2(2, 2), Color("#9fb2bd"))
+		# 危险度：右上方 1~3 个点，越亮越危险
+		var risk := int(mark.get("risk", 0))
+		for index in range(mini(3, risk)):
+			var tint := Color("#635e57") if index < 1 else Color("#8a4a3a")
+			_add_mark_rect("Risk_%s_%d" % [id, index], Vector2(at.x + size.x + 2 + index * 3, top_y - 4), Vector2(2, 3), tint)
+		# 去过：标签下面一条短横
+		if bool(mark.get("visited", false)):
+			_add_mark_rect("Visited_%s" % id, Vector2(at.x, at.y + 14), Vector2(8, 2), Color("#f6f6f0"))
+
+
+func _add_mark_rect(mark_name: String, at: Vector2, size: Vector2, color: Color) -> void:
+	var rect := ColorRect.new()
+	rect.name = mark_name
+	rect.position = at
+	rect.size = size
+	rect.color = color
+	_marks_root.add_child(rect)
+
+
+## 供门禁读：这栋楼在地图上被标了什么。
+func markers(id: String) -> Dictionary:
+	return (_marks.get(id, {}) as Dictionary).duplicate()
 
 
 func _refresh_cursor() -> void:

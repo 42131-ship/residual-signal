@@ -103,6 +103,8 @@ var _at_exit := false
 const EXIT_HINT_X := 596.0
 ## 出口选楼：打开旅行图，图上只列相邻且可达的楼。
 var _current_building := "school"
+## 今天去过哪几栋（地图上用一条短线标出来）。
+var _visited: Array[String] = ["school"]
 var _fuel := 0
 var _map_open := false
 var _map_layer: CanvasLayer
@@ -1444,7 +1446,7 @@ func _open_travel_map() -> void:
 	# 输入由走廊统一转发：地图自己不处理，避免两边抢键。
 	_map.interactive = false
 	_map_layer.add_child(_map)
-	_map.setup(_current_building, _fuel)
+	_map.setup(_current_building, _fuel, _visited)
 	_map.chosen.connect(_on_map_chosen)
 	_map.cancelled.connect(_close_travel_map)
 	_map_layer.visible = true
@@ -1489,6 +1491,8 @@ func _depart_to(target: String) -> void:
 	_health = float(result["health"])
 	_fuel = maxi(0, _fuel - spent)
 	_current_building = target
+	if not _visited.has(target):
+		_visited.append(target)
 	_close_travel_map()
 	_at_exit = false
 	_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)

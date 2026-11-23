@@ -118,6 +118,35 @@ func _run() -> void:
 	_map.cancel()
 	_check(bool(capture["cancelled"]), "cancel must emit cancelled")
 
+	# ⑨ 地图标注：相邻的楼有油耗/危险，不相邻的不瞎标；去过的楼有短线
+	var visited_a: Array[String] = ["school"]
+	_map.setup("school", 0, visited_a)
+	var gas_marks: Dictionary = _map.markers("gas_station")
+	_check(bool(gas_marks.get("known", false)), "gas_station must be marked as known from school")
+	_check(int(gas_marks.get("risk", 0)) == 1, "gas_station risk should be 1, got %s" % str(gas_marks.get("risk")))
+	_check(int(gas_marks.get("fuel", -1)) == 0, "gas_station needs no fuel")
+	var hospital_marks: Dictionary = _map.markers("hospital")
+	_check(not bool(hospital_marks.get("known", true)), "hospital is not adjacent to school, must stay unmarked")
+	var marks_root := _map.get_node_or_null("Marks") as Node2D
+	_check(marks_root != null, "marks container missing")
+	if marks_root != null:
+		_check(marks_root.get_node_or_null("Risk_gas_station_0") != null, "risk dot for gas_station missing")
+		_check(marks_root.get_node_or_null("Visited_school") != null, "visited bar for school missing")
+		_check(marks_root.get_node_or_null("Visited_gas_station") == null, "gas_station must not be marked visited yet")
+
+	# ⑩ 去过的楼会亮起；油耗按数据展开成点
+	var visited_b: Array[String] = ["school", "gas_station"]
+	_map.setup("school", 0, visited_b)
+	_check(bool(_map.markers("gas_station").get("visited", false)), "gas_station must show as visited")
+	if marks_root != null:
+		_check(marks_root.get_node_or_null("Visited_gas_station") != null, "visited bar for gas_station missing")
+	var visited_c: Array[String] = ["school", "hospital"]
+	_map.setup("hospital", 2, visited_c)
+	if marks_root != null:
+		_check(marks_root.get_node_or_null("Fuel_military_base_0") != null, "fuel pip 1 missing on military_base")
+		_check(marks_root.get_node_or_null("Fuel_military_base_1") != null, "fuel pip 2 missing on military_base")
+		_check(int(_map.markers("military_base").get("fuel", 0)) == 2, "military_base needs 2 fuel")
+
 	_map.setup("school", 0)
 	await _capture("%s_topdown" % _prefix)
 	_finish()

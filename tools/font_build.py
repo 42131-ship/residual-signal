@@ -25,6 +25,7 @@ INSPECTIONS = ROOT / "data" / "prop_inspections.json"
 LOOT_CONTAINERS = ROOT / "data" / "loot" / "containers.json"
 LOOT_ITEMS = ROOT / "data" / "loot" / "items.json"
 STATUS_DATA = ROOT / "data" / "systems" / "status.json"
+TRAVEL_ROUTES = ROOT / "data" / "travel" / "routes.json"
 # 战利品面板的固定文案：与 corridor.gd 的 _search_container / _loot_lines 保持一致。
 LOOT_UI_TEXT = "找到：共件已经搜过一次剧情模式不会刷新里面是空的连灰都没有、…（）"
 # 背包与使用界面的固定文案（与 corridor.gd 的 _render_inventory / _use_selected_item 一致）。
@@ -126,6 +127,11 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
     if STATUS_DATA.exists():
         status = json.loads(STATUS_DATA.read_text(encoding="utf-8"))
         for entry in status.get("statuses", []):
+            characters.update(str(entry.get("label", "")))
+    # 楼名（学校/加油站/医院/消防站/军事基地）只在 routes.json 里，地图要用。
+    if TRAVEL_ROUTES.exists():
+        routes = json.loads(TRAVEL_ROUTES.read_text(encoding="utf-8"))
+        for entry in routes.get("buildings", []):
             characters.update(str(entry.get("label", "")))
     characters = sorted(characters - {"", "\n", "\r", "\t", " "})
     # 代码里的中文字面量（动词、提示语、报错文案）也要进图集：
