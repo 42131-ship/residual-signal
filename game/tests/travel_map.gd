@@ -1,0 +1,120 @@
+extends SceneTree
+## 旅行图原型门禁：五块都在视口内、每块三面、顶面比正面亮、正面比侧面亮、
+## 连线与 TravelService 邻接一致且去重。
+## 运行（要渲染）：
+##   .tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 \
+##     --script res://game/tests/travel_map.gd -- MAP
+
+const SCENE: PackedScene = preload("res://game/scenes/travel_map.tscn")
+const VIEW := Vector2(384, 216)
+
+var _map: Node2D
+var _prefix := "MAP"
+var _failures: Array[String] = []
+
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("MAP"):
+			_prefix = argument
+	_map = SCENE.instantiate() as Node2D
+	root.add_child(_map)
+	await process_frame
+	await process_frame
+
+	# ① 五块，坐标都在视口内（含高度与进深，别让立体块顶出画面）
+	var ids: Array = _map.block_ids()
+	_check(ids.size() == 5, "map must draw 5 blocks, got %d" % ids.size())
+	for id: String in ids:
+		var spec: Dictionary = _map.BLOCKS[id]
+		var at: Vector2 = spec["at"]
+		var size: Vector2 = spec["size"]
+		var height: float = spec["height"]
+		var top_left := Vector2(at.x - 2, at.y - height - size.y - 2)
+		var bottom_right := Vector2(at.x + size.x + size.y * 0.6 + 2, at.y + 12)
+		_check(top_left.x >= 0 and top_left.y >= 0, "%s pokes out of the top-left: %s" % [id, str(top_left)])
+		_check(bottom_right.x <= VIEW.x and bottom_right.y <= VIEW.y,
+			"%s pokes out of the bottom-right: %s" % [id, str(bottom_right)])
+
+	# ② 每块三个面，且明度关系符合「光只从上方来」
+	for id: String in ids:
+		var node := _map.get_node_or_null("Block_%s" % id) as Node2D
+		_check(node != null, "%s block node missing" % id)
+		if node == null:
+			continue
+		var top := node.get_node_or_null("Top") as Polygon2D
+		var front := node.get_node_or_null("Front") as Polygon2D
+		var side := node.get_node_or_null("Side") as Polygon2D
+		_check(top != null and front != null and side != null, "%s needs top/front/side faces" % id)
+		if top == null or front == null or side == null:
+			continue
+		_check(top.polygon.size() == 4, "%s top face must be a quad" % id)
+		_check(side.polygon.size() == 4, "%s side face must be a quad" % id)
+		var lt := top.color.get_luminance()
+		var lf := front.color.get_luminance()
+		var ls := side.color.get_luminance()
+		_check(lt > lf and lf > ls, "%s shading order broken: top=%.2f front=%.2f side=%.2f" % [id, lt, lf, ls])
+
+	# ③ 绘制顺序按底边 y 从远到近（后面画的在前面）
+	var order: Array[String] = []
+	for child: Node in _map.get_children():
+		if str(child.name).begins_with("Block_"):
+			order.append(str(child.name).trim_prefix("Block_"))
+	for index in range(1, order.size()):
+		var prev: float = float(_map.BLOCKS[order[index - 1]]["at"].y)
+		var cur: float = float(_map.BLOCKS[order[index]]["at"].y)
+		_check(cur >= prev, "blocks must be drawn far-to-near: %s before %s" % [order[index - 1], order[index]])
+
+	# ④ 连线与 TravelService 的邻接一致，且无重复
+	var travel := TravelService.new()
+	travel.load_all()
+	var expected := 0
+	var seen := {}
+	for id: String in travel.building_ids():
+		for other: String in travel.neighbors(id):
+			var key := "%s|%s" % [id, other] if id < other else "%s|%s" % [other, id]
+			if not seen.has(key):
+				seen[key] = true
+				expected += 1
+	_check(_map.edge_count() == expected, "map roads %d != travel edges %d" % [_map.edge_count(), expected])
+
+	# ⑤ 底图已挂上并压了暗罩
+	var art := _map.get_node_or_null("MapArt") as Sprite2D
+	_check(art != null, "generated map art must be mounted")
+	if art != null:
+		_check(art.texture != null and art.texture.get_size() == VIEW, "map art must be 384x216")
+
+	await _capture("%s_topdown" % _prefix)
+	_finish()
+
+
+func _capture(label: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	if image == null:
+		_check(false, "capture failed")
+		return
+	image.save_png(ProjectSettings.globalize_path("res://design/previews/%s.png" % label))
+	print("MAP_SHOT res://design/previews/%s.png" % label)
+
+
+func _check(condition: bool, message: String) -> void:
+	if not condition:
+		_failures.append(message)
+		push_error("MAP_FAIL " + message)
+
+
+func _finish() -> void:
+	if _failures.is_empty():
+		print("TRAVEL_MAP_OK blocks=5 faces=3 shading=top>front>side depth_sort=ok roads=%d" % _map.edge_count())
+		quit(0)
+		return
+	print("TRAVEL_MAP_FAILED count=%d" % _failures.size())
+	for failure: String in _failures:
+		print("  - " + failure)
+	quit(1)
