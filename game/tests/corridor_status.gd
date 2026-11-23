@@ -71,10 +71,59 @@ func _run() -> void:
 	_corridor.advance_hours(7.0)
 	_check(not status.has("poison"), "poison must fade after its decay window")
 
-	# ⑥ HUD 真的有状态行，并留下截图。
+	# ⑥ 危险视觉：状态越重边框越厚，颜色跟最重的那条走；治好后消失。
+	_reset_status()
+	status = _corridor._status
+	_check(_corridor._status_fx_thickness == 0, "clean state must show no warning frame")
+	_check(not _corridor._status_fx_bars[0].visible, "warning frame must be hidden when clean")
+	status.apply("wound")
+	status.apply("wound")
+	_corridor._refresh_hud_stats()
+	_check(_corridor._status_fx_thickness == 4, "wound 2 must show a 4px frame, got %d" % _corridor._status_fx_thickness)
+	_check(_corridor._status_fx_bars[0].visible, "warning frame must be visible while wounded")
+	_check(_corridor._status_fx_bars[0].color == _corridor.STATUS_FX_COLORS["wound"],
+		"frame colour must follow the wound state")
+	status.apply("wound")
+	status.apply("poison")
+	status.apply("poison")
+	_corridor._refresh_hud_stats()
+	_check(_corridor._status_fx_thickness == 6, "wound 3 must cap the frame at 6px, got %d" % _corridor._status_fx_thickness)
+	status.cure("wound")
+	_corridor._refresh_hud_stats()
+	_check(_corridor._status_fx_thickness == 4, "curing the wound must fall back to the poison frame, got %d" % _corridor._status_fx_thickness)
+	_check(_corridor._status_fx_bars[0].color == _corridor.STATUS_FX_COLORS["poison"],
+		"frame colour must switch to poison once the wound is cured")
+
+	# ⑦ 搜索风险：敌人贴到 40px 内，搜索被打断并吃一记抓伤。
+	_reset_status()
+	status = _corridor._status
+	await _place(88.0, 128.0)
+	var enemy: Enemy = null
+	for candidate: Enemy in _corridor._enemies:
+		if is_instance_valid(candidate):
+			enemy = candidate
+			break
+	_check(enemy != null, "corridor has no enemy to threaten the search")
+	if enemy != null:
+		var down := InputEventKey.new()
+		down.physical_keycode = KEY_E
+		down.keycode = KEY_E
+		down.pressed = true
+		_corridor._unhandled_input(down)
+		Input.action_press("pickup")
+		_check(not _corridor._search_id.is_empty(), "search did not start")
+		enemy.global_position = _actor.global_position + Vector2(20.0, 0.0)
+		_corridor._update_search(0.1)
+		Input.action_release("pickup")
+		_check(_corridor._search_id.is_empty(), "a nearby enemy must interrupt the search")
+		_check(status.has("wound"), "interrupted search must cost a wound")
+		enemy.global_position = Vector2(300.0, 168.0)
+	_reset_status()
+
+	# ⑧ HUD 真的有状态行，并留下截图。
 	_corridor._status.apply("infection")
 	_corridor._refresh_hud_stats()
-	var summary := status.summary()
+	var summary: String = str(_corridor._status.summary())
 	_check(summary.contains("感染"), "summary must list the active infection: %s" % summary)
 	_check(_corridor._hud_stats_root.get_child_count() > 0, "HUD stats root stayed empty")
 	_actor.set_physics_process(false)
@@ -88,6 +137,20 @@ func _run() -> void:
 		print("STATUS_SHOT res://design/previews/%s_hud.png" % _prefix)
 	_actor.set_physics_process(true)
 	_finish()
+
+
+func _reset_status() -> void:
+	# 换一个干净的服务，测「治疗/清空后视觉是否归零」。
+	_corridor._status = StatusService.new()
+	_corridor._status.load_all()
+	_corridor._refresh_hud_stats()
+
+
+func _place(x: float, y: float) -> void:
+	_actor.global_position = Vector2(x, y)
+	_actor.velocity = Vector2.ZERO
+	await process_frame
+	await process_frame
 
 
 func _find_item(item_id: String) -> int:

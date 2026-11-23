@@ -99,11 +99,24 @@ var _status: StatusService
 const ADDICTIVE_ITEMS := ["painkillers", "sleeping_pills"]
 ## 面板当前内容（测试与调试用，不参与渲染）。
 var _panel_title := ""
-## 按住 E 搜索的进度（秒）。required 来自 containers.json 的 tiers.search_seconds。
+## 按住 E 搜索：id / 已按秒数 / 需要的秒数（来自 tiers.search_seconds）。
 var _search_id := ""
 var _search_elapsed := 0.0
 var _search_required := 0.0
 var _search_ui_root: Node2D
+## 状态的危险视觉：四边框，厚度随最重状态走（0 = 干净，看不见）。
+var _status_fx_layer: CanvasLayer
+var _status_fx_bars: Array[ColorRect] = []
+var _status_fx_thickness := 0
+## 状态边框配色（像素硬边，不走 alpha 渐变）。
+const STATUS_FX_COLORS := {
+	"wound": Color("#4a1f24"),
+	"infection": Color("#2a2438"),
+	"poison": Color("#2f3a24"),
+	"addiction": Color("#33302a"),
+}
+## 搜索时敌人靠到多近算被打断。
+const SEARCH_THREAT_RANGE := 40.0
 var _panel_lines: Array = []
 ## 走廊 demo 的世界日（HUD 写死 DAY 3，等接入 WorldState 后替换）。
 var _world_day := 3
@@ -125,6 +138,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_hud()
 	_build_search_ui($HUD)
+	_build_status_fx()
 	_build_inventory_ui()
 	_build_door_prompt()
 	_build_attack_visual()
@@ -828,9 +842,73 @@ func _build_search_ui(parent: Node) -> void:
 	parent.add_child(_search_ui_root)
 
 
+## 受伤/中毒/感染的屏幕边缘警示：纯色硬边，不加渐变、不加发光。
+func _build_status_fx() -> void:
+	_status_fx_layer = CanvasLayer.new()
+	_status_fx_layer.name = "StatusFx"
+	_status_fx_layer.layer = 26
+	add_child(_status_fx_layer)
+	for index in range(4):
+		var bar := ColorRect.new()
+		bar.name = ["Top", "Bottom", "Left", "Right"][index]
+		bar.color = Color.TRANSPARENT
+		bar.visible = false
+		_status_fx_layer.add_child(bar)
+		_status_fx_bars.append(bar)
+
+
+func _refresh_status_fx() -> void:
+	if _status == null or _status_fx_bars.size() != 4:
+		return
+	var thickness := 0
+	var tint := Color.TRANSPARENT
+	for id: String in _status.ids():
+		var stage := _status.stage_of(id)
+		if stage <= 0:
+			continue
+		# 每级 2px，最多 6px：够看见，又不至于挡视野。
+		var candidate := mini(3, stage) * 2
+		if candidate > thickness:
+			thickness = candidate
+			tint = STATUS_FX_COLORS.get(id, Color("#3a2028"))
+	_status_fx_thickness = thickness
+	var width := float(VIEW_SIZE.x)
+	var height := float(VIEW_SIZE.y)
+	var t := float(thickness)
+	var rects := [
+		[Vector2.ZERO, Vector2(width, t)],
+		[Vector2(0, height - t), Vector2(width, t)],
+		[Vector2.ZERO, Vector2(t, height)],
+		[Vector2(width - t, 0), Vector2(t, height)],
+	]
+	for index in range(4):
+		var bar := _status_fx_bars[index]
+		bar.position = rects[index][0]
+		bar.size = rects[index][1]
+		bar.color = tint
+		bar.visible = thickness > 0
+
+
+func _nearest_enemy_distance() -> float:
+	var best := -1.0
+	for enemy: Enemy in _enemies:
+		if not is_instance_valid(enemy) or enemy.dead:
+			continue
+		var distance := enemy.global_position.distance_to(_player.global_position)
+		if best < 0.0 or distance < best:
+			best = distance
+	return best
+
+
 ## 按住 E 才继续；松手即中断。进度到点才结算物资。
 func _update_search(delta: float) -> void:
 	if _search_id.is_empty():
+		return
+	# 搜索是背对走廊的动作：敌人贴近就打断，并吃一记抓伤。
+	var threat := _nearest_enemy_distance()
+	if threat >= 0.0 and threat <= SEARCH_THREAT_RANGE:
+		_cancel_search("搜索被打断了")
+		_on_enemy_attacked(1)
 		return
 	if not InputMap.has_action("pickup") or not Input.is_action_pressed("pickup"):
 		_cancel_search("搜索被打断")
@@ -1005,6 +1083,7 @@ func _refresh_hud_stats() -> void:
 	# 状态一变，移速惩罚立刻生效（不只靠 advance_hours）。
 	if _status != null and _player != null:
 		_player.status_speed_scale = _status.speed_multiplier()
+		_refresh_status_fx()
 	# 行距 15：PF-02 汉字墨迹 13×14，10px 行距会直接叠字。
 	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_supplies * 100.0)), Vector2(8, 42), Color("#9fb2bd"))
 	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), Color("#9fb2bd"))
