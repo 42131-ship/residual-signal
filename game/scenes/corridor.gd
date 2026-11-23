@@ -95,6 +95,12 @@ var _combat_message := ""
 var _combat_message_frames := 0
 ## 状态系统：伤口/感染/中毒/成瘾（数据在 data/systems/status.json）。
 var _status: StatusService
+## 一天与出行：结算与「能不能走」（数据在 data/travel/routes.json）。
+var _day: DayCycle
+var _travel: TravelService
+var _at_exit := false
+## 走到这个 x 就算站在出口（尽头墙在 576，玩家被夹在 ~600）。
+const EXIT_HINT_X := 596.0
 ## 会成瘾的消耗品（吃污染食物中毒之外再加一层成瘾）。
 const ADDICTIVE_ITEMS := ["painkillers", "sleeping_pills"]
 ## 面板当前内容（测试与调试用，不参与渲染）。
@@ -148,6 +154,11 @@ func _ready() -> void:
 	_status = StatusService.new()
 	if not _status.load_all():
 		push_error("STATUS_LOAD_FAILED: " + _status.load_error())
+	_day = DayCycle.new()
+	_day.new_run()
+	_travel = TravelService.new()
+	if not _travel.load_all():
+		push_error("TRAVEL_LOAD_FAILED: " + _travel.load_error())
 	_build_camera()
 	_build_hud()
 	_build_search_ui($HUD)
@@ -1114,7 +1125,9 @@ func _refresh_hud_stats() -> void:
 	var status_text := _status.summary() if _status != null else ""
 	if not status_text.is_empty():
 		PixelFont.draw(_hud_stats_root, status_text, Vector2(8, 117), Color("#bfb6a3"))
-	if _combat_message_frames > 0 and not _combat_message.is_empty():
+	if _at_exit:
+		PixelFont.draw(_hud_stats_root, "按 E 离场", Vector2(8, 132), Color("#f6f6f0"))
+	elif _combat_message_frames > 0 and not _combat_message.is_empty():
 		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 132), Color("#f6f6f0"))
 
 
@@ -1377,6 +1390,29 @@ func _on_enemy_died(enemy: Enemy) -> void:
 
 
 ## 主角动作：受击优先 → 走动播 walk → 静止播 idle。帧由精灵表按 fps 推进。
+## 离场：把今天折算进 DayCycle，翻页，然后把结算写在面板上。
+## 注意：现在走廊的 _supplies/_health 仍是本地状态，这里只是把它们喂给结算；
+## M2 会把这两个字段整个删掉，改由 world_state 持有。
+func _leave_building() -> void:
+	if _day == null:
+		return
+	var result := _day.settle({
+		"extracted": true,
+		"supplies": _supplies,
+		"health": _health,
+		"kills": _enemies_killed,
+		"noise": _noise,
+	})
+	_supplies = float(result["supplies"])
+	_health = float(result["health"])
+	_at_exit = false
+	var lines: Array = result["lines"]
+	_show_panel("第 %d 天结束" % (int(result["day"]) + 1), lines.slice(1), "exit")
+	if bool(result["finished"]):
+		_toast_combat("三十天到了。")
+	_refresh_hud_stats()
+
+
 func _update_player_anim(delta: float) -> void:
 	if _player == null or not CharAnim.has("player"):
 		return
@@ -1507,6 +1543,10 @@ func _process(delta: float) -> void:
 	_update_doors()
 	_update_search(delta)
 	_update_player_anim(delta)
+	var near_exit := _player != null and _player.position.x >= EXIT_HINT_X
+	if near_exit != _at_exit:
+		_at_exit = near_exit
+		_refresh_hud_stats()
 	if _combat_message_frames > 0:
 		_combat_message_frames -= 1
 		if _combat_message_frames == 0:
@@ -1591,6 +1631,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		var pickup_target := _nearest_inspection_id()
 		if not pickup_target.is_empty() and _loot != null and _loot.has_container(pickup_target):
 			_begin_search(pickup_target)
+			get_viewport().set_input_as_handled()
+			return
+		if _at_exit:
+			_leave_building()
 			get_viewport().set_input_as_handled()
 			return
 		if _nearest_door >= 0:

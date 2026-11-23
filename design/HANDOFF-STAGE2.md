@@ -569,6 +569,23 @@ python tools/see_through_export.py   # characters=31 layers_written=217
 2. 走廊尽头那扇门改成「离场 / 回学校」的出口，接 `TravelService.can_travel`。
 3. 然后才是 M2（走廊全量改读写 `world_state`，删掉并行的 `_supplies/_health`）。
 
+---
+
+## 二十二、Stage 3.1 · 出口闭环（2026-11-24 凌晨）
+
+> 「一天能结束」这条闭环先接通，旅行图才有东西可画。
+
+| 件 | 落点 | 验收 |
+|---|---|---|
+| 结算核心 | `game/runtime/day_cycle.gd`：离场 +1 沉积 / 未离场 +2、睡觉回体力（0.25 / 0.10）、未离场自耗 0.05 物资、沉积上限 40、第 30 天收束 | `DAY_OK extract=+1 sediment lost=+2 cap=40 days=30 rested=0.25/0.10` |
+| 走廊出口 | 走到 x≥596 亮「按 E 离场」；E → 结算面板 + 翻页；面板期间锁移动 | `CORRIDOR_EXIT_OK days=2 sediment=2 panel=ok` |
+
+**技术债（明确记账）**：`_leave_building()` 现在只是把走廊本地的 `_supplies/_health` **喂给**结算，
+出口本身还不消耗行动次数、也不选目的地。M2 会把这两个字段删掉，改由 `world_state` 持有；
+M1 的 `TravelMap` 负责「今天去哪一栋」。
+
+下一步顺序：**TravelMap 场景（选楼 + 去程/回程）→ M2 状态合并 → M3 广播/手机/空投**。
+
 
 
 
