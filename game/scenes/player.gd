@@ -25,6 +25,8 @@ var _previous_global_position := Vector2.ZERO
 var facing_x := 1.0
 var facing_y := 0.0
 var gear := "walk"
+## 状态系统（伤口/中毒/成瘾）给的移速倍率，由场景每帧写入；1.0 = 无惩罚。
+var status_speed_scale := 1.0
 
 
 func _ready() -> void:
@@ -65,8 +67,8 @@ func _physics_process(delta: float) -> void:
 		speed = SPRINT_SPEED
 		gear = "sprint"
 	var target_velocity := Vector2(
-		direction.x * speed,
-		direction.y * speed * DEPTH_SPEED_SCALE,
+		direction.x * speed * status_speed_scale,
+		direction.y * speed * DEPTH_SPEED_SCALE * status_speed_scale,
 	)
 	var rate := ACCELERATION if direction != Vector2.ZERO else DECELERATION
 	if direction.x != 0.0:

@@ -38,6 +38,13 @@ func tier_of(id: String) -> String:
 	return str(_containers.get(id, {}).get("tier", ""))
 
 
+## 搜索这个容器要按住多久（秒）。数据在 containers.json 的 tiers[*].search_seconds。
+func search_seconds_of(id: String) -> float:
+	var tier: Dictionary = _tiers.get(tier_of(id), {})
+	return maxf(0.0, float(tier.get("search_seconds", 0.0)))
+
+
+
 func container_ids() -> Array[String]:
 	return _order.duplicate()
 

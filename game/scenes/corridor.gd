@@ -93,8 +93,17 @@ var _enemies: Array[Enemy] = []
 var _enemies_killed := 0
 var _combat_message := ""
 var _combat_message_frames := 0
+## 状态系统：伤口/感染/中毒/成瘾（数据在 data/systems/status.json）。
+var _status: StatusService
+## 会成瘾的消耗品（吃污染食物中毒之外再加一层成瘾）。
+const ADDICTIVE_ITEMS := ["painkillers", "sleeping_pills"]
 ## 面板当前内容（测试与调试用，不参与渲染）。
 var _panel_title := ""
+## 按住 E 搜索的进度（秒）。required 来自 containers.json 的 tiers.search_seconds。
+var _search_id := ""
+var _search_elapsed := 0.0
+var _search_required := 0.0
+var _search_ui_root: Node2D
 var _panel_lines: Array = []
 ## 走廊 demo 的世界日（HUD 写死 DAY 3，等接入 WorldState 后替换）。
 var _world_day := 3
@@ -110,8 +119,12 @@ func _ready() -> void:
 	_load_inspections()
 	_load_loot()
 	_inventory = InventoryService.new(INVENTORY_CAPACITY)
+	_status = StatusService.new()
+	if not _status.load_all():
+		push_error("STATUS_LOAD_FAILED: " + _status.load_error())
 	_build_camera()
 	_build_hud()
+	_build_search_ui($HUD)
 	_build_inventory_ui()
 	_build_door_prompt()
 	_build_attack_visual()
@@ -738,6 +751,96 @@ func _search_container(id: String) -> void:
 	_refresh_hud_stats()
 
 
+## 一次搜索折算多少游戏小时：1 秒 = 1 小时（数值旋钮，调它就能改状态推进速度）。
+const SEARCH_SECONDS_PER_GAME_HOUR := 1.0
+
+
+func _begin_search(id: String) -> void:
+	if _loot == null or not _loot.has_container(id):
+		return
+	var required := _loot.search_seconds_of(id)
+	if required <= 0.0:
+		_search_container(id)
+		return
+	_search_id = id
+	_search_elapsed = 0.0
+	_search_required = required
+	_player._movement_locked = true
+	_refresh_search_progress()
+
+
+func _cancel_search(reason: String) -> void:
+	if _search_id.is_empty():
+		return
+	_search_id = ""
+	_search_elapsed = 0.0
+	_search_required = 0.0
+	_player._movement_locked = false
+	_refresh_search_progress()
+	if not reason.is_empty():
+		_toast_combat(reason)
+
+
+func _finish_search() -> void:
+	var id := _search_id
+	var seconds := _search_elapsed
+	_search_id = ""
+	_search_elapsed = 0.0
+	_search_required = 0.0
+	_player._movement_locked = false
+	_refresh_search_progress()
+	_search_container(id)
+	# 搜索要花时间：这段时间里伤口在流血、感染在恶化。
+	advance_hours(seconds * SEARCH_SECONDS_PER_GAME_HOUR)
+
+
+## 推进游戏小时：状态按小时恶化/消退，伤口持续掉体力。由搜索等耗时行为调用。
+func advance_hours(hours: float) -> void:
+	if _status == null or hours <= 0.0:
+		return
+	_status.tick_hours(hours)
+	var drain := _status.health_drain_per_hour() * hours
+	if drain > 0.0:
+		_health = clampf(_health - drain, 0.0, 1.0)
+	_player.status_speed_scale = _status.speed_multiplier()
+	_refresh_hud_stats()
+
+
+func _refresh_search_progress() -> void:
+	if _search_ui_root == null:
+		return
+	for child: Node in _search_ui_root.get_children():
+		child.queue_free()
+	if _search_id.is_empty():
+		return
+	var progress := clampf(_search_elapsed / maxf(0.001, _search_required), 0.0, 1.0)
+	var bar_x := 8.0
+	var bar_y := 146.0
+	var bar_w := 120.0
+	_add_rect_polygon(_search_ui_root, "SearchBg", Vector2(bar_x, bar_y), Vector2(bar_w, 5), Color("#0b1119"))
+	_add_rect_polygon(_search_ui_root, "SearchFill", Vector2(bar_x + 1, bar_y + 1), Vector2(maxf(0.0, (bar_w - 2) * progress), 3), Color("#9fb2bd"))
+	PixelFont.draw(_search_ui_root, "搜索中 %d" % int(round(progress * 100.0)), Vector2(bar_x, bar_y - 16), Color("#f6f6f0"))
+
+
+func _build_search_ui(parent: Node) -> void:
+	_search_ui_root = Node2D.new()
+	_search_ui_root.name = "SearchProgress"
+	parent.add_child(_search_ui_root)
+
+
+## 按住 E 才继续；松手即中断。进度到点才结算物资。
+func _update_search(delta: float) -> void:
+	if _search_id.is_empty():
+		return
+	if not InputMap.has_action("pickup") or not Input.is_action_pressed("pickup"):
+		_cancel_search("搜索被打断")
+		return
+	_search_elapsed += delta
+	_refresh_search_progress()
+	if _search_elapsed >= _search_required:
+		_finish_search()
+
+
 func _loot_lines(item_ids: Array) -> Array[String]:
 	var names := PackedStringArray()
 	for value: Variant in item_ids:
@@ -899,8 +1002,12 @@ func _refresh_hud_stats() -> void:
 	for enemy: Enemy in _enemies:
 		if is_instance_valid(enemy) and not enemy.dead:
 			alive += 1
+	# 状态一变，移速惩罚立刻生效（不只靠 advance_hours）。
+	if _status != null and _player != null:
+		_player.status_speed_scale = _status.speed_multiplier()
+	# 行距 15：PF-02 汉字墨迹 13×14，10px 行距会直接叠字。
 	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_supplies * 100.0)), Vector2(8, 42), Color("#9fb2bd"))
-	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 52), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), Color("#9fb2bd"))
 	var weapon_text := "空手"
 	if not _equipped.is_empty():
 		weapon_text = _loot.item_name(_equipped)
@@ -908,10 +1015,13 @@ func _refresh_hud_stats() -> void:
 			weapon_text += " 耐久 %d" % _weapon_durability
 		elif _weapon_magazine > 0:
 			weapon_text += " 弹 %d/%d" % [_magazine, _weapon_magazine]
-	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 62), Color("#9fb2bd"))
-	PixelFont.draw(_hud_stats_root, "敌人 %d" % alive, Vector2(8, 72), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 72), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, "敌人 %d" % alive, Vector2(8, 87), Color("#9fb2bd"))
+	var status_text := _status.summary() if _status != null else ""
+	if not status_text.is_empty():
+		PixelFont.draw(_hud_stats_root, status_text, Vector2(8, 117), Color("#bfb6a3"))
 	if _combat_message_frames > 0 and not _combat_message.is_empty():
-		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 82), Color("#f6f6f0"))
+		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 132), Color("#f6f6f0"))
 
 
 func _open_inventory() -> void:
@@ -955,10 +1065,10 @@ func _render_inventory() -> void:
 		_inventory_index = clampi(_inventory_index, 0, ids.size() - 1)
 		for row: int in mini(9, ids.size()):
 			var item_id: String = ids[row]
-			var row_y := panel_y + 22 + row * 13
+			var row_y := panel_y + 24 + row * 15
 			if row == _inventory_index:
 				_add_rect_polygon(_inventory_panel_root, "Sel%d" % row,
-					Vector2(panel_x + 4, row_y - 2), Vector2(panel_w - 8, 13), Color("#354b60"))
+					Vector2(panel_x + 4, row_y - 2), Vector2(panel_w - 8, 15), Color("#354b60"))
 			var text := "%d %s" % [row + 1, _loot.item_name(item_id)]
 			var count := _inventory.count_of(item_id)
 			if count > 1:
@@ -999,6 +1109,14 @@ func _use_selected_item() -> void:
 		_render_inventory()
 		return
 	var consumed := false
+	# 先判「对症下药」：绷带治伤口、抗生素治感染、消毒水治中毒。
+	var cured := _status.cure_with_item(item_id)
+	if not cured.is_empty():
+		_inventory.remove(item_id, 1)
+		_inventory_toast = "用了 %s，%s好了" % [item_name, _status.label_of(cured)]
+		_refresh_hud_stats()
+		_render_inventory()
+		return
 	if effect.has("supplies"):
 		_supplies = clampf(_supplies + float(effect["supplies"]), 0.0, 1.0)
 		consumed = true
@@ -1007,6 +1125,13 @@ func _use_selected_item() -> void:
 		consumed = true
 	if effect.has("noise"):
 		_noise += int(effect["noise"])
+		consumed = true
+	# 污染食物：吃下去先中毒；止痛/安眠这类还会上瘾。
+	if bool(effect.get("contaminate", false)):
+		_status.apply("poison")
+		if item_id in ADDICTIVE_ITEMS:
+			_status.apply("addiction")
+		_inventory_toast = "味道不对……"
 		consumed = true
 	if consumed:
 		_inventory.remove(item_id, 1)
@@ -1140,7 +1265,8 @@ func _spawn_enemies() -> void:
 
 func _on_enemy_attacked(damage: int) -> void:
 	_health = clampf(_health - 0.15 * float(damage), 0.0, 1.0)
-	_toast_combat("你被感染体抓伤了")
+	var stage := _status.apply("wound")
+	_toast_combat("你被感染体抓伤了（伤口 %d）" % stage)
 	_refresh_hud_stats()
 
 
@@ -1203,11 +1329,12 @@ func _build_flashlight() -> void:
 	layer.add_child(mask)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_follow_player()
 	_update_flashlight()
 	_update_depth_order()
 	_update_doors()
+	_update_search(delta)
 	if _combat_message_frames > 0:
 		_combat_message_frames -= 1
 		if _combat_message_frames == 0:
@@ -1291,7 +1418,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pickup"):
 		var pickup_target := _nearest_inspection_id()
 		if not pickup_target.is_empty() and _loot != null and _loot.has_container(pickup_target):
-			_search_container(pickup_target)
+			_begin_search(pickup_target)
 			get_viewport().set_input_as_handled()
 			return
 		if _nearest_door >= 0:

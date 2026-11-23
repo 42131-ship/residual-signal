@@ -10,6 +10,7 @@ The bundled OFL font is a build input; the scene draws the PNG at native size.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -23,6 +24,7 @@ CJK_FONT = ROOT / "art" / "fonts" / "NotoSansSC-VF.ttf"
 INSPECTIONS = ROOT / "data" / "prop_inspections.json"
 LOOT_CONTAINERS = ROOT / "data" / "loot" / "containers.json"
 LOOT_ITEMS = ROOT / "data" / "loot" / "items.json"
+STATUS_DATA = ROOT / "data" / "systems" / "status.json"
 # 战利品面板的固定文案：与 corridor.gd 的 _search_container / _loot_lines 保持一致。
 LOOT_UI_TEXT = "找到：共件已经搜过一次剧情模式不会刷新里面是空的连灰都没有、…（）"
 # 背包与使用界面的固定文案（与 corridor.gd 的 _render_inventory / _use_selected_item 一致）。
@@ -35,6 +37,14 @@ ASCII_EXTRA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/×()"
 PAL = ROOT / "art" / "palettes" / "master.gpl"
 CELL_SIZE = 16
 CJK_COLUMNS = 16
+# 中文每字步进。以前是 12，为了「12px 步进内不重叠」把 14px 字形最近邻压到 10px，
+# 笔画糊成一团——这是 Stage 2 之后「所有字体都很糊」的真正原因。
+# 现在步进放到 14，字形不再降采样；面板最宽一行 12 字 = 168px，368px 面板放得下。
+CJK_ADVANCE = 14
+CJK_MAX_INK_W = CJK_ADVANCE - 1   # 13：留 1px 侧距，保证相邻字不粘
+CJK_MAX_INK_H = CELL_SIZE - 2     # 14
+CJK_PIXEL_SIZE = 13               # 栅格字号：13px 的汉字墨迹落在 13x13 内，不用降采样
+
 
 for _s in (sys.stdout, sys.stderr):
     try:
@@ -72,6 +82,25 @@ def read_gpl_named(path: Path) -> dict[str, tuple[int, int, int]]:
     return out
 
 
+def _scan_script_cjk() -> set[str]:
+    """收集 game/*.gd 里所有**字符串字面量**中的中日韩字符。
+
+    为什么扫脚本：图集原先只从 JSON 取字，结果「搜索」的『索』只写在
+    corridor.gd 里，运行时静默少一个字。注释里的中文不扫——那是给人看的，
+    烤进图集只会白占字形。
+    """
+    found: set[str] = set()
+    roots = [ROOT / "game"]
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("*.gd")):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for literal in re.findall(r'"(?:[^"\\]|\\.)*"', text):
+                found.update(re.findall(r"[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]", literal))
+    return found
+
+
 def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
     from PIL import ImageDraw, ImageFont
 
@@ -93,30 +122,45 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
         items = json.loads(LOOT_ITEMS.read_text(encoding="utf-8"))
         for entry in items.get("items", []):
             characters.update(str(entry.get("name", "")))
+    # 状态名（伤口/感染/中毒/成瘾）只在 data/systems/status.json 里，也要进图集。
+    if STATUS_DATA.exists():
+        status = json.loads(STATUS_DATA.read_text(encoding="utf-8"))
+        for entry in status.get("statuses", []):
+            characters.update(str(entry.get("label", "")))
     characters = sorted(characters - {"", "\n", "\r", "\t", " "})
+    # 代码里的中文字面量（动词、提示语、报错文案）也要进图集：
+    # 「搜索」的『索』只出现在 .gd 里，不扫脚本就会静默少字。
+    characters = sorted(set(characters) | (_scan_script_cjk() - {"", "\n", "\r", "\t", " "}))
+
 
     rows = (len(characters) + CJK_COLUMNS - 1) // CJK_COLUMNS
     atlas = Image.new("RGBA", (CJK_COLUMNS * CELL_SIZE, rows * CELL_SIZE), (0, 0, 0, 0))
-    font = ImageFont.truetype(str(CJK_FONT), 14)
+    font = ImageFont.truetype(str(CJK_FONT), CJK_PIXEL_SIZE)
     if hasattr(font, "set_variation_by_axes"):
         font.set_variation_by_axes([650])
     draw = ImageDraw.Draw(atlas)
     glyph_map: dict[str, list[int]] = {}
+    shrunk = 0
+    widest = 0
+    tallest = 0
     for index, char in enumerate(characters):
         cell_x = (index % CJK_COLUMNS) * CELL_SIZE
         cell_y = (index // CJK_COLUMNS) * CELL_SIZE
         bounds = font.getbbox(char)
         mask = Image.new("L", (bounds[2] - bounds[0] + 2, bounds[3] - bounds[1] + 2), 0)
         ImageDraw.Draw(mask).text((1 - bounds[0], 1 - bounds[1]), char, font=font, fill=255)
-        mask = mask.point(lambda value: 255 if value >= 96 else 0)
+        mask = mask.point(lambda value: 255 if value >= 110 else 0)
         ink_bounds = mask.getbbox()
         if ink_bounds is None:
             raise SystemExit(f"empty glyph: {char}")
         mask = mask.crop(ink_bounds)
-        scale = min(10 / mask.width, 12 / mask.height, 1.0)
+        scale = min(CJK_MAX_INK_W / mask.width, CJK_MAX_INK_H / mask.height, 1.0)
         target = (max(1, round(mask.width * scale)), max(1, round(mask.height * scale)))
         if target != mask.size:
             mask = mask.resize(target, Image.Resampling.NEAREST)
+            shrunk += 1
+        widest = max(widest, mask.width)
+        tallest = max(tallest, mask.height)
         glyph = Image.new("RGBA", (CELL_SIZE, CELL_SIZE), (0, 0, 0, 0))
         left = (CELL_SIZE - mask.width) // 2
         top = (CELL_SIZE - mask.height) // 2
@@ -135,10 +179,16 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
         "schema": "pixel-font-atlas.v1",
         "font": "Noto Sans SC",
         "cell_size": CELL_SIZE,
-        "advance": 12,
+        "advance": CJK_ADVANCE,
         "columns": CJK_COLUMNS,
         "characters": glyph_map,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"CJK 字形: {len(characters)} 个 · 步进 {CJK_ADVANCE}px · "
+          f"墨迹最大 {widest}x{tallest} · 被缩小的字 {shrunk}")
+    if widest > CJK_MAX_INK_W or tallest > CJK_MAX_INK_H:
+        raise SystemExit(f"CJK atlas overflow: {widest}x{tallest}")
+    if shrunk > 0:
+        print(f"注意: {shrunk} 个字仍被降采样（字形超出 {CJK_MAX_INK_W}x{CJK_MAX_INK_H}）")
     return len(characters)
 
 

@@ -318,6 +318,67 @@ DISPLAY_OK actual=3x
 - 桌面 1366×768，只能 3× 呈现；参考机 5×。
 - 本机到 GitHub 的 HTTPS 在 HTTP/2 下会被重置，仓库已设 `http.version=HTTP/1.1`。
 
+---
+
+## 十六、Stage 2.12 · 字形重做 + 状态系统 + 搜索耗时（2026-11-23 深夜）
+
+> 反馈原文：「跟上新系统，把新系统给补完，并且我发现放大后所有字体都很糊，你需要检查是什么导致的」。
+
+### 一、字为什么糊（已定位，不是缩放问题）
+
+先排除显示链：本机 `screen_scale=1.0`、`get_final_transform()` 的缩放**正好是整数 3.0**，
+渲染截图里文字区域 `distinct_colors=2`（只有底色与字色）——没有抗锯齿、没有重采样模糊。
+
+真正原因在字形本身：`PF-02` 为了让 12px 步进不重叠，把 **14px 栅格的字形用最近邻压到 10×10**。
+汉字的撇捺钩在 10px 内直接粘连：墨迹中位数 10×10、横向笔画段中位数 18。
+
+| 项 | 之前 | 现在 |
+|---|---|---|
+| 步进 | 12px | **14px** |
+| 栅格字号 | 14px | **13px** |
+| 降采样 | 每字压到 ≤10px | **零降采样**（546 字里只剩 1 个极宽字被缩） |
+| 墨迹中位数 | 10×10 | **12×12** |
+| 横向笔画段 | 18 | **24** |
+| 阈值 | 96 | 110（笔画更实） |
+| 字形来源 | JSON 文案 | JSON + `data/systems/status.json` + **`game/*.gd` 字符串字面量** |
+
+顺带修掉的三件事：
+- 「搜索」的『索』只写在 `corridor.gd` 里，原本不在图集 → 现在扫脚本字符串，缺字归零；
+- `PixelFont` 步进改为**读图集元数据**（`advance` 字段），字号再变也不用改代码；
+- HUD 四行与背包行距 10/13 → 15/15，避免 14px 字高叠字。
+
+证据：`design/previews/FONT-PF02_compare.png`（新旧字形并排 6×）。
+
+### 二、新补的系统
+
+| 系统 | 落点 | 验收 |
+|---|---|---|
+| 状态：伤口 / 感染 / 中毒 / 成瘾 | `data/systems/status.json` + `game/runtime/status.gd` | `STATUS_OK states=4 wound_cap=3 infection=4h poison_decay=6h cures=ok` |
+| 状态接入战斗与食物 | 抓伤 → 伤口；污染食物 → 中毒；止痛片/安眠药 → 成瘾；绷带/抗生素/消毒水对症 | `CORRIDOR_STATUS_OK states=4 wound=scratch poison=food addiction=pills cure=bandage hud=ok` |
+| 状态影响玩法 | 移速倍率进 `player.status_speed_scale`；噪音倍率；按小时掉体力 | 同上 |
+| 搜索耗时 | `LootService.search_seconds_of()`；按住 E 读条，松手中断，完成才结算 | `CORRIDOR_LOOT_OK containers=3`（门禁改成按住搜索） |
+| 时间推进 | 搜索 1 秒 = 1 游戏小时（`SEARCH_SECONDS_PER_GAME_HOUR`），驱动流血与感染恶化 | `advance_hours()` 断言 |
+
+### 三、当前全绿（2026-11-23 21:3x，本机 1366×768 / 3× 呈现）
+
+```text
+SMOKE_OK / REPLAY_OK / SHELL_OK
+LOOT_OK items=105  INVENTORY_OK effects=41  TRAVERSE_OK leaks=0
+STATUS_OK states=4
+CORRIDOR_OK（crouch=29.5 sprint=107.7）/ CORRIDOR_INSPECT_OK
+CORRIDOR_LOOT_OK / CORRIDOR_INVENTORY_OK / CORRIDOR_DOORS_OK
+CORRIDOR_COMBAT_OK / CORRIDOR_STATUS_OK
+DISPLAY_OK actual=3x
+```
+
+### 四、下一步（按优先级）
+
+1. **状态的可视化反馈**：目前只有 HUD 一行字，缺屏幕边缘、喘息、脚步等体感线索。
+2. **搜索时的风险**：搜索现在只推进状态，还没做「搜索中不能移动 / 会被抓」。
+3. 房间级状态（各区灯光、敌人刷新）；敌人被噪声吸引（噪声目前只是数值）。
+4. 玩家体力归零的后果（现在只是数值到 0）。
+5. 原定 Stage 3（地面接缝/磨损/散落物）仍排队——是否插队由你定。
+
 
 
 

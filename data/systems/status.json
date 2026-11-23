@@ -1,0 +1,45 @@
+{
+  "schema": "status-v1",
+  "note": "伤口/感染/中毒/成瘾四态。数值只在这里调，运行时不写死。health_drain_per_hour 按「每阶段」叠加；stage_hours 表示每隔多少游戏小时恶化一级；decay_hours 表示多久自行消退。",
+  "statuses": [
+    {
+      "id": "wound",
+      "label": "伤口",
+      "max_stage": 3,
+      "per_stage": {"health_drain_per_hour": 0.12, "speed_mult": 1.0, "noise_mult": 1.0},
+      "cure_items": ["bandage", "first_aid_kit"],
+      "cause": "enemy_scratch",
+      "note": "被感染体抓伤。绷带止住一级，急救包清零。"
+    },
+    {
+      "id": "infection",
+      "label": "感染",
+      "max_stage": 3,
+      "per_stage": {"health_drain_per_hour": 0.05, "speed_mult": 0.95, "noise_mult": 1.1},
+      "stage_hours": 4.0,
+      "cure_items": ["antibiotics"],
+      "cause": "contaminated_food",
+      "note": "吃了污染食物。每 4 游戏小时恶化一级，抗生素清零。"
+    },
+    {
+      "id": "poison",
+      "label": "中毒",
+      "max_stage": 2,
+      "per_stage": {"health_drain_per_hour": 0.2, "speed_mult": 0.9, "noise_mult": 1.0},
+      "decay_hours": 6.0,
+      "cure_items": ["disinfectant"],
+      "cause": "contaminated_food",
+      "note": "发作快、退得也快：6 游戏小时自行消退。"
+    },
+    {
+      "id": "addiction",
+      "label": "成瘾",
+      "max_stage": 2,
+      "per_stage": {"health_drain_per_hour": 0.02, "speed_mult": 0.95, "noise_mult": 1.15},
+      "withdrawal_hours": 8.0,
+      "cure_items": [],
+      "cause": "painkiller_use",
+      "note": "止痛片吃多了：戒断期噪音更大、走得更慢，没有药能解，只能熬。"
+    }
+  ]
+}

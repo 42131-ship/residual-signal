@@ -41,7 +41,7 @@ func _run() -> void:
 		var spec: Dictionary = CONTAINERS[id]
 		await _place(float(spec["x"]), float(spec["y"]))
 		_check(_corridor._nearest_inspection_id() == id, "%s is not the nearest target" % id)
-		await _press(KEY_E)
+		await _search(id)
 		_check(_corridor._inspection_open, "%s search did not open a panel" % id)
 		_check(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")) == id,
 			"%s panel shows the wrong container" % id)
@@ -57,13 +57,13 @@ func _run() -> void:
 
 	# ② 剧情模式不刷新：搜过的柜子换多少世界日都还是空的。
 	await _place(float(CONTAINERS["locker_bank"]["x"]), float(CONTAINERS["locker_bank"]["y"]))
-	await _press(KEY_E)
+	await _search("locker_bank")
 	_check(_corridor._inspection_open, "second search did not open the refusal panel")
 	_check(_corridor._panel_lines.has("已经搜过一次"),
 		"second search should be refused, panel=%s" % str(_corridor._panel_lines))
 	await _press(KEY_ESCAPE)
 	_corridor._world_day = 28
-	await _press(KEY_E)
+	await _search("locker_bank")
 	_check(_corridor._panel_lines.has("已经搜过一次"),
 		"story mode must not refresh after day change, panel=%s" % str(_corridor._panel_lines))
 	_check(_corridor._panel_lines.has("剧情模式不会刷新"),
@@ -92,6 +92,27 @@ func _press(keycode: Key) -> void:
 	up.keycode = keycode
 	up.pressed = false
 	_corridor._unhandled_input(up)
+	await process_frame
+
+
+## 按住 E 搜索：Down 起手 → 逐帧推进进度 → 到点结算。松手会中断，所以这里不松。
+func _search(container_id: String) -> void:
+	var down := InputEventKey.new()
+	down.physical_keycode = KEY_E
+	down.keycode = KEY_E
+	down.pressed = true
+	_corridor._unhandled_input(down)
+	_check(not _corridor._search_id.is_empty(), "%s did not start a timed search" % container_id)
+	Input.action_press("pickup")
+	var required: float = float(_corridor._loot.search_seconds_of(container_id))
+	var steps := int(ceil(required / 0.1)) + 3
+	var progress_seen := 0.0
+	for _i in steps:
+		_corridor._update_search(0.1)
+		progress_seen = maxf(progress_seen, _corridor._search_elapsed / maxf(0.001, _corridor._search_required))
+	Input.action_release("pickup")
+	_check(progress_seen > 0.0, "%s search never showed progress" % container_id)
+	_check(_corridor._search_id.is_empty(), "%s search did not finish" % container_id)
 	await process_frame
 
 

@@ -13,11 +13,12 @@ const CELL_W := 6
 const GLYPH_H := 8
 const ORDER := "DAY0123456789  "
 const ADVANCE := 6
-const CJK_ADVANCE := 12
+const CJK_ADVANCE_FALLBACK := 14
 
 static var _tex: Texture2D = null
 static var _cjk_tex: Texture2D = null
 static var _cjk_map: Dictionary = {}
+static var _cjk_advance := CJK_ADVANCE_FALLBACK
 
 
 static func _texture() -> Texture2D:
@@ -33,13 +34,15 @@ static func _load_cjk() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(CJK_MAP_PATH))
 	if parsed is Dictionary and parsed.get("schema") == "pixel-font-atlas.v1":
 		_cjk_map = parsed.get("characters", {})
+		# 步进以图集元数据为准：字号变过两次（12 → 14），写死在代码里就会串行。
+		_cjk_advance = maxi(1, int(parsed.get("advance", CJK_ADVANCE_FALLBACK)))
 
 
 static func width_of(text: String) -> int:
 	_load_cjk()
 	var width := 0
 	for index in text.length():
-		width += ADVANCE if ORDER.contains(text[index]) else CJK_ADVANCE
+		width += ADVANCE if ORDER.contains(text[index]) else _cjk_advance
 	return width
 
 
@@ -73,7 +76,7 @@ static func draw(parent: Node, text: String, pos: Vector2, tint: Color) -> int:
 			sprite.region_enabled = true
 			sprite.region_rect = Rect2(float(region[0]), float(region[1]), float(region[2]), float(region[3]))
 			sprite.position = pos + Vector2(x + int(offset[0]), int(offset[1]))
-			x += CJK_ADVANCE
+			x += _cjk_advance
 		parent.add_child(sprite)
 		n += 1
 	return n

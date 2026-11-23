@@ -32,9 +32,9 @@ func _run() -> void:
 		_finish()
 		return
 
-	# ① 搜索一个柜子：物资自动进背包。
+	# ① 搜索一个柜子：按住 E 到进度满，物资自动进背包。
 	await _place(float(LOCKER["x"]), float(LOCKER["y"]))
-	await _press(KEY_E)
+	await _search(str(LOCKER.get("id", "locker_bank")))
 	_check(_corridor._inspection_open, "search panel did not open")
 	var picked: int = _corridor._inventory.total()
 	_check(picked >= 1 and picked <= 2, "search should put 1-2 items into the backpack, got %d" % picked)
@@ -110,6 +110,23 @@ func _run() -> void:
 	_check(_corridor._attacks == attacks_before + 1, "left click did not trigger an attack")
 	_check(_corridor._noise > noise_before, "equipped melee attack should raise noise")
 	_finish()
+
+
+## 按住 E 搜索：起手 → 推进进度 → 到点结算（松手会中断，所以这里不松）。
+func _search(container_id: String) -> void:
+	var down := InputEventKey.new()
+	down.physical_keycode = KEY_E
+	down.keycode = KEY_E
+	down.pressed = true
+	_corridor._unhandled_input(down)
+	Input.action_press("pickup")
+	var required: float = float(_corridor._loot.search_seconds_of(container_id))
+	var steps := int(ceil(required / 0.1)) + 3
+	for _i in steps:
+		_corridor._update_search(0.1)
+	Input.action_release("pickup")
+	_check(_corridor._search_id.is_empty(), "%s search did not finish" % container_id)
+	await process_frame
 
 
 func _find_item(item_id: String) -> int:
