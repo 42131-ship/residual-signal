@@ -90,27 +90,33 @@ func _verify_catalog() -> void:
 # ── 边界：44 进（28px，含），43 不进（29px）────────────────────
 
 func _verify_boundary() -> void:
-	# wall_clock_stopped 中心 x=80，focus_offset_x=-8 → 锚点 72。
-	await _place(43.0)
+	# wall_clock_stopped 中心 x=80，focus_offset_x=-8 → 锚点 72；纵深锚点 136。
+	var anchor_y := _focus_y("wall_clock_stopped")
+	await _place(43.0, anchor_y)
 	_check(_corridor._nearest_inspection_id() == "", "x=43 (29px) must be out of range")
 	_check(not _corridor._inspection_prompt_root.visible, "prompt must stay hidden at x=43")
 
-	await _place(44.0)
+	await _place(44.0, anchor_y)
 	_check(_corridor._nearest_inspection_id() == "wall_clock_stopped", "x=44 (28px) must target the clock")
 	_check(_corridor._inspection_prompt_root.visible, "prompt must be visible at x=44")
 	_check(str(_corridor._inspection_prompt_root.get_meta("target_id", "")) == "wall_clock_stopped",
 		"prompt must name the clock")
 
 	# 空按 E：范围外不能打开，也不能沿用上一次对象。
-	await _place(4.0)
+	await _place(4.0, anchor_y)
 	await _press(KEY_E)
 	_check(not _corridor._inspection_open, "E outside any range must not open a panel")
+
+	# 纵深容差：站在房间最下缘（y=216）时，墙面时钟（锚点 136）已在 24px 容差外。
+	await _place(44.0, 216.0)
+	_check(_corridor._nearest_inspection_id() == "", "depth tolerance must reject the clock from the room edge")
 
 
 # ── 同距裁决：x=80 / x=288 / x=520 / x=536 ───────────────────
 
 func _verify_ties() -> void:
-	await _place(80.0)
+	# 纵深锚点：墙面道具统一 136，地面道具用自身 y。x=288 的椅子(160)/窗(136)取中间 148 让两者等深。
+	await _place(80.0, 136.0)
 	_actor.facing_x = 1.0
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "locker_bank", "x=80 facing right must pick the locker")
@@ -118,7 +124,7 @@ func _verify_ties() -> void:
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "wall_clock_stopped", "x=80 facing left must pick the clock")
 
-	await _place(288.0)
+	await _place(288.0, 148.0)
 	_actor.facing_x = 1.0
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "chair_toppled", "x=288 facing right must pick the chair")
@@ -126,7 +132,7 @@ func _verify_ties() -> void:
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "window_night", "x=288 facing left must pick the window")
 
-	await _place(520.0)
+	await _place(520.0, 136.0)
 	_actor.facing_x = 1.0
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "drinking_fountain", "x=520 facing right must pick the fountain")
@@ -134,7 +140,7 @@ func _verify_ties() -> void:
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "intercom_broken", "x=520 facing left must pick the intercom")
 
-	await _place(536.0)
+	await _place(536.0, 136.0)
 	_actor.facing_x = 1.0
 	await process_frame
 	_check(_corridor._nearest_inspection_id() == "notice_board_torn", "x=536 facing right must pick the notice board")
@@ -149,7 +155,7 @@ func _verify_all_records() -> void:
 	for id: String in _order:
 		var record: Dictionary = _records[id]
 		var anchor := await _focus_x(id)
-		await _place(anchor)
+		await _place(anchor, _focus_y(id))
 		await _press(KEY_E)
 		_check(_corridor._inspection_open, "%s did not open" % id)
 		var shown := str(_corridor._inspection_panel_root.get_meta("inspection_id", ""))
@@ -168,7 +174,7 @@ func _verify_all_records() -> void:
 
 func _verify_hold_and_lock() -> void:
 	var anchor := await _focus_x("desk_flipped")
-	await _place(anchor)
+	await _place(anchor, _focus_y("desk_flipped"))
 	var before: float = _actor.global_position.x
 
 	# 键盘重复（echo）不能当第二次按下。
@@ -212,7 +218,7 @@ func _verify_hold_and_lock() -> void:
 
 func _capture_open_panel() -> void:
 	# trash_bin 的正文是全表最长的一行（12 字 = 144px），最容易裁切。
-	await _place(await _focus_x("trash_bin"))
+	await _place(await _focus_x("trash_bin"), _focus_y("trash_bin"))
 	await _press(KEY_E)
 	_check(_corridor._inspection_open, "panel must be open before capture")
 	_actor.set_physics_process(false)
@@ -259,8 +265,16 @@ func _focus_x(id: String) -> float:
 	return prop.global_position.x + float(record.get("focus_offset_x", 0.0))
 
 
-func _place(x: float) -> void:
-	_actor.global_position = Vector2(x, 128.0)
+func _focus_y(id: String) -> float:
+	# 与 corridor.gd 的 _inspection_anchor 同一条规则：墙面道具落到房间内缘 136，地面道具用自身 y。
+	var prop := _corridor.get_node_or_null("Props/" + id) as Sprite2D
+	if prop == null:
+		return 136.0
+	return clampf(prop.global_position.y, 136.0, 216.0)
+
+
+func _place(x: float, y: float = 136.0) -> void:
+	_actor.global_position = Vector2(x, y)
 	_actor.velocity = Vector2.ZERO
 	await process_frame
 	await process_frame

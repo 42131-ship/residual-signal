@@ -5,24 +5,30 @@ signal stepped(is_running: bool)
 
 const SLOW_SPEED := 12.0
 const NORMAL_SPEED := 24.0
+const DEPTH_SPEED_SCALE := 0.8
 const ACCELERATION := 600.0
 const DECELERATION := 900.0
 const STEP_DISTANCE := 16.0
+
+## 脚底允许活动区域（世界坐标）。纵深轴（W/S）只在这个矩形内移动。
+## 由 corridor.gd 在 _ready 里写入；空矩形表示不限制（测试/复用默认）。
+var walk_bounds := Rect2()
 
 var _distance_since_step := 0.0
 var _movement_locked := false
 var _walk_action_available := false
 var _previous_global_position := Vector2.ZERO
 var facing_x := 1.0
+var facing_y := 0.0
 
 
 func _ready() -> void:
 	_previous_global_position = global_position
 	var collision := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(12, 28)
+	rectangle.size = Vector2(14, 40)
 	collision.shape = rectangle
-	collision.position = Vector2(0, -14)
+	collision.position = Vector2(0, -20)
 	add_child(collision)
 
 	var camera := Camera2D.new()
@@ -43,15 +49,20 @@ func _physics_process(delta: float) -> void:
 
 	var direction := _get_direction()
 	var walking := _walk_action_available and Input.is_action_pressed("walk")
-	var target_speed := SLOW_SPEED if walking else NORMAL_SPEED
-	var target_velocity := direction * target_speed
-	var rate := ACCELERATION if direction != 0.0 else DECELERATION
-	if direction != 0.0:
-		facing_x = direction
+	var speed := SLOW_SPEED if walking else NORMAL_SPEED
+	var target_velocity := Vector2(
+		direction.x * speed,
+		direction.y * speed * DEPTH_SPEED_SCALE,
+	)
+	var rate := ACCELERATION if direction != Vector2.ZERO else DECELERATION
+	if direction.x != 0.0:
+		facing_x = signf(direction.x)
+	if direction.y != 0.0:
+		facing_y = signf(direction.y)
 
-	velocity.x = move_toward(velocity.x, target_velocity, rate * delta)
-	velocity.y = 0.0
+	velocity = velocity.move_toward(target_velocity, rate * delta)
 	move_and_slide()
+	_clamp_to_walk_bounds()
 
 	var distance_moved := global_position.distance_to(_previous_global_position)
 	_previous_global_position = global_position
@@ -60,14 +71,25 @@ func _physics_process(delta: float) -> void:
 		while _distance_since_step >= STEP_DISTANCE:
 			_distance_since_step -= STEP_DISTANCE
 			stepped.emit(not walking)
-	elif direction == 0.0 and is_zero_approx(velocity.x):
+	elif direction == Vector2.ZERO and velocity.is_zero_approx():
 		_distance_since_step = 0.0
 
 
-func _get_direction() -> float:
+func _clamp_to_walk_bounds() -> void:
+	if walk_bounds.size == Vector2.ZERO:
+		return
+	global_position = Vector2(
+		clampf(global_position.x, walk_bounds.position.x, walk_bounds.end.x),
+		clampf(global_position.y, walk_bounds.position.y, walk_bounds.end.y),
+	)
+
+
+func _get_direction() -> Vector2:
 	var left := _is_action_pressed("move_left", KEY_A) or Input.is_key_pressed(KEY_LEFT)
 	var right := _is_action_pressed("move_right", KEY_D) or Input.is_key_pressed(KEY_RIGHT)
-	return float(right) - float(left)
+	var up := _is_action_pressed("move_up", KEY_W) or Input.is_key_pressed(KEY_UP)
+	var down := _is_action_pressed("move_down", KEY_S) or Input.is_key_pressed(KEY_DOWN)
+	return Vector2(float(right) - float(left), float(down) - float(up))
 
 
 func _is_action_pressed(action: StringName, fallback_key: Key) -> bool:

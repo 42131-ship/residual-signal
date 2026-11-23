@@ -1,11 +1,19 @@
 extends Node2D
 
 const SHEET := preload("res://art/generated_candidates/tiles/TL-04_corridor_v2.png")
-const CHAR_PATH := "res://art/generated_candidates/characters/SPR-student_32.png"
+const CHAR_PATH := "res://art/generated_candidates/characters/SPR-player_32x48.png"
 const INSPECTION_PATH := "res://data/prop_inspections.json"
 const TILE_SIZE := 16
 const WORLD_TILES := Vector2i(40, 14)
 const VIEW_SIZE := Vector2i(384, 216)
+# 可行走区域（玩家脚底坐标）：x 夹在左右墙内，纵深轴 W/S 只在 y=128..216。
+const WALK_TOP := 128.0
+const WALK_BOTTOM := 216.0
+const WALK_LEFT := 14.0
+const WALK_RIGHT := 602.0
+## 纵深容差：玩家脚底与交互锚点的 y 差超过它就不算「站在道具前面」。
+## 水平距离仍是 28px 主判据（同距时按朝向裁决），保持 Stage 2 的 28px 边界语义。
+const INTERACT_DEPTH_TOLERANCE := 24.0
 const TILE_INDEX := {
 	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
 	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
@@ -33,8 +41,8 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_ensure_actions()
 	_build_corridor()
-	_build_bounds()
 	_build_actor()
+	_apply_depth_sort()
 	_load_inspections()
 	_build_camera()
 	_build_hud()
@@ -175,15 +183,12 @@ func _add_rect_polygon(parent: Node, node_name: String, at: Vector2, size: Vecto
 	return shape
 
 
-func _build_bounds() -> void:
-	var bounds := StaticBody2D.new()
-	bounds.name = "WorldBounds"
-	bounds.collision_layer = 1
-	bounds.collision_mask = 0
-	add_child(bounds)
-	_add_box_collision(bounds, Vector2(320, 136), Vector2(640, 16), "Floor")
-	_add_box_collision(bounds, Vector2(0, 96), Vector2(16, 96), "LeftWall")
-	_add_box_collision(bounds, Vector2(616, 96), Vector2(16, 96), "RightWall")
+func _apply_depth_sort() -> void:
+	# 纵深轴：y 越大越靠近镜头。用 z_index 做前后遮挡，玩家每帧更新自己的值。
+	for child: Node in $Props.get_children():
+		var prop := child as Sprite2D
+		if prop != null:
+			prop.z_index = int(prop.position.y)
 
 
 func _add_box_collision(parent: Node2D, at: Vector2, dimensions: Vector2, node_name: String) -> void:
@@ -200,6 +205,7 @@ func _build_actor() -> void:
 	_player = Player.new()
 	_player.name = "Player"
 	_player.position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
+	_player.walk_bounds = Rect2(WALK_LEFT, WALK_TOP, WALK_RIGHT - WALK_LEFT, WALK_BOTTOM - WALK_TOP)
 	var texture := load(CHAR_PATH) as Texture2D
 	if texture == null:
 		push_error("Could not load player character texture: %s" % CHAR_PATH)
@@ -208,7 +214,8 @@ func _build_actor() -> void:
 		sprite.name = "BodySprite"
 		sprite.texture = texture
 		sprite.centered = false
-		sprite.position = Vector2(-16, -30)
+		# 32×48 原生帧：脚底在第 46 行、水平居中（±16），所以左上角相对脚底是 (-16,-46)。
+		sprite.position = Vector2(-16, -46)
 		_player.add_child(sprite)
 	add_child(_player)
 	for child in _player.get_children():
@@ -225,6 +232,9 @@ func _on_player_stepped(is_running: bool) -> void:
 func _ensure_actions() -> void:
 	_add_action("move_left", [KEY_A, KEY_LEFT])
 	_add_action("move_right", [KEY_D, KEY_RIGHT])
+	# 纵深轴：W/S（与 A/D 正交，见 design/PIXEL_SPEC.md §2）
+	_add_action("move_up", [KEY_W, KEY_UP])
+	_add_action("move_down", [KEY_S, KEY_DOWN])
 	_add_action("walk", [KEY_SHIFT])
 	_add_action("inspect", [KEY_E])
 	_add_action("cancel_inspect", [KEY_ESCAPE])
@@ -313,8 +323,11 @@ func _nearest_inspection_id() -> String:
 		if not is_instance_valid(prop):
 			continue
 		var record: Dictionary = _inspection_records[id]
-		var focus_x := prop.global_position.x + float(record.get("focus_offset_x", 0.0))
-		var distance := absf(focus_x - _player.global_position.x)
+		var anchor := _inspection_anchor(prop, record)
+		# 先过纵深容差（W/S 走进房间后才有意义），再按水平距离取最近。
+		if absf(_player.global_position.y - anchor.y) > INTERACT_DEPTH_TOLERANCE:
+			continue
+		var distance := absf(anchor.x - _player.global_position.x)
 		if distance > _inspection_range_x:
 			continue
 		if distance < best_distance and not is_equal_approx(distance, best_distance):
@@ -330,10 +343,18 @@ func _nearest_inspection_id() -> String:
 	var facing := _player.facing_x
 	for id: String in ties:
 		var prop := $Props.get_node_or_null(NodePath(id)) as Sprite2D
-		var focus_x := prop.global_position.x + float(_inspection_records[id].get("focus_offset_x", 0.0))
-		if signf(focus_x - _player.global_position.x) == facing:
+		var anchor := _inspection_anchor(prop, _inspection_records[id])
+		if signf(anchor.x - _player.global_position.x) == facing:
 			return id
 	return ties[0]
+
+
+func _inspection_anchor(prop: Sprite2D, record: Dictionary) -> Vector2:
+	# 墙面道具（y < 128）落到房间内缘的锚点；地面道具用自己的 y。
+	# 这样「走到柜子前面」是按二维距离判定的，不再是旧的只看 x。
+	var anchor_x := prop.global_position.x + float(record.get("focus_offset_x", 0.0))
+	var anchor_y := clampf(prop.global_position.y, WALK_TOP + 8.0, WALK_BOTTOM)
+	return Vector2(anchor_x, anchor_y)
 
 
 func _build_inspection_ui(_parent: Node) -> void:
@@ -524,6 +545,7 @@ func _build_flashlight() -> void:
 func _process(_delta: float) -> void:
 	_follow_player()
 	_update_flashlight()
+	_update_depth_order()
 	# 只有提示条需要每帧刷新；开/关面板全部走 _unhandled_input。
 	# 之前这里也处理 inspect，导致真键盘同一帧先开后关（面板只闪一帧）。
 	if not _inspection_ui_enabled:
@@ -532,6 +554,16 @@ func _process(_delta: float) -> void:
 	if target != _inspection_target:
 		_inspection_target = target
 		_draw_inspection_prompt(target)
+
+
+func _update_depth_order() -> void:
+	if _player == null:
+		return
+	# 纵深遮挡：脚底 y 越大越靠前，直接当 z_index 用。
+	_player.z_index = int(_player.global_position.y)
+	var sprite := _player.get_node_or_null("BodySprite") as Sprite2D
+	if sprite != null:
+		sprite.flip_h = _player.facing_x < 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -561,6 +593,8 @@ func _follow_player() -> void:
 	var half_view := float(VIEW_SIZE.x) / 2.0
 	var rightmost_center := WORLD_TILES.x * TILE_SIZE - half_view
 	_camera.position.x = roundf(clampf(_player.position.x + 64.0, half_view, rightmost_center))
+	# 玩家走进房间下缘时相机轻微下移（最多 8px），保证脚底不出画；世界只有 14 行，不能露空。
+	_camera.position.y = clampf(_player.position.y - 56.0, 108.0, 116.0)
 
 
 func _update_flashlight() -> void:

@@ -65,6 +65,34 @@ func _run() -> void:
 		return
 	if not await _capture("entry", 0):
 		return
+	# 纵深轴（W/S）：让玩家真的走进下方房间，而不是只有一条地面线。
+	var floor_y := _actor.position.y
+	Input.action_press("move_down")
+	for _frame in range(60):
+		await physics_frame
+	Input.action_release("move_down")
+	await physics_frame
+	if _actor.position.y <= floor_y + 12.0:
+		_fail("depth movement did not move the player into the room: %.1f" % _actor.position.y)
+		return
+	if _actor.position.y > 216.0 + 0.1:
+		_fail("depth bounds leaked past the room edge: %.1f" % _actor.position.y)
+		return
+	# 纵深截图证据：玩家真的站在房间区块里，而不是被锁在一条地面线上。
+	if not await _capture("depth", 0):
+		return
+	# 纵深遮挡：脚底 y 直接当 z_index，靠近镜头的道具压在玩家前面。
+	if _actor.z_index != int(_actor.position.y):
+		_fail("player z_index does not follow depth: %d vs %.1f" % [_actor.z_index, _actor.position.y])
+		return
+	Input.action_press("move_up")
+	for _frame in range(120):
+		await physics_frame
+	Input.action_release("move_up")
+	await physics_frame
+	if absf(_actor.position.y - floor_y) > 0.5:
+		_fail("player did not return to the floor line: %.1f" % _actor.position.y)
+		return
 	Input.action_press("move_right")
 	if not await _walk_to(184.0, true):
 		return
@@ -168,16 +196,17 @@ func _verify_character() -> bool:
 	var sprite := _actor.get_node_or_null("BodySprite") as Sprite2D
 	if sprite == null or sprite.texture == null:
 		return _fail("player sprite is missing")
-	if sprite.texture.resource_path != "res://art/generated_candidates/characters/SPR-student_32.png":
-		return _fail("player is not using the Stage 2 student asset")
-	if sprite.texture.get_size() != Vector2(32, 32) or sprite.centered or sprite.scale != Vector2.ONE:
+	# 2026-11-23：主角放大为 32×48 原生帧（可见 41px）。清单同步见 tools/player_build.py。
+	if sprite.texture.resource_path != "res://art/generated_candidates/characters/SPR-player_32x48.png":
+		return _fail("player is not using the Stage 2 player asset")
+	if sprite.texture.get_size() != Vector2(32, 48) or sprite.centered or sprite.scale != Vector2.ONE:
 		return _fail("player sprite canvas, centered mode or scale is off-spec")
 	var image := sprite.texture.get_image()
-	if image == null or image.get_size() != Vector2i(32, 32):
+	if image == null or image.get_size() != Vector2i(32, 48):
 		return _fail("could not inspect player sprite alpha bounds")
 	var silhouette := image.get_used_rect()
-	if silhouette != Rect2i(8, 7, 16, 24):
-		return _fail("student sprite silhouette changed: %s" % str(silhouette))
+	if silhouette != Rect2i(5, 6, 19, 41):
+		return _fail("player sprite silhouette changed: %s" % str(silhouette))
 	var foot_row := silhouette.end.y - 1
 	var shoe_spans := PackedInt32Array()
 	var run := 0
@@ -190,12 +219,12 @@ func _verify_character() -> bool:
 	if run > 0:
 		shoe_spans.append(run)
 	if shoe_spans.size() != 2 or shoe_spans[0] < 4 or shoe_spans[1] < 4:
-		return _fail("student sprite needs two separated shoes: %s" % str(shoe_spans))
+		return _fail("player sprite needs two separated shoes: %s" % str(shoe_spans))
 	var source_corner := sprite.get_rect().position
 	var foot_left := sprite.to_global(source_corner + Vector2(silhouette.position.x, foot_row))
 	var foot_right := sprite.to_global(source_corner + Vector2(silhouette.end.x - 1, foot_row))
 	if not is_equal_approx(foot_left.y, 128.0) or not is_equal_approx(foot_right.y, 128.0):
-		return _fail("student sprite feet do not align with floor y=128: %.1f / %.1f" % [foot_left.y, foot_right.y])
+		return _fail("player sprite feet do not align with floor y=128: %.1f / %.1f" % [foot_left.y, foot_right.y])
 	return true
 
 
@@ -316,7 +345,8 @@ func _capture(label: String, expected_left: int) -> bool:
 	await process_frame
 	await RenderingServer.frame_post_draw
 	var offset := Vector2i(root.get_canvas_transform().origin.round())
-	if offset != Vector2i(-expected_left, 0):
+	# 纵深轴加入后相机会轻微下移（y 108..116），这里只锁水平取景。
+	if offset.x != -expected_left:
 		return _fail("%s camera expected world left=%d, canvas offset=%s" % [label, expected_left, offset])
 	var rendered := root.get_texture().get_image()
 	if rendered == null or rendered.is_empty() or rendered.get_size() != VIEW_SIZE:
