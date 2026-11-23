@@ -26,6 +26,22 @@ func _run() -> void:
 
 	_check(_menu.view_name() == "root", "menu must start on the root view")
 	_check(_menu.current_index() == 0, "cursor must start on the first entry")
+
+	# ⓪ 生图背景已落地：KeyArt 引用量化后的图，Scrim 铺满视口保证文字对比度
+	var art := _menu.get_node_or_null("KeyArt") as Sprite2D
+	_check(art != null, "quantized key art must be mounted behind the menu")
+	if art != null:
+		_check(art.texture != null, "key art has no texture")
+		if art.texture != null:
+			_check(str(art.texture.resource_path).ends_with("maps/menu_bg.png"),
+				"key art must use the quantized map, got %s" % art.texture.resource_path)
+			_check(art.texture.get_size() == Vector2(384, 216), "key art must be 384x216")
+		_check(not art.centered, "key art must be top-left anchored")
+	var scrim := _menu.get_node_or_null("Scrim") as ColorRect
+	_check(scrim != null, "a scrim must sit between the art and the text")
+	if scrim != null:
+		_check(scrim.size == Vector2(384, 216), "scrim must cover the viewport")
+		_check(scrim.color.a > 0.3 and scrim.color.a < 0.8, "scrim alpha must stay in a readable range")
 	await _capture("%s_root" % _prefix)
 
 	# ① 选择项数量与顺序：新游戏 / 继续 / 结局栏

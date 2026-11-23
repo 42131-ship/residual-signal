@@ -13,6 +13,9 @@ const BG := Color("#0b1119")
 
 const ITEMS := ["新游戏", "继续", "结局栏"]
 const ENDING_TEMPLATE := "school"
+const BG_PATH := "res://art/generated_candidates/maps/menu_bg.png"
+## 背景是生图量化来的，压一层暗罩保证文字对比度（这是 UI 罩层，不是资产，允许半透明）。
+const SCRIM := Color(0.043, 0.067, 0.098, 0.55)
 
 var _index := 0
 var _view := "root"          # root / endings
@@ -70,10 +73,26 @@ func _build_chrome() -> void:
 	background.color = BG
 	background.size = Vector2(VIEW)
 	add_child(background)
+
+	# 生图背景（若已量化入库）。没有就保持纯色底 —— 任何时候都能启动，不等美术。
+	var texture := load(BG_PATH) as Texture2D
+	if texture != null:
+		var art := Sprite2D.new()
+		art.name = "KeyArt"
+		art.texture = texture
+		art.centered = false
+		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(art)
+		var scrim := ColorRect.new()
+		scrim.name = "Scrim"
+		scrim.color = SCRIM
+		scrim.size = Vector2(VIEW)
+		add_child(scrim)
+
 	# 底部一条暗带 + 顶部一条细线：给标题和菜单分层次，不靠渐变。
 	var band := ColorRect.new()
 	band.name = "Band"
-	band.color = Color("#111a26")
+	band.color = Color(0.067, 0.102, 0.149, 0.85)
 	band.position = Vector2(0, 150)
 	band.size = Vector2(VIEW.x, 66)
 	add_child(band)

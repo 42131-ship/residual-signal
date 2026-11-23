@@ -29,3 +29,6 @@ Desktop.ini
 # 说明：art/generated_candidates/ 虽然名字里带 generated，
 # 但它是 Godot 运行时直接引用的资源（tiles / props / characters / fonts），
 # 必须入库，否则工程 clone 下来跑不起来。重建命令见 README。
+
+# ��ͼԭʼ������ֻ��������ĳ�Ʒ��
+art/raw/
