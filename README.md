@@ -67,8 +67,11 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --headless --path . --check-only --script res://game/scenes/corridor.gd
 & $G --headless --path . --script res://game/tests/smoke.gd
 & $G --headless --path . --script res://game/tests/replay_30d.gd
+& $G --headless --path . --script res://game/tests/shell.gd
 # 走廊截图回归（需要图形渲染，不能加 --headless）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_preview.gd -- CORRIDOR-QA
+# 检查框门禁（真渲染 + 真实 InputEventKey；同样不能加 --headless）
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT
 ```
 
 ---
@@ -79,7 +82,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 |---|---|---|
 | — | 数据层 / 43 条规则 / 资产管线 | 已通过 |
 | Stage 1 | 15 件学校环境物件、走廊几何、相机与手电 | 已签核 |
-| Stage 2 | 道具细节、24px 角色可读、检查文本框、移动速度 | 进行中（待视觉签核） |
+| Stage 2 | 道具细节、24px 角色可读、检查文本框、移动速度 | 已实现并通过门禁（待视觉签核） |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |

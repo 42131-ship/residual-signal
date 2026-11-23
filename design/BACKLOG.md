@@ -40,6 +40,19 @@
 
 ---
 
+## 2026-11-23 · P0 修复批次（本机 Godot 4.7.2 实跑，DONE）
+
+> 详细记录见 [`HANDOFF-STAGE2.md`](HANDOFF-STAGE2.md) 第七节；每一项都有可复跑的验收命令。
+
+| # | 项 | 验收 | 状态 |
+|---|---|---|---|
+| P6 | 检查框双输入路径（真键盘开一帧即关） | `corridor_inspect.gd` → `CORRIDOR_INSPECT_OK records=15` | **DONE**（`19c184f`） |
+| P7 | 卡效果空转（读 `add_vars`，数据是 `effects[].vars`） | `replay_30d.gd` 不变量 ⑤ + `changed>0` | **DONE**（`f447071`） |
+| P8 | `DataLayer` 取数接口用错（夜晚倍率/沉积传导/锁门/NPC 引用恒 null） | `smoke.gd` 夜间倍率 2→3、Day14/15 锁门 | **DONE**（`f447071`） |
+| P9 | `main.gd` 死代码 + JSON 存档往返恒失败 | `game/tests/shell.gd` → `SHELL_OK ... six_vars_in_0..1=true` | **DONE**（`e38bdfd`） |
+| P10 | 输入台账 20/23 | `validate.py --inventory` → 23/23 | **DONE**（`cf290af`） |
+| A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
+
 ## 队列纪律（三模型共守）
 
 1. **先看验收命令，再动手。** 做完必须自己跑一遍并把输出贴进当轮汇报。

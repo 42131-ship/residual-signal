@@ -41,7 +41,7 @@ python tools/font_build.py      # PF-01 96x16；PF-02 256x192 cell=16 CJK=186
 2. **中文渲染**：`PixelFont.draw()` 现在按字形表逐字画 Sprite2D，`width_of()` 按 6/12px 混合计宽。
    还没在 384×216 实机上确认最长一句（`trash_bin` 的 12 字）不裁切。
 
-## 四、必须先修的坑（下次开工第一条）
+## 四、必须先修的坑（2026-11-23 已修，见文末《七》）
 
 `game/tests/corridor_preview.gd` 的移动断言还是按 24/12 px/s **之前**的数值写的，现在必然失败：
 
@@ -74,3 +74,52 @@ python tools/font_build.py      # PF-01 96x16；PF-02 256x192 cell=16 CJK=186
 | `game/scenes/corridor.gd` | 检查流程、提示条、面板、移动锁、`inspect`/`cancel_inspect` 动作 |
 | `game/scenes/player.gd` | 速度 24/12、朝向 `facing_x`、`_movement_locked` |
 | `design/prompts/X-02-dev-player.md` | 速度表同步为 24/12 |
+
+---
+
+## 七、2026-11-23 修复记录（本机 Godot 4.7.2 实跑，全部已提交）
+
+环境：`Godot 4.7.2.stable.official.ed1daf0bf` · Windows 11 · RTX 5080（GL Compatibility）。
+提交方式说明：本机到 github.com 的 git/SSH 传输被网络 reset（clone 卡死、HTTPS clone
+`Recv failure`），所以提交走 GitHub Git Data API（`create blobs → tree → commit → update ref main`），
+仓库内容与普通 push 等价。
+
+### 修了什么
+
+| # | 问题 | 修法 | 提交 |
+|---|---|---|---|
+| 1 | 检查框真键盘「开一帧就关」：`_unhandled_input` 打开、同帧 `_process` 的 `is_action_just_pressed` 又关掉 | 输入收敛为单一路径：开/关/取消全走 `_unhandled_input`（echo/松开不计），`_process` 只刷新提示条；门禁改为直接投递真实 `InputEventKey`（`--script` SceneTree 里 `Input.parse_input_event` 实测不派发） | `19c184f` |
+| 2 | 12 张卡的 24 个效果全部空转：`card_engine.gd` 读 `add_vars`，数据是 `effects[].vars` | 改读 `vars`；`time` 是派生量，按 v0.6 开工盘点「事件卡 +0h」跳过 | `f447071` |
+| 3 | `world_state.gd` / `memory.gd` 对 `DataLayer` 调 `data.get("mode_profile"/"nodes"/"npcs")`，恒 null：夜晚倍率、沉积传导、`day_locked_after`、NPC 引用全部失效 | 改 `data.profile("story")` / `data.nodes()` / `data.node()`；NPC 池统一走 `load_npcs()` | `f447071` |
+| 4 | `main.gd` 死代码：调 WorldState 不存在的 `new_game/set_day/set_hour`，摘要读 `vars` 且查 `health/morale/risk` | 开局改为 `init_from + spend_time`；`add_noise` 按 `{self,neighbors}` 判；摘要改读 `snapshot.variables` 六组；`_dev_log` 改 `push_warning` | `e38bdfd` |
+| 5 | 存档读回恒失败：Godot 4 JSON 往返把整数读成 float，`restore()` 要求 `is int` | `restore()` 按数值校验并取整（day/hour/sediment） | `e38bdfd` |
+| 6 | 测试里有同义反复：`replay` ③ 因效果空转空转、`smoke` 存读往返被夹零 | 新增真断言：卡效果必须改动变量、夜间噪声倍率、Day14/15 锁门、shell 闭环 | `f447071` `e38bdfd` |
+| 7 | 输入台账缺 3 项（20/23） | 补 `data/weapons/weapons.json`、`data/variables.json`、`schema/card.schema.json` → **23/23** | `cf290af` |
+
+### 当前验收快照（可复跑）
+
+```powershell
+$G = ".tools/Godot_v4.7-stable_win64_console.exe"
+python tools/validate.py            # 43 条：ERROR 0 · WARN 0 · SKIP 0
+python tools/validate.py --inventory# 输入台账 23/23 就位
+python tools/selftest.py            # 全部通过
+python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd game/runtime/card_engine.gd game/runtime/memory.gd game/runtime/main.gd  # 结构问题 0 个
+& $G --headless --path . --script res://game/tests/smoke.gd       # SMOKE_OK ... changed=9 night=2/3 lock=ok roundtrip=ok
+& $G --headless --path . --script res://game/tests/replay_30d.gd  # REPLAY_OK seeds=3 fired=90 oneshot_max=13 changed=27
+& $G --headless --path . --script res://game/tests/shell.gd       # SHELL_OK day=0 hour=11 supplies=0.8 ... six_vars_in_0..1=true
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_preview.gd -- CORRIDOR-QA   # CORRIDOR_OK ... props=15 min_changed_pixels=283
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT  # CORRIDOR_INSPECT_OK records=15 ties=8 boundary=28px
+```
+
+`corridor_inspect` 的面板墨点门禁：title=121 / body=1112 / esc=82（阈值 80/160/20），
+`design/previews/CORRIDOR-INSPECT_panel.png` 现在是真面板（此前只有提示条）。
+
+### 仍未做 / 仍需人
+
+1. **Stage 2 视觉签核**：`design/previews/CORRIDOR-QA_{entry,classroom,midpoint,late,far_end}.png`
+   与 `CORRIDOR-INSPECT_panel.png` 需要人看过后点头，才进 Stage 3。
+2. 卡池覆盖仍窄：30 天回放 12 张只触发 6 张（`l_night_encounter` 等常因 `node_tags_any` 与主轴走廊不匹配而不可达），
+   这是 trigger 资格面问题，不是 `pick_and_fire` 饥饿（轮转已实现）。
+3. `R21` 仍未在真实数据上开火：`art/asset-manifest.json` 32 条全是 `draft`，`approved/` 仍为空。
+4. 角色精灵仍是 blockout；Stage 3（地面接缝/磨损/散落物）与 Stage 4/5 未动。
+

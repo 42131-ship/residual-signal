@@ -113,6 +113,11 @@ godot --headless --check-only --script game/runtime/main.gd
 
 ## 六、已知欠账（不粉饰）
 
+> **2026-11-23 更新**：下面第 1、2 条已不成立 —— `returns_after_days` 已实现
+> （`card_engine.gd:31-37`，值为 0 时永久跳过），`pick_and_fire` 已改为
+> 「新卡 → 最久未触发 → id」三档轮转（`:164-200`），不会饥饿。
+> 当前真实缺口与修复记录见 [`HANDOFF-STAGE2.md`](HANDOFF-STAGE2.md) 第七节。
+
 1. **`returns_after_days` 从未被实现**。`card_engine.gd` 的契约里没写，`headless_30d.py` 里是我第 10 轮才补的。**运行时必须补上**，否则标着「只发生一次」的卡会天天触发。
 2. **`pick_and_fire` 按字典序取第一个**，会导致卡池饥饿（同一张卡反复触发，别的永远轮不上）。需要冷却或轮转。
 3. **R40 只抓「漏出来的」，抓不住「补进去的」**。「戴眼镜」是黑名单兜的，不是白名单。严格做法要中文分词 + 词表。
