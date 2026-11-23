@@ -1,0 +1,52 @@
+{
+  "schema": "map-layout.v1",
+  "note": "旅行图上五栋楼的锚点。at = 楼体正面底边中点（2.5D 里最容易对齐地面），size = 宽×进深，height = 高度。坐标对着 art/generated_candidates/maps/map_topdown.png 的楼位摆；调位置只改这个文件，不用碰代码。label_align = 楼名相对锚点的对齐（center 会按文字宽度居中并夹进视口）。",
+  "view": [384, 216],
+  "buildings": [
+    {
+      "id": "school",
+      "at": [86, 96],
+      "size": [44, 16],
+      "height": 34,
+      "detail": "school",
+      "label_align": "center",
+      "note": "左侧最高的那栋：水塔 + 天线 + 三排教室窗"
+    },
+    {
+      "id": "hospital",
+      "at": [282, 98],
+      "size": [46, 16],
+      "height": 28,
+      "detail": "hospital",
+      "label_align": "center",
+      "note": "右上方宽体：红十字牌 + 四排窗"
+    },
+    {
+      "id": "gas_station",
+      "at": [232, 138],
+      "size": [30, 13],
+      "height": 10,
+      "detail": "gas_station",
+      "label_align": "center",
+      "note": "中间低矮雨棚 + 两个加油岛"
+    },
+    {
+      "id": "fire_station",
+      "at": [78, 196],
+      "size": [40, 15],
+      "height": 20,
+      "detail": "fire_station",
+      "label_align": "center",
+      "note": "左下方：宽卷帘门 + 晾水塔"
+    },
+    {
+      "id": "military_base",
+      "at": [300, 190],
+      "size": [44, 15],
+      "height": 18,
+      "detail": "military_base",
+      "label_align": "center",
+      "note": "右下方：围栏 + 天线杆 + 窄窗"
+    }
+  ]
+}

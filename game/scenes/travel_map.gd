@@ -1,35 +1,33 @@
 extends Node2D
 ## 旅行图：俯视 + 2.5D 立体块，可当走廊出口的选楼界面用。
 ##
-## 为什么立体块是程序画的、不是生图画的：
-##   1) 生图在 384×216 上边缘密度 0.198，细节会埋掉节点标记；
-##   2) 节点坐标必须可断言（门禁要查「五块都在视口内、连线与 TravelService 一致」）；
-##   3) 2.5D 只需要三条规则就成立 —— 顶面最亮、正面中间、右侧最暗，且块按底边 y 排序。
-## 生图只当底纹（压暗 60%），几何一律程序画。
+## 三条 2.5D 规则（PIXEL_SPEC §4 的光照约定）：
+##   1) 每栋楼 = 顶面 + 正面 + 右侧面（平行四边形错开，给出斜上方视角）
+##   2) 明度 顶面 > 正面 > 右侧面
+##   3) 按底边 y 从远到近绘制
+##
+## 楼位与体积来自 data/travel/map_layout.json —— 生图底图换了只改数据，不碰代码。
+## 生图只当底纹（压暗 60%），几何一律程序画：细节与坐标都要能被门禁断言。
 
 signal chosen(building_id: String)
 signal cancelled
 
 const VIEW := Vector2i(384, 216)
 const BG_PATH := "res://art/generated_candidates/maps/map_topdown.png"
+const LAYOUT_PATH := "res://data/travel/map_layout.json"
 const SCRIM := Color(0.043, 0.067, 0.098, 0.6)
 
-# 三档明度：光只从上方来（PIXEL_SPEC §4），所以顶面最亮、右侧最暗。
 const TOP_FACE := Color("#3f5366")
 const FRONT_FACE := Color("#26323f")
 const SIDE_FACE := Color("#151d28")
 const ROAD := Color("#182433")
 const LABEL := Color("#9fb2bd")
 const CURSOR := Color("#f6f6f0")
-
-# 每栋楼的落点与体积（宽、进深、高）。坐标是设计值，门禁直接断言它们。
-const BLOCKS := {
-	"school": {"at": Vector2(46, 150), "size": Vector2(40, 16), "height": 26},
-	"gas_station": {"at": Vector2(120, 132), "size": Vector2(30, 14), "height": 12},
-	"fire_station": {"at": Vector2(186, 166), "size": Vector2(32, 14), "height": 18},
-	"hospital": {"at": Vector2(258, 128), "size": Vector2(34, 15), "height": 30},
-	"military_base": {"at": Vector2(320, 172), "size": Vector2(36, 15), "height": 20},
-}
+const WINDOW := Color("#8a6a3a")
+const WINDOW_DIM := Color("#4a3a26")
+const SIGN := Color("#8a4a3a")
+const OPENING := Color("#111a26")
+const METAL := Color("#5a6b78")
 
 var current_building := "school"
 ## 作为走廊的叠加层时由走廊统一转发按键，地图自己不处理输入（避免两边抢键）。
@@ -37,10 +35,10 @@ var interactive := true
 ## 今天去过哪几栋（走廊传进来），用于地图上的「去过」标记。
 var _visited: Array[String] = []
 ## 每栋楼的标记：{fuel, risk, visited, known}
-## known = 是否相邻：不相邻的楼你不知道去一趟多贵，所以不标油耗与危险。
 var _marks: Dictionary = {}
+## 楼位表：id -> {at, size, height, detail, label_align}
+var BLOCKS: Dictionary = {}
 var _travel := TravelService.new()
-var _blocks: Dictionary = {}
 var _edges: Array[Dictionary] = []
 var _selectable: Array[String] = []
 var _neighbors: Array[String] = []
@@ -48,11 +46,13 @@ var _selected := 0
 var _cursor: Node2D
 var _hint_root: Node2D
 var _marks_root: Node2D
+var _detail_count: Dictionary = {}
 
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_ensure_actions()
+	_load_layout()
 	_build_background()
 	if not _travel.load_all():
 		push_error("TRAVEL_LOAD_FAILED: " + _travel.load_error())
@@ -62,7 +62,7 @@ func _ready() -> void:
 	_hint_root = _node("Hints")
 	_cursor = _node("Cursor")
 	_marks_root = _node("Marks")
-	PixelFont.draw(_hint_root, "W/S 选楼 · E 出发 · Esc 留下", Vector2(8, 200), LABEL)
+	PixelFont.draw(_hint_root, "W/S 选楼 · E 出发 · Esc 留下", Vector2(8, 202), LABEL)
 	setup(current_building)
 
 
@@ -88,6 +88,31 @@ func _ensure_actions() -> void:
 			var key := InputEventKey.new()
 			key.physical_keycode = keycode
 			InputMap.action_add_event(action, key)
+
+
+## 楼位表是数据驱动的：改位置只改 JSON，代码不动。
+func _load_layout() -> void:
+	BLOCKS.clear()
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT_PATH))
+	if not raw is Dictionary:
+		push_error("MAP_LAYOUT_UNREADABLE: " + LAYOUT_PATH)
+		return
+	for value: Variant in (raw as Dictionary).get("buildings", []):
+		if not value is Dictionary:
+			continue
+		var entry: Dictionary = value
+		var id := str(entry.get("id", ""))
+		var at: Variant = entry.get("at")
+		var size: Variant = entry.get("size")
+		if id.is_empty() or not at is Array or not size is Array:
+			continue
+		BLOCKS[id] = {
+			"at": Vector2(float(at[0]), float(at[1])),
+			"size": Vector2(float(size[0]), float(size[1])),
+			"height": float(entry.get("height", 16.0)),
+			"detail": str(entry.get("detail", "")),
+			"label_align": str(entry.get("label_align", "center")),
+		}
 
 
 func _node(node_name: String) -> Node2D:
@@ -124,6 +149,8 @@ func _build_roads() -> void:
 	var seen := {}
 	for id: String in BLOCKS:
 		for other: String in _travel.neighbors(id):
+			if not BLOCKS.has(other):
+				continue
 			var key := "%s|%s" % [id, other] if id < other else "%s|%s" % [other, id]
 			if seen.has(key):
 				continue
@@ -141,9 +168,8 @@ func _build_roads() -> void:
 
 
 func _build_blocks() -> void:
-	# 2.5D 的关键：按底边 y 从远到近画，后面的块才不会压住前面的块。
 	var ordered := BLOCKS.keys()
-	ordered.sort_custom(func(a, b): return int(BLOCKS[a]["at"].y) < int(BLOCKS[b]["at"].y))
+	ordered.sort_custom(func(a, b): return float(BLOCKS[a]["at"].y) < float(BLOCKS[b]["at"].y))
 	for id: String in ordered:
 		var spec: Dictionary = BLOCKS[id]
 		var at: Vector2 = spec["at"]
@@ -178,18 +204,87 @@ func _build_blocks() -> void:
 		])
 		side.color = SIDE_FACE
 		node.add_child(side)
-		_blocks[id] = {"node": node, "height": height, "size": size, "at": at}
+		_detail_count[id] = _build_details(id, node, spec)
 
 
+## 每栋楼按职能长不同的东西 —— 玩家要能一眼认出「这是医院、那是加油站」。
+func _build_details(id: String, node: Node2D, spec: Dictionary) -> int:
+	var size: Vector2 = spec["size"]
+	var height: float = spec["height"]
+	var detail := str(spec.get("detail", ""))
+	var made := 0
+	match detail:
+		"school":
+			# 三排教室窗 + 大门 + 屋顶水塔 + 天线
+			for row in range(3):
+				var y := -height + 6.0 + row * 7.0
+				_rect(node, "Windows%d" % row, Vector2(4, y), Vector2(size.x - 8, 3), WINDOW if row == 1 else WINDOW_DIM)
+				made += 1
+			_rect(node, "Door", Vector2(size.x * 0.5 - 4, -8), Vector2(8, 8), OPENING)
+			_rect(node, "Tank", Vector2(size.x * 0.18, -height - size.y * 0.7), Vector2(8, 7), METAL)
+			_rect(node, "Antenna", Vector2(size.x * 0.72, -height - size.y * 0.7 - 10), Vector2(1, 12), METAL)
+			made += 3
+		"hospital":
+			# 四排窗 + 红十字牌 + 大门
+			for row in range(4):
+				var y := -height + 5.0 + row * 6.0
+				_rect(node, "Windows%d" % row, Vector2(3, y), Vector2(size.x - 6, 2), WINDOW_DIM if row % 2 else WINDOW)
+				made += 1
+			_rect(node, "CrossV", Vector2(size.x * 0.5 - 1, -height + 8), Vector2(2, 7), SIGN)
+			_rect(node, "CrossH", Vector2(size.x * 0.5 - 3, -height + 10), Vector2(6, 2), SIGN)
+			_rect(node, "Door", Vector2(size.x * 0.5 - 5, -9), Vector2(10, 9), OPENING)
+			made += 3
+		"gas_station":
+			# 低矮雨棚 + 两个加油岛 + 顶灯
+			_rect(node, "Canopy", Vector2(2, -height - 1), Vector2(size.x - 4, 4), METAL)
+			_rect(node, "Pump0", Vector2(6, -height + 2), Vector2(3, 5), SIGN)
+			_rect(node, "Pump1", Vector2(size.x - 10, -height + 2), Vector2(3, 5), SIGN)
+			_rect(node, "RoofLight", Vector2(size.x * 0.5 - 1, -height - size.y * 0.5), Vector2(2, 2), WINDOW)
+			made += 4
+		"fire_station":
+			# 宽卷帘门 + 晾水塔
+			_rect(node, "Garage", Vector2(4, -11), Vector2(size.x - 8, 11), OPENING)
+			for bar in range(3):
+				_rect(node, "GarageBar%d" % bar, Vector2(6, -10 + bar * 3), Vector2(size.x - 12, 1), SIDE_FACE)
+				made += 1
+			_rect(node, "HoseTower", Vector2(size.x * 0.72, -height - size.y * 0.6 - 8), Vector2(5, 9), METAL)
+			made += 2
+		"military_base":
+			# 围栏 + 天线杆 + 两排窄窗
+			for post in range(4):
+				_rect(node, "Fence%d" % post, Vector2(2 + post * 10, -5), Vector2(1, 6), METAL)
+				made += 1
+			_rect(node, "Mast", Vector2(size.x * 0.8, -height - size.y * 0.6 - 14), Vector2(1, 16), METAL)
+			for row in range(2):
+				_rect(node, "Windows%d" % row, Vector2(6, -height + 6 + row * 5), Vector2(size.x - 14, 2), WINDOW_DIM)
+				made += 1
+		_:
+			return 0
+	return made
+
+
+func _rect(parent: Node2D, node_name: String, at: Vector2, size: Vector2, color: Color) -> void:
+	var rect := ColorRect.new()
+	rect.name = node_name
+	rect.position = at
+	rect.size = size
+	rect.color = color
+	parent.add_child(rect)
+
+
+## 楼名：居中并按文字宽度夹进视口，绝不被裁断。
 func _build_labels() -> void:
 	for id: String in BLOCKS:
 		var spec: Dictionary = BLOCKS[id]
 		var at: Vector2 = spec["at"]
-		PixelFont.draw(self, _travel.label_of(id), Vector2(at.x, at.y + 4), LABEL)
+		var text := _travel.label_of(id)
+		var width := PixelFont.width_of(text)
+		var x := at.x - width * 0.5
+		x = clampf(x, 4.0, float(VIEW.x) - width - 4.0)
+		PixelFont.draw(self, text, Vector2(x, at.y + 6), LABEL)
 
 
 ## 走廊把「现在在哪栋、还有多少燃料、今天去过哪」告诉地图；地图自己算可去哪几栋。
-## 相邻但不可达的楼仍然画出来（灰着），玩家能看见"那里有医院，但没燃料去"。
 func setup(from: String, fuel := 0, visited: Array[String] = []) -> void:
 	current_building = from if BLOCKS.has(from) else "school"
 	_visited = visited.duplicate()
@@ -227,15 +322,37 @@ func setup(from: String, fuel := 0, visited: Array[String] = []) -> void:
 
 
 func _refresh_reachability() -> void:
-	for id: String in _blocks:
-		var node: Node2D = (_blocks[id] as Dictionary)["node"]
+	for id: String in BLOCKS:
+		var node: Node2D = get_node_or_null("Block_%s" % id) as Node2D
+		if node == null:
+			continue
 		var factor := 1.0 if id in _selectable else 0.45
-		for face_name: String in ["Top", "Front", "Side"]:
-			var face := node.get_node_or_null(face_name) as Polygon2D
-			if face == null:
-				continue
-			var base: Color = {"Top": TOP_FACE, "Front": FRONT_FACE, "Side": SIDE_FACE}[face_name]
-			face.color = Color(base.r * factor, base.g * factor, base.b * factor)
+		node.modulate = Color(factor, factor, factor)
+
+
+func _refresh_cursor() -> void:
+	if _cursor == null:
+		return
+	for child: Node in _cursor.get_children():
+		child.queue_free()
+	if _selectable.is_empty():
+		return
+	var spec: Dictionary = BLOCKS[selected_id()]
+	var at: Vector2 = spec["at"]
+	var size: Vector2 = spec["size"]
+	var height: float = spec["height"]
+	var outline := Line2D.new()
+	outline.name = "Bracket"
+	outline.points = PackedVector2Array([
+		Vector2(at.x - 2, at.y + 2),
+		Vector2(at.x + size.x + size.y * 0.6 + 2, at.y + 2),
+		Vector2(at.x + size.x + size.y * 0.6 + 2, at.y - height - size.y - 2),
+		Vector2(at.x - 2, at.y - height - size.y - 2),
+		Vector2(at.x - 2, at.y + 2),
+	])
+	outline.width = 1.0
+	outline.default_color = CURSOR
+	_cursor.add_child(outline)
 
 
 func _refresh_marks() -> void:
@@ -252,20 +369,17 @@ func _refresh_marks() -> void:
 		var size: Vector2 = spec["size"]
 		var height: float = spec["height"]
 		var top_y := at.y - height - size.y
-		# 燃料需求：每个点 = 1 燃料，点在块顶正上方
 		for index in range(int(mark.get("fuel", 0))):
-			_add_mark_rect("Fuel_%s_%d" % [id, index], Vector2(at.x + index * 4, top_y - 6), Vector2(2, 2), Color("#9fb2bd"))
-		# 危险度：右上方 1~3 个点，越亮越危险
+			_mark_rect("Fuel_%s_%d" % [id, index], Vector2(at.x + index * 4, top_y - 6), Vector2(2, 2), Color("#9fb2bd"))
 		var risk := int(mark.get("risk", 0))
 		for index in range(mini(3, risk)):
 			var tint := Color("#635e57") if index < 1 else Color("#8a4a3a")
-			_add_mark_rect("Risk_%s_%d" % [id, index], Vector2(at.x + size.x + 2 + index * 3, top_y - 4), Vector2(2, 3), tint)
-		# 去过：标签下面一条短横
+			_mark_rect("Risk_%s_%d" % [id, index], Vector2(at.x + size.x + 2 + index * 3, top_y - 4), Vector2(2, 3), tint)
 		if bool(mark.get("visited", false)):
-			_add_mark_rect("Visited_%s" % id, Vector2(at.x, at.y + 14), Vector2(8, 2), Color("#f6f6f0"))
+			_mark_rect("Visited_%s" % id, Vector2(at.x, at.y + 20), Vector2(8, 2), CURSOR)
 
 
-func _add_mark_rect(mark_name: String, at: Vector2, size: Vector2, color: Color) -> void:
+func _mark_rect(mark_name: String, at: Vector2, size: Vector2, color: Color) -> void:
 	var rect := ColorRect.new()
 	rect.name = mark_name
 	rect.position = at
@@ -279,30 +393,8 @@ func markers(id: String) -> Dictionary:
 	return (_marks.get(id, {}) as Dictionary).duplicate()
 
 
-func _refresh_cursor() -> void:
-	if _cursor == null:
-		return
-	for child: Node in _cursor.get_children():
-		child.queue_free()
-	if _selectable.is_empty():
-		return
-	var spec: Dictionary = BLOCKS[selected_id()]
-	var at: Vector2 = spec["at"]
-	var size: Vector2 = spec["size"]
-	var height: float = spec["height"]
-	# 选中框：把「正面 + 顶面」的外轮廓描一圈，比只框正面更容易看出前后关系。
-	var outline := Line2D.new()
-	outline.name = "Bracket"
-	outline.points = PackedVector2Array([
-		Vector2(at.x - 2, at.y + 2),
-		Vector2(at.x + size.x + size.y * 0.6 + 2, at.y + 2),
-		Vector2(at.x + size.x + size.y * 0.6 + 2, at.y - height - size.y - 2),
-		Vector2(at.x - 2, at.y - height - size.y - 2),
-		Vector2(at.x - 2, at.y + 2),
-	])
-	outline.width = 1.0
-	outline.default_color = CURSOR
-	_cursor.add_child(outline)
+func detail_count(id: String) -> int:
+	return int(_detail_count.get(id, 0))
 
 
 func move(delta: int) -> void:
@@ -322,7 +414,6 @@ func selectable_ids() -> Array[String]:
 	return _selectable.duplicate()
 
 
-## 相邻的全部楼（含灰着的），用于绘制与「你知道那里有东西」的信息量。
 func neighbor_ids() -> Array[String]:
 	return _neighbors.duplicate()
 
@@ -360,14 +451,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func block_ids() -> Array[String]:
 	var out: Array[String] = []
-	for id: String in _blocks:
+	for id: String in BLOCKS:
 		out.append(id)
 	out.sort()
 	return out
 
 
 func block_info(id: String) -> Dictionary:
-	return (_blocks.get(id, {}) as Dictionary).duplicate()
+	return (BLOCKS.get(id, {}) as Dictionary).duplicate()
 
 
 func edge_count() -> int:

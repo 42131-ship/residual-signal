@@ -147,6 +147,33 @@ func _run() -> void:
 		_check(marks_root.get_node_or_null("Fuel_military_base_1") != null, "fuel pip 2 missing on military_base")
 		_check(int(_map.markers("military_base").get("fuel", 0)) == 2, "military_base needs 2 fuel")
 
+	# ⑪ 每栋楼要有能认出来的细节，不是光板方块
+	var required := {
+		"school": ["Tank", "Antenna", "Door", "Windows0"],
+		"hospital": ["CrossV", "CrossH", "Door"],
+		"gas_station": ["Canopy", "Pump0", "Pump1"],
+		"fire_station": ["Garage", "HoseTower"],
+		"military_base": ["Mast", "Fence0"],
+	}
+	for id: String in required:
+		var node := _map.get_node_or_null("Block_%s" % id) as Node2D
+		_check(node != null, "%s block missing" % id)
+		if node == null:
+			continue
+		_check(_map.detail_count(id) >= 3, "%s needs at least 3 detail pieces, got %d" % [id, _map.detail_count(id)])
+		for part: String in required[id]:
+			_check(node.get_node_or_null(part) != null, "%s is missing its %s detail" % [id, part])
+
+	# ⑫ 楼名必须完整落在视口内（上一版『消』被裁断就是这条没测）
+	for id: String in _map.BLOCKS:
+		var label: String = str(_map._travel.label_of(id))
+		var width := PixelFont.width_of(label)
+		var spec: Dictionary = _map.BLOCKS[id]
+		var at: Vector2 = spec["at"]
+		var x := clampf(at.x - width * 0.5, 4.0, 384.0 - width - 4.0)
+		_check(x >= 4.0 and x + width <= 380.0, "%s label overflows: x=%.1f w=%d" % [id, x, width])
+		_check(width > 0, "%s has no label" % id)
+
 	_map.setup("school", 0)
 	await _capture("%s_topdown" % _prefix)
 	_finish()
