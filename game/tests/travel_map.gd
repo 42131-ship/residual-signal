@@ -88,6 +88,37 @@ func _run() -> void:
 	if art != null:
 		_check(art.texture != null and art.texture.get_size() == VIEW, "map art must be 384x216")
 
+	# ⑥ 选楼：学校只列两个邻居，顺序按远→近，光标会绕回
+	_map.setup("school", 0)
+	var pick_school: Array = _map.selectable_ids()
+	_check(pick_school.size() == 2, "school should allow 2 destinations, got %d" % pick_school.size())
+	_check(str(pick_school[0]) == "gas_station", "gas_station should come first (nearer on the map)")
+	_check(str(_map.selected_id()) == "gas_station", "cursor should start on the first destination")
+	_map.move(1)
+	_check(str(_map.selected_id()) == "fire_station", "moving should reach fire_station")
+	_map.move(1)
+	_check(str(_map.selected_id()) == "gas_station", "cursor must wrap around")
+
+	# ⑦ 燃料为 0：医院相邻但不可选，仍然画出来
+	_map.setup("gas_station", 0)
+	var neighbours: Array = _map.neighbor_ids()
+	var allowed: Array = _map.selectable_ids()
+	_check(neighbours.size() == 2, "gas_station has 2 neighbours, got %d" % neighbours.size())
+	_check("hospital" in neighbours, "hospital must still be drawn as a neighbour")
+	_check("hospital" not in allowed, "hospital must not be selectable without fuel")
+	_check(_map.is_reachable("school"), "school must stay reachable from gas_station")
+
+	# ⑧ 信号：确认发 chosen，取消发 cancelled（GDScript 闭包按值捕获，所以用字典承接）
+	var capture := {"chosen": "", "cancelled": false}
+	_map.chosen.connect(func(id: String) -> void: capture["chosen"] = id)
+	_map.cancelled.connect(func() -> void: capture["cancelled"] = true)
+	_map.setup("school", 0)
+	_map.confirm()
+	_check(str(capture["chosen"]) == "gas_station", "confirm must emit the selected id, got %s" % str(capture["chosen"]))
+	_map.cancel()
+	_check(bool(capture["cancelled"]), "cancel must emit cancelled")
+
+	_map.setup("school", 0)
 	await _capture("%s_topdown" % _prefix)
 	_finish()
 

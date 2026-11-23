@@ -699,6 +699,47 @@ TRAVEL_MAP_OK blocks=5 faces=3 shading=top>front>side depth_sort=ok roads=6
 - 本地：`0f1aa31`（同一棵树，仅 sha 不同；网络恢复后 `git fetch` + 对比再对齐）
 - 下一步：把走廊出口的选楼面板换成「打开旅行图」，在图上选楼（W/S 遍历五块、E 出发、Esc 返回）。
 
+---
+
+## 二十六、Stage 3.5 · 出口改成旅行图选楼（2026-11-24 凌晨）
+
+> 用户拍板：先 3（选楼逻辑）再 1（旅行图）。这一步把两者合并：出口直接打开旅行图。
+
+### 一、改了什么
+
+| 件 | 做法 |
+|---|---|
+| 走廊出口 | `_leave_building()` → `_open_travel_map()`：把 `travel_map.tscn` 实例到 `CanvasLayer(45)`，`setup(当前楼, 燃料)` 后接管按键 |
+| 地图选楼 | `selectable_ids()`（可去）与 `neighbor_ids()`（相邻全部，含灰显）分开；**燃料不够的楼仍然画出来**，玩家看得见"那里有医院，但去不了" |
+| 出发 | `chosen` 信号 → `_depart_to(target)`：再次校验 `can_travel` → 结算 → 换楼 → 扣燃料 → 回入口 → 结算面板写「明天在 X」 |
+| 取消 | `cancelled` → 关图、解锁移动、不结算 |
+| 按键归属 | 地图自己不处理输入（`interactive=false`），由走廊统一转发，避免两边抢键 |
+
+### 二、两个真实 bug（都记下来）
+
+1. **死循环**：我先给地图写了 `_map.interactive = false`，但脚本里根本没有这个属性 →
+   运行时出错、`setup()` 没执行、可选集为空，门禁里 `while selected != "gas_station"` 就永远转。
+   修法：补 `var interactive := true` 并在 `_unhandled_input` 里提前返回；门禁的 while 加 8 次上限。
+2. **闭包按值捕获**：`var chosen := ""` 在 lambda 里赋值不会回传，断言永远读到空串。
+   修法：用字典承接（`capture["chosen"] = id`）。
+
+### 三、验收
+
+```text
+TRAVEL_MAP_OK blocks=5 faces=3 shading=top>front>side depth_sort=ok roads=6
+CORRIDOR_EXIT_OK map=open selectable=2 picked=gas_station day=1 sediment=1 fuel_gate=blocked
+```
+
+`corridor_exit` 覆盖：出口外按 E 不开图、Esc 不结算、可选集只有 2 个、
+`hospital` 相邻但不可选、确认后换楼回入口且面板打开、硬调 `_depart_to` 也被挡住。
+全量 **22 条门禁全绿**。证据：`design/previews/CORRIDOR-EXIT_map.png`、`MAP_topdown.png`。
+
+### 四、下一步
+
+旅行图现在是"能选但还不能标状态"：没有「今天已去过」「危险度」的视觉标记，
+也没有从地图进入/返回走廊的场景切换。建议顺序：
+① 地图标注（去过/危险/燃料需求）→ ② 真正的场景切换（走廊 ↔ 加油站）→ ③ M2 状态合并。
+
 
 
 

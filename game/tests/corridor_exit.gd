@@ -1,7 +1,7 @@
 extends SceneTree
-## 出口门禁：走到尽头 → 选楼面板（按 TravelService 的门槛）→ 选一栋 → 结算翻页；
-## 以及「燃料不够」的选项必须被挡住且不结算。
-## 运行（要渲染，抓一张选楼面板）：
+## 出口门禁：走到尽头 → 打开旅行图 → 图上只列相邻可达的楼 → 选一栋 → 结算翻页；
+## 燃料不足的楼不出现在可选集里，直接调 _depart_to 也必须被挡住。
+## 运行（要渲染，抓一张旅行图）：
 ##   .tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 \
 ##     --script res://game/tests/corridor_exit.gd -- CORRIDOR-EXIT
 
@@ -36,79 +36,69 @@ func _run() -> void:
 		return _finish()
 	_check(str(_corridor._current_building) == "school", "a run must start at school")
 
-	# ① 没到出口：没有提示，按 E 也不开面板
+	# ① 没到出口：不提示，也不开图
 	await _place(300.0, 128.0)
 	_check(not _corridor._at_exit, "mid-corridor must not count as the exit")
 	await _press(KEY_E)
-	_check(not _corridor._exit_choice_open, "pressing E away from the exit must not open the chooser")
+	_check(not _corridor._map_open, "pressing E away from the exit must not open the map")
 	_check(day.day == 0, "no settlement away from the exit")
 
-	# ② 走到尽头 → 按 E → 打开选楼面板，列出学校的邻居
+	# ② 走到尽头按 E → 打开旅行图，可选集 = 学校的邻居
 	await _place(600.0, 128.0)
 	_check(_corridor._at_exit, "the far end must arm the exit")
 	await _press(KEY_E)
-	_check(_corridor._exit_choice_open, "leaving must open the building chooser")
-	var choices: Array = _corridor._exit_choices
-	_check(choices.size() == 2, "school must offer 2 neighbours, got %d" % choices.size())
-	var ids: Array[String] = []
-	for choice: Dictionary in choices:
-		ids.append(str(choice["id"]))
-		_check(bool(choice["ok"]), "%s should be reachable on day 0" % str(choice["id"]))
-	_check("gas_station" in ids, "gas_station must be reachable from school")
-	await _capture("%s_choices" % _prefix)
+	_check(_corridor._map_open, "leaving must open the travel map")
+	var map: Node2D = _corridor._map
+	_check(map != null, "travel map instance missing")
+	if map == null:
+		return _finish()
+	var selectable: Array = map.selectable_ids()
+	_check(selectable.size() == 2, "school must offer 2 neighbours, got %d" % selectable.size())
+	_check("gas_station" in selectable, "gas_station must be selectable from school")
+	_check("hospital" not in selectable, "hospital must not be reachable from school")
+	await _capture("%s_map" % _prefix)
 
-	# ③ 上下移动 + 取消
-	_corridor._move_exit_choice(1)
-	_check(_corridor._exit_choice_index == 1, "down must move the cursor")
-	_corridor._move_exit_choice(-1)
-	_check(_corridor._exit_choice_index == 0, "up must move the cursor back")
+	# ③ W/S 遍历只走可选集，Esc 关闭不结算
+	var first_id: String = map.selected_id()
+	map.move(1)
+	_check(map.selected_id() != first_id, "moving the cursor must change the selection")
+	map.move(-1)
+	_check(map.selected_id() == first_id, "moving back must return to the first choice")
 	await _press(KEY_ESCAPE)
-	_check(not _corridor._exit_choice_open, "Esc must close the chooser without settling")
+	_check(not _corridor._map_open, "Esc must close the map")
 	_check(day.day == 0, "cancelling must not settle the day")
 
-	# ④ 选学校->加油站：结算翻页、换楼、回入口
+	# ④ 选学校 -> 加油站：确认后结算、换楼、回入口、面板打开
 	await _place(600.0, 128.0)
 	await _press(KEY_E)
-	var gas_index := -1
-	for index in range(_corridor._exit_choices.size()):
-		if str((_corridor._exit_choices[index] as Dictionary)["id"]) == "gas_station":
-			gas_index = index
-	_check(gas_index >= 0, "gas_station must be in the chooser")
-	if gas_index >= 0:
-		while _corridor._exit_choice_index != gas_index:
-			_corridor._move_exit_choice(1)
-		await _press(KEY_E)
-	_check(not _corridor._exit_choice_open, "confirming must close the chooser")
+	var guard := 0
+	while str(_corridor._map.selected_id()) != "gas_station" and guard < 8:
+		_corridor._map.move(1)
+		guard += 1
+	_check(str(_corridor._map.selected_id()) == "gas_station", "could not select gas_station on the map")
+	await _press(KEY_E)
+	_check(not _corridor._map_open, "confirming must close the map")
 	_check(day.day == 1, "one outing must advance to day 1, got %d" % day.day)
 	_check(day.sediment == 1, "an extracted day must add 1 sediment, got %d" % day.sediment)
 	_check(str(_corridor._current_building) == "gas_station", "the run must move to gas_station")
 	_check(_actor.position.x < 60.0, "the player must be back at the entrance, got %s" % str(_actor.position))
 	_check(_corridor._inspection_open, "settlement panel must open after the trip")
-	_check(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")) == "exit",
-		"settlement panel must be tagged as the exit")
 	await _press(KEY_ESCAPE)
 
-	# ⑤ 燃料门槛：在加油站，医院要 1 燃料，手上 0 → 选项灰掉且不结算
+	# ⑤ 燃料门槛：在加油站、燃料 0 时医院不可选；硬调 _depart_to 也不结算
 	_corridor._fuel = 0
 	await _place(600.0, 128.0)
 	await _press(KEY_E)
-	_check(_corridor._exit_choice_open, "chooser must reopen at the new building")
-	var hospital_index := -1
-	for index in range(_corridor._exit_choices.size()):
-		var choice: Dictionary = _corridor._exit_choices[index]
-		if str(choice["id"]) == "hospital":
-			hospital_index = index
-			_check(not bool(choice["ok"]), "hospital must be blocked without fuel")
-			_check(str(choice["reason"]) == "not_enough_fuel", "wrong block reason: %s" % str(choice["reason"]))
-	if hospital_index >= 0:
-		while _corridor._exit_choice_index != hospital_index:
-			_corridor._move_exit_choice(1)
-		var before_day: int = day.day
-		await _press(KEY_E)
-		_check(day.day == before_day, "a blocked choice must not settle the day")
-		_check(_corridor._exit_choice_open, "a blocked choice must keep the chooser open")
-		_check(str(_corridor._combat_message).contains("燃料"), "blocked choice should explain why")
-	_corridor._close_exit_choices()
+	_check(_corridor._map_open, "the map must reopen at the new building")
+	_check("hospital" not in _corridor._map.selectable_ids(), "hospital must be blocked without fuel")
+	_check("hospital" in _corridor._map.neighbor_ids(), "hospital must still be drawn greyed out")
+	var before_day: int = day.day
+	_corridor._depart_to("hospital")
+	await process_frame
+	_check(day.day == before_day, "a blocked destination must not settle the day")
+	_check(str(_corridor._current_building) == "gas_station", "a blocked destination must not move the run")
+	_check(str(_corridor._combat_message).contains("燃料"), "blocked destination should explain why")
+	_corridor._close_travel_map()
 
 	_finish()
 
@@ -153,7 +143,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("CORRIDOR_EXIT_OK chooser=2 picked=gas_station day=1 sediment=1 fuel_gate=blocked")
+		print("CORRIDOR_EXIT_OK map=open selectable=2 picked=gas_station day=1 sediment=1 fuel_gate=blocked")
 		quit(0)
 		return
 	print("CORRIDOR_EXIT_FAILED count=%d" % _failures.size())
