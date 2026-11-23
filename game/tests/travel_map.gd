@@ -180,6 +180,23 @@ func _run() -> void:
 		_check(y >= 2.0 and y + 14.0 <= 216.0, "%s label vertical overflow: y=%.1f" % [id, y])
 		_check(width > 0, "%s has no label" % id)
 
+	# ⑬ 街道不是空的：路灯 / 报废车 / 路障
+	var street := _map.get_node_or_null("Street") as Node2D
+	_check(street != null, "street layer missing")
+	if street != null:
+		for index in range(4):
+			_check(street.get_node_or_null("StreetLamp%d" % index) != null, "street lamp %d missing" % index)
+			_check(street.get_node_or_null("StreetLampGlow%d" % index) != null, "street lamp glow %d missing" % index)
+	var car := _map.get_node_or_null("CarWreck") as Node2D
+	_check(car != null, "wrecked car missing")
+	if car != null:
+		for part: String in ["CarBody", "CarRoof", "CarWheel0", "CarWheel1"]:
+			_check(car.get_node_or_null(part) != null, "car part %s missing" % part)
+	var barrier := _map.get_node_or_null("Barrier") as Node2D
+	_check(barrier != null, "barrier missing")
+	if barrier != null:
+		_check(barrier.get_node_or_null("BarrierBoard0") != null, "barrier board missing")
+
 	_map.setup("school", 0)
 	await _capture("%s_topdown" % _prefix)
 	_finish()

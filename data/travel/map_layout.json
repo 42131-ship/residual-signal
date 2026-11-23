@@ -5,7 +5,7 @@
   "buildings": [
     {
       "id": "school",
-      "at": [100, 96],
+      "at": [100, 88],
       "size": [44, 16],
       "height": 34,
       "detail": "school",
@@ -14,7 +14,7 @@
     },
     {
       "id": "hospital",
-      "at": [285, 88],
+      "at": [293, 88],
       "size": [48, 16],
       "height": 26,
       "detail": "hospital",

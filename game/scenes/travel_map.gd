@@ -58,6 +58,7 @@ func _ready() -> void:
 		push_error("TRAVEL_LOAD_FAILED: " + _travel.load_error())
 	_build_roads()
 	_build_blocks()
+	_build_street()
 	_build_labels()
 	_hint_root = _node("Hints")
 	_cursor = _node("Cursor")
@@ -277,6 +278,31 @@ func _build_details(id: String, node: Node2D, spec: Dictionary) -> int:
 		_:
 			return 0
 	return made
+
+
+## 街道不是空的：路灯、报废车、路障。全部程序画，坐标固定可断言。
+func _build_street() -> void:
+	var street := _node("Street")
+	# 路灯：1px 杆 + 2×2 暖光（灯本身是暖色，和窗户同一个调子）
+	var lamps := [Vector2(150, 112), Vector2(214, 152), Vector2(272, 120), Vector2(330, 168)]
+	for index in range(lamps.size()):
+		var at: Vector2 = lamps[index]
+		_rect(street, "StreetLamp%d" % index, at, Vector2(1, 6), METAL)
+		_rect(street, "StreetLampGlow%d" % index, at + Vector2(-1, -2), Vector2(3, 2), WINDOW)
+	# 报废车：车身 + 车顶 + 两个轮子
+	var car := _node("CarWreck")
+	car.position = Vector2(196, 168)
+	_rect(car, "CarBody", Vector2.ZERO, Vector2(12, 5), Color("#3a4652"))
+	_rect(car, "CarRoof", Vector2(4, -3), Vector2(5, 3), Color("#26323f"))
+	_rect(car, "CarWheel0", Vector2(1, 5), Vector2(2, 2), OPENING)
+	_rect(car, "CarWheel1", Vector2(9, 5), Vector2(2, 2), OPENING)
+	# 路障：两块斜挡板
+	var barrier := _node("Barrier")
+	barrier.position = Vector2(120, 150)
+	_rect(barrier, "BarrierBoard0", Vector2.ZERO, Vector2(10, 2), SIGN)
+	_rect(barrier, "BarrierBoard1", Vector2(2, 2), Vector2(10, 2), SIGN)
+	_rect(barrier, "BarrierLeg0", Vector2(1, 4), Vector2(1, 3), METAL)
+	_rect(barrier, "BarrierLeg1", Vector2(10, 4), Vector2(1, 3), METAL)
 
 
 func _rect(parent: Node2D, node_name: String, at: Vector2, size: Vector2, color: Color) -> void:
