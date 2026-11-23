@@ -24,6 +24,13 @@ const TILE_INDEX := {
 	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
 	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
 }
+## 房间分隔：在 tile x=12 / x=26 处做门洞式隔断（上方墙垛 + 门楣 + 地面门槛），
+## 下方留出 136px 高的净空让玩家穿过去。三个区块：A 区 / B 区 / C 区。
+const ROOM_PARTITION_TILES: Array[int] = [12, 26]
+const ROOM_LABELS: Array[String] = ["A 区", "B 区", "C 区"]
+## 墙垛高度：门洞净空从 y=80 一直到地面，玩家 40px 身高（脚底 128..216）可以通过。
+const ROOM_LINTEL_Y := 80
+const ROOM_PARTITION_WIDTH := 32
 
 var _world: Node2D
 var _player: Player
@@ -139,6 +146,61 @@ func _build_corridor() -> void:
 
 	_build_floor_seams()
 	_build_exit_cues()
+	_build_room_partitions()
+
+
+func _build_room_partitions() -> void:
+	for index: int in ROOM_PARTITION_TILES.size():
+		var tile_x: int = ROOM_PARTITION_TILES[index]
+		var origin := Vector2(tile_x * TILE_SIZE, 0)
+		# 墙垛主体（压暗，与普通墙面区分）
+		var body := Polygon2D.new()
+		body.name = "RoomPartition_%d" % tile_x
+		body.position = origin
+		body.polygon = PackedVector2Array([
+			Vector2.ZERO, Vector2(ROOM_PARTITION_WIDTH, 0),
+			Vector2(ROOM_PARTITION_WIDTH, ROOM_LINTEL_Y), Vector2(0, ROOM_LINTEL_Y),
+		])
+		body.color = Color("#0b1119")
+		_world.add_child(body)
+		# 门楣：底部一条亮线，读出「这是门洞」而不是墙没画完
+		var lintel := Polygon2D.new()
+		lintel.name = "RoomLintel_%d" % tile_x
+		lintel.position = origin + Vector2(0, ROOM_LINTEL_Y - 2)
+		lintel.polygon = PackedVector2Array([
+			Vector2.ZERO, Vector2(ROOM_PARTITION_WIDTH, 0),
+			Vector2(ROOM_PARTITION_WIDTH, 2), Vector2(0, 2),
+		])
+		lintel.color = Color("#635e57")
+		_world.add_child(lintel)
+		# 左右立柱高光，让 32px 宽的墙垛有体积感
+		var edge := Polygon2D.new()
+		edge.name = "RoomPartitionEdge_%d" % tile_x
+		edge.position = origin + Vector2(ROOM_PARTITION_WIDTH - 1, 0)
+		edge.polygon = PackedVector2Array([
+			Vector2.ZERO, Vector2(1, 0), Vector2(1, ROOM_LINTEL_Y), Vector2(0, ROOM_LINTEL_Y),
+		])
+		edge.color = Color("#354b60")
+		_world.add_child(edge)
+		# 地面门槛：门洞下方一条横线，提示房间边界
+		var threshold := Polygon2D.new()
+		threshold.name = "RoomThreshold_%d" % tile_x
+		threshold.position = origin + Vector2(0, TILE_SIZE * 8)
+		threshold.polygon = PackedVector2Array([
+			Vector2.ZERO, Vector2(ROOM_PARTITION_WIDTH, 0),
+			Vector2(ROOM_PARTITION_WIDTH, 2), Vector2(0, 2),
+		])
+		threshold.color = Color("#354b60")
+		_world.add_child(threshold)
+		# 区块标签（A 区 / B 区 / C 区），标在下一段墙面上
+	# 标签放在每个房间起点：A 区最左，B/C 区在各自门洞后两格
+	var label_tiles: Array[int] = [
+		2,
+		ROOM_PARTITION_TILES[0] + 2,
+		ROOM_PARTITION_TILES[1] + 2,
+	]
+	for index: int in mini(ROOM_LABELS.size(), label_tiles.size()):
+		PixelFont.draw(_world, ROOM_LABELS[index], Vector2(label_tiles[index] * TILE_SIZE, 44), Color("#354b60"))
 
 
 func _build_floor_seams() -> void:

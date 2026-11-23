@@ -25,13 +25,16 @@ func _run() -> void:
 		_fail("player missing")
 		return
 
-	# 可达目标：四角 + 中心（当前 demo 是一条连续房间带，还没有分隔墙）。
+	# 可达目标：四角 + 中心 + 三个房间区块（A/B/C）各一个点（必须能穿过门洞）。
 	var waypoints := [
 		{"x": BOUNDS.end.x, "y": BOUNDS.position.y, "label": "right_top"},
 		{"x": BOUNDS.end.x, "y": BOUNDS.end.y, "label": "right_bottom"},
 		{"x": BOUNDS.position.x, "y": BOUNDS.end.y, "label": "left_bottom"},
 		{"x": BOUNDS.position.x, "y": BOUNDS.position.y, "label": "left_top"},
 		{"x": 320.0, "y": 172.0, "label": "center"},
+		{"x": 100.0, "y": 128.0, "label": "room_a"},
+		{"x": 300.0, "y": 216.0, "label": "room_b"},
+		{"x": 560.0, "y": 128.0, "label": "room_c"},
 	]
 	for point: Dictionary in waypoints:
 		if not await _move_towards(float(point["x"]), float(point["y"]), str(point["label"])):

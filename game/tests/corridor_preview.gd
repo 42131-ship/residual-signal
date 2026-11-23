@@ -55,7 +55,7 @@ func _run() -> void:
 		_fail("missing player, props, HUD or flashlight")
 		return
 	_light_material = light.material as ShaderMaterial
-	if not _verify_props() or not _verify_character() or not _verify_doorway() or not _verify_readability_structures():
+	if not _verify_props() or not _verify_character() or not _verify_doorway() or not _verify_readability_structures() or not _verify_rooms():
 		return
 	hud.visible = not _without_hud
 	(light.material as ShaderMaterial).set_shader_parameter("flicker_speed", 0.0)
@@ -291,6 +291,33 @@ func _verify_doorway() -> bool:
 		var tile := child as Sprite2D
 		if tile.position.x >= 224 and tile.position.x < 256 and tile.position.y >= 96 and tile.position.y < 128:
 			return _fail("corridor wall tile still fills the doorway")
+	return true
+
+
+func _verify_rooms() -> bool:
+	# 房间分隔：墙垛 + 门楣 + 地面门槛，门洞净空必须高于玩家身高（40px）。
+	var world := _corridor.get_node_or_null("World") as Node2D
+	if world == null:
+		return _fail("missing world for room partitions")
+	for tile_x: int in [12, 26]:
+		var partition := world.get_node_or_null("RoomPartition_%d" % tile_x) as Polygon2D
+		if partition == null or partition.polygon.size() != 4:
+			return _fail("room partition %d missing" % tile_x)
+		var top := partition.polygon[0]
+		var bottom := partition.polygon[2]
+		if not is_equal_approx(top.y, 0.0) or not is_equal_approx(bottom.y, 80.0):
+			return _fail("room partition %d should stop at y=80, got %s" % [tile_x, str(bottom)])
+		if not is_equal_approx(bottom.y, 80.0):
+			return _fail("room partition %d doorway clearance wrong" % tile_x)
+		var lintel := world.get_node_or_null("RoomLintel_%d" % tile_x) as Polygon2D
+		if lintel == null or not is_equal_approx(lintel.position.y, 78.0):
+			return _fail("room lintel %d missing or misplaced" % tile_x)
+		var threshold := world.get_node_or_null("RoomThreshold_%d" % tile_x) as Polygon2D
+		if threshold == null or not is_equal_approx(threshold.position.y, 128.0):
+			return _fail("room threshold %d missing or misplaced" % tile_x)
+	# 门洞净空 80px，玩家 40px 身高（脚底最低 216 → 头顶 176）不可能会被门楣挡住。
+	if 80.0 >= 216.0 - 40.0:
+		return _fail("doorway clearance is not tall enough for the player")
 	return true
 
 

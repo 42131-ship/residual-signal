@@ -62,6 +62,7 @@
 | P19 | 容器加载校验（稀有度池引用、每建筑唯一 treasure）与面板证据 | `LOOT_OK` 加载失败即拒；`CORRIDOR-LOOT_*.png` | **DONE** |
 | P20 | 背包与使用系统：容量 10、堆叠、拾取入包、E 使用 / Q 丢弃 / Tab 界面、玩家物资/体力/噪声状态 | `INVENTORY_OK effects=41` + `CORRIDOR_INVENTORY_OK` | **DONE** |
 | P21 | 左键攻击占位：装备近战/枪械后挥击、按武器抬噪声、4 帧挥击条 | `CORRIDOR_INVENTORY_OK ... attack=left_click` | **DONE**（无敌人/命中/耐久） |
+| P22 | 房间分隔墙 + 门洞（A/B/C 三区，常开门洞） | `TRAVERSE_OK waypoints=8` + `corridor_preview._verify_rooms()` + 截图 | **DONE**（门不可交互、区块状态未做） |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）

@@ -20,7 +20,8 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 .tools/Godot_v4.7-stable_win64.exe --path .
 ```
 
-主场景是 `game/scenes/corridor.tscn`。完整键位见 [`design/CONTROLS.md`](design/CONTROLS.md)：
+主场景是 `game/scenes/corridor.tscn`。走廊分成 **A 区 / B 区 / C 区** 三个房间区块（门洞连通），
+完整键位见 [`design/CONTROLS.md`](design/CONTROLS.md)：
 
 | 键 | 动作 |
 |---|---|
