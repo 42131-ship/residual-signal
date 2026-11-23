@@ -282,6 +282,43 @@ python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd
 2. 玩家死亡没有后果（体力到 0 只是数值）。
 3. 下一步：**状态系统（伤口/感染/中毒/成瘾）→ 搜索耗时**。
 
+---
+
+## 十五、本机同步（2026-11-23 晚，拉取 5a08898 后）
+
+从 GitHub 拉下 14 个提交（`3d41cf2 → 5a08898`）到本机（GTX 1060 / 1366×768 / Godot 4.7.0），
+跑全套门禁，**发现远端 HEAD 有两条门禁本来就是红的**，都不是玩法问题，是测试常量没跟上战斗提交：
+
+| # | 门禁 | 现象 | 根因 | 修法 |
+|---|---|---|---|---|
+| 1 | `loot.gd` | `treasure search without a high-value item (salt 3)` | 测试里手抄的 `HIGH_VALUE` 少了 `ammo_rifle`；数据 `pools.high_value` 已经有它 | 改成**从 `containers.json` 的池子推导** `HIGH_VALUE` / `FIREARMS`，不再手抄 |
+| 2 | `inventory.gd` | `unknown effect key damage on screwdriver` | `VALID_EFFECT_KEYS` 还是 Stage 2.8 的 5 个键，战斗提交新增了 `damage/durability/magazine/ammo` | 白名单补齐到 9 个键 |
+| 3 | `display.gd` | `window client size must be 1920x1080, got (1370, 749)` + `3.57x3.47` | 门禁用「窗口尺寸 ÷ 384」反推倍数；本机桌面只有 1366×768，窗口被系统夹小 | 改读 `root.get_final_transform()` 的实际缩放：断言**整数倍 + 方形像素 + 原生 384×216**；桌面 ≥1920×1080 时仍强制 1920×1080 / 5× |
+
+本机实测：引擎在 1366×768 上自动选了 **3×** 整数放大（`DISPLAY_OK ... actual=3x`），
+像素完整性没破，此前那个 3.57× 是测试自己的算法错。
+
+### 本机全绿快照（2026-11-23 21:0x）
+
+```text
+python tools/validate.py                 # 43 条 ERROR 0 · WARN 0 · SKIP 0
+python tools/selftest.py                 # 全部通过
+SMOKE_OK / REPLAY_OK / SHELL_OK
+LOOT_OK items=105 containers=3 tiers=4 story=never
+INVENTORY_OK capacity=3 effects=41
+TRAVERSE_OK waypoints=8 leaks=0
+CORRIDOR_OK / CORRIDOR_INSPECT_OK / CORRIDOR_LOOT_OK
+CORRIDOR_INVENTORY_OK / CORRIDOR_DOORS_OK / CORRIDOR_COMBAT_OK
+DISPLAY_OK actual=3x
+```
+
+### 本机与参考机的差异（不影响结论）
+
+- Godot 4.7.0（本机）vs 4.7.2（远端记录），同一 stable 分支。
+- 桌面 1366×768，只能 3× 呈现；参考机 5×。
+- 本机到 GitHub 的 HTTPS 在 HTTP/2 下会被重置，仓库已设 `http.version=HTTP/1.1`。
+
+
 
 
 

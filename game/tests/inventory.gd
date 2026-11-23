@@ -4,7 +4,11 @@ extends SceneTree
 ##         --script res://game/tests/inventory.gd
 ## 通过输出一行 `INVENTORY_OK ...`。
 
-const VALID_EFFECT_KEYS := ["supplies", "health", "noise", "equip", "contaminate"]
+const VALID_EFFECT_KEYS := [
+	"supplies", "health", "noise", "equip", "contaminate",
+	# 战斗提交（Stage 2.11）新增：武器伤害 / 耐久 / 弹匣容量 / 装填的弹药 id。
+	"damage", "durability", "magazine", "ammo",
+]
 
 
 func _initialize() -> void:

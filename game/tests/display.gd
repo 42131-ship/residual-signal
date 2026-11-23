@@ -35,13 +35,27 @@ func _run() -> void:
 		_finish()
 		return
 
-	# ② 真实窗口：客户区必须是 1920×1080，且放大倍数是整数 5×。
+	# ② 真实窗口：桌面够大时必须是 1920×1080 / 5×；
+	#    桌面放不下（笔记本、缩放、虚拟机）时按桌面能给的**整数倍**降级，
+	#    但「整数倍 + 方形像素 + 原生 384×216」这三条不许破。
+	#    之前用窗口尺寸 ÷ 384 反推倍数，桌面一小就误判（1370/384=3.57x3.47）。
+	await process_frame
 	await process_frame
 	var window_size := DisplayServer.window_get_size()
-	_check(window_size == PRESENT, "window client size must be 1920x1080, got %s" % str(window_size))
-	var factor := Vector2(window_size) / Vector2(NATIVE)
-	_check(is_equal_approx(factor.x, float(SCALE)) and is_equal_approx(factor.y, float(SCALE)),
-		"presentation scale must be exactly 5x, got %.2fx%.2f" % [factor.x, factor.y])
+	var screen := DisplayServer.screen_get_size()
+	var scale := root.get_final_transform().get_scale()
+	_check(scale.x >= 1.0 and is_equal_approx(scale.x, floorf(scale.x)),
+		"horizontal upscale must be an integer, got %.3f" % scale.x)
+	_check(scale.y >= 1.0 and is_equal_approx(scale.y, floorf(scale.y)),
+		"vertical upscale must be an integer, got %.3f" % scale.y)
+	_check(is_equal_approx(scale.x, scale.y),
+		"pixel aspect must stay square, got %.3fx%.3f" % [scale.x, scale.y])
+	if screen.x >= PRESENT.x and screen.y >= PRESENT.y:
+		_check(window_size == PRESENT, "window client size must be 1920x1080, got %s" % str(window_size))
+		_check(is_equal_approx(scale.x, float(SCALE)),
+			"reference desktop must present at exactly 5x, got %.2f" % scale.x)
+	else:
+		print("DISPLAY_DOWNSCALED desktop=%s window=%s scale=%s" % [str(screen), str(window_size), str(scale)])
 
 	# ③ 证据：原生帧 + 玩家实际看到的 5× 最近邻放大帧。
 	await RenderingServer.frame_post_draw
@@ -72,7 +86,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("DISPLAY_OK native=384x216 present=1920x1080 scale=5x stretch=viewport/integer/keep filter=nearest")
+		print("DISPLAY_OK native=384x216 target=1920x1080 actual=%.0fx stretch=viewport/integer/keep filter=nearest" % root.get_final_transform().get_scale().x)
 		quit(0)
 		return
 	print("DISPLAY_FAILED count=%d" % _failures.size())

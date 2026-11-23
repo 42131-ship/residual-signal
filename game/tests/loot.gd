@@ -3,15 +3,35 @@ extends SceneTree
 ## 运行：.tools/Godot_v4.7-stable_win64_console.exe --headless --path . \
 ##         --script res://game/tests/loot.gd
 ## 通过输出一行 `LOOT_OK ...`。
+##
+## 高价值 / 枪械集合**从 containers.json 的池子推导**，不在测试里手抄。
+## 手抄过一次：战斗提交往 high_value 里加了 ammo_rifle，测试常量没跟上，
+## 保底断言就变成「假失败」——数据是对的，测试是旧的。
 
-const FIREARMS := ["pistol", "ammo_9mm", "rifle"]
-const HIGH_VALUE := [
-	"pistol", "ammo_9mm", "rifle", "flare", "firecracker",
-	"antibiotics", "first_aid_kit", "tourniquet",
-]
+const CONTAINERS_PATH := "res://data/loot/containers.json"
+
+var HIGH_VALUE: Array[String] = []
+var FIREARMS: Array[String] = []
 
 
 func _initialize() -> void:
+	# 先按数据把两个集合建出来，后面所有断言都用它们。
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(CONTAINERS_PATH))
+	if not raw is Dictionary:
+		_fail("containers.json unreadable")
+		return
+	var pools: Variant = (raw as Dictionary).get("pools")
+	if not pools is Dictionary:
+		_fail("containers.json has no pools block")
+		return
+	for entry: Variant in (pools as Dictionary).get("high_value", []):
+		HIGH_VALUE.append(str((entry as Dictionary).get("item", "")))
+	for entry: Variant in (pools as Dictionary).get("firearm", []):
+		FIREARMS.append(str((entry as Dictionary).get("item", "")))
+	if HIGH_VALUE.is_empty():
+		_fail("high_value pool is empty")
+		return
+
 	var loot := LootService.new()
 	if not loot.load_all():
 		_fail("loot load failed: " + loot.load_error())
