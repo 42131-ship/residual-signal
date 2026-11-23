@@ -15,14 +15,12 @@ func _ready() -> void:
 
 
 func run_minimal_loop() -> void:
-	var load_result = data.load_all()
-	if not _operation_succeeded(load_result):
-		_finish(false, "load_failed: %s" % _operation_error(load_result, "data.load_all"))
+	if not data.load_all():
+		_finish(false, "load_failed: data.load_all()")
 		return
 
-	var init_result = world.init_from(data)
-	if not _operation_succeeded(init_result):
-		_finish(false, "world_init_failed: %s" % _operation_error(init_result, "world.init_from"))
+	if not world.init_from(data):
+		_finish(false, "world_init_failed: world.init_from()")
 		return
 
 	if not new_game("school", 0):
@@ -32,24 +30,22 @@ func run_minimal_loop() -> void:
 	world.spend_time(1)
 	world.spend_time(2)
 
-	var noise_result = world.add_noise("school_corridor_b", 2)
-	if not _operation_succeeded(noise_result):
-		_finish(false, "action_failed: add_noise(school_corridor_b): %s" % _operation_error(noise_result, "add_noise(school_corridor_b)"))
+	# add_noise 返回 {self, neighbors}，不是 {ok}；成功与否看 self 是否存在。
+	var noise_result: Dictionary = world.add_noise("school_corridor_b", 2)
+	if not noise_result.has("self"):
+		_finish(false, "action_failed: add_noise(school_corridor_b)")
 		return
 
-	var corridor_sediment = world.sediment_of("school_corridor_b")
-	if corridor_sediment == null:
-		_finish(false, "action_failed: sediment_of(school_corridor_b) returned null")
-		return
+	var corridor_sediment: int = world.sediment_of("school_corridor_b")
 
 	if not save_game():
 		_finish(false, "save_failed: user://save_01.json")
 		return
 
-	var saved_snapshot = world.snapshot()
-	var change_result = world.add_var("supplies", -0.1)
-	if not _operation_succeeded(change_result):
-		_finish(false, "roundtrip_setup_failed: add_var(supplies, -0.1): %s" % _operation_error(change_result, "add_var(supplies, -0.1)"))
+	var saved_snapshot: Dictionary = world.snapshot()
+	world.add_var("supplies", -0.1)
+	if is_equal_approx(world.var_of("supplies"), float(saved_snapshot.get("variables", {}).get("supplies", -1.0))):
+		_finish(false, "roundtrip_setup_failed: add_var(supplies, -0.1) 未生效")
 		return
 
 	if not load_game():
@@ -117,24 +113,22 @@ func load_game(path: String = "user://save_01.json") -> bool:
 
 
 func new_game(template_id: String = "school", entry_day: int = 0) -> bool:
-	if world == null:
-		_finish(false, "new_game_failed: world is null")
+	if world == null or data == null:
+		_finish(false, "new_game_failed: world/data is null")
 		return false
 
-	var template_result = world.new_game(template_id, entry_day)
-	if not _operation_succeeded(template_result):
-		_finish(false, "new_game_failed: template %s: %s" % [template_id, _operation_error(template_result, "world.new_game")])
+	# WorldState 没有 new_game/set_day/set_hour；开局 = init_from + spend_time 到 entry_day 08:00。
+	# template 目前只做存在性校验（模板运行时尚未接入）。
+	if data.template(template_id).is_empty():
+		_finish(false, "new_game_failed: unknown template %s" % template_id)
 		return false
-
-	var state_result = world.set_day(entry_day)
-	if not _operation_succeeded(state_result):
-		_finish(false, "new_game_failed: set day for template %s: %s" % [template_id, _operation_error(state_result, "set_day")])
+	if entry_day < 0 or entry_day > 30:
+		_finish(false, "new_game_failed: entry_day %d 超出 0..30" % entry_day)
 		return false
-
-	state_result = world.set_hour(8)
-	if not _operation_succeeded(state_result):
-		_finish(false, "new_game_failed: set hour for template %s: %s" % [template_id, _operation_error(state_result, "set_hour")])
+	if not world.init_from(data):
+		_finish(false, "new_game_failed: world.init_from()")
 		return false
+	world.spend_time(entry_day * 24 + 8)
 
 	var initial_vars := {
 		"trust": 0.3,
@@ -142,31 +136,32 @@ func new_game(template_id: String = "school", entry_day: int = 0) -> bool:
 		"supplies": 0.8,
 		"control": 0.0,
 		"knowledge": 0.5,
-		"time": 0.0,
 	}
-	# 六组之外的名字 set_var 会拒绝 —— 这里不许自造 health / morale / risk
-	for variable_id in initial_vars:
-		world.set_var(variable_id, initial_vars[variable_id])
+	# 六组之外的名字 set_var 会拒绝 —— 这里不许自造 health / morale / risk。
+	# time 是派生变量（day/30），不写入。
+	for variable_id: String in initial_vars:
+		world.set_var(variable_id, float(initial_vars[variable_id]))
 
 	return true
 
 
 func _make_summary(corridor_sediment: Variant) -> String:
-	var snapshot = world.snapshot()
-	var day = snapshot.get("day", "unknown")
-	var hour = snapshot.get("hour", "unknown")
-	var supplies = snapshot.get("vars", {}).get("supplies", "unknown")
-	var vars: Dictionary = snapshot.get("vars", {})
+	var snapshot: Dictionary = world.snapshot()
+	var day_value: Variant = snapshot.get("day", "unknown")
+	var hour_value: Variant = snapshot.get("hour", "unknown")
+	var variables: Dictionary = snapshot.get("variables", {})
+	var supplies: Variant = variables.get("supplies", "unknown")
 	var bounded := true
-	for variable_id in ["supplies", "trust", "knowledge", "health", "morale", "risk"]:
-		var value = vars.get(variable_id)
-		if not (value is int or value is float) or value < 0.0 or value > 1.0:
+	# 只查六组变量；旧代码查 health/morale/risk 这三个不存在的名字，摘要恒为 false。
+	for variable_id: String in WorldState.VARIABLE_NAMES:
+		var value: Variant = variables.get(variable_id)
+		if not (value is int or value is float) or float(value) < 0.0 or float(value) > 1.0:
 			bounded = false
 			break
 
 	return "day=%s hour=%s supplies=%s corridor_b_sediment=%s six_vars_in_0..1=%s" % [
-		str(day),
-		str(hour),
+		str(day_value),
+		str(hour_value),
 		str(supplies),
 		str(corridor_sediment),
 		str(bounded),
@@ -194,4 +189,5 @@ func _finish(ok: bool, report: String) -> void:
 
 
 func _dev_log(msg: String) -> void:
-	print(msg)
+	# 项目约定：运行时不 print（gd_sanity 会拦），开发日志走 warning。
+	push_warning(msg)

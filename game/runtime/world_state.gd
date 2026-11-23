@@ -164,11 +164,15 @@ func snapshot() -> Dictionary:
 func restore(s: Dictionary) -> bool:
 	if not s.has("day") or not s.has("hour") or not s.has("variables") or not s.has("sediment"):
 		return false
-	if not (s["day"] is int) or not (s["hour"] is int):
+	# JSON 往返会把整数读成 float（Godot 4 JSON 数值统一 float），这里按数值校验后取整。
+	var day_value: Variant = s["day"]
+	var hour_value: Variant = s["hour"]
+	if not (day_value is int or day_value is float) or not (hour_value is int or hour_value is float):
 		return false
-
-	var restored_day: int = int(s["day"])
-	var restored_hour: int = int(s["hour"])
+	var restored_day: int = int(day_value)
+	var restored_hour: int = int(hour_value)
+	if not is_equal_approx(float(day_value), float(restored_day)) or not is_equal_approx(float(hour_value), float(restored_hour)):
+		return false
 	if restored_day < 0 or restored_day > 30 or restored_hour < 0 or restored_hour > 23:
 		return false
 
@@ -189,7 +193,9 @@ func restore(s: Dictionary) -> bool:
 		return false
 	for node_id: Variant in restored_sediment:
 		var amount: Variant = restored_sediment[node_id]
-		if not (amount is int) or int(amount) < 0:
+		if not (amount is int or amount is float):
+			return false
+		if float(amount) < 0.0 or not is_equal_approx(float(amount), floorf(float(amount))):
 			return false
 		if int(amount) < sediment_of(str(node_id)):
 			return false
