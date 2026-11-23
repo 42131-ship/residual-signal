@@ -1,0 +1,24 @@
+{
+  "schema": "travel.v1",
+  "note": "五栋楼与它们之间的路线。一天只有一次外出（actions_per_day），去程回程算同一次行动；天黑未归按 night_multiplier 加风险。燃料是门槛不是消耗池（首版）。route 每条无向边只写一次，服务层负责对称校验。",
+  "buildings": [
+    {"id": "school", "label": "学校", "safehouse": true, "entry_days": [0, 1, 3, 5], "note": "唯一能锁门过夜；广播室在 f2。"},
+    {"id": "gas_station", "label": "加油站", "safehouse": false, "entry_days": [2, 6, 12], "note": "燃料来源；开阔，噪声传导快。"},
+    {"id": "hospital", "label": "医院", "safehouse": false, "entry_days": [8, 14, 21], "note": "药品与感染线；高密度感染区。"},
+    {"id": "fire_station", "label": "消防站", "safehouse": false, "entry_days": [10, 16, 23], "note": "工具与电台中继器；部分区域一次性。"},
+    {"id": "military_base", "label": "军事基地", "safehouse": false, "entry_days": [22, 27, 30], "note": "军用频率密码与弹药；晚去等于送死。"}
+  ],
+  "routes": [
+    {"a": "school", "b": "gas_station", "cost": 1, "fuel": 0, "risk": 1, "note": "过一条街，首版第一个可玩的外部楼。"},
+    {"a": "gas_station", "b": "hospital", "cost": 1, "fuel": 1, "risk": 2, "note": "要车或绕行。"},
+    {"a": "school", "b": "fire_station", "cost": 1, "fuel": 0, "risk": 2, "note": "后门小巷，夜里风险翻倍。"},
+    {"a": "fire_station", "b": "hospital", "cost": 1, "fuel": 1, "risk": 2, "note": "消防站是去医院的中转。"},
+    {"a": "fire_station", "b": "military_base", "cost": 2, "fuel": 2, "risk": 3, "note": "郊区公路，两天行程。"},
+    {"a": "hospital", "b": "military_base", "cost": 2, "fuel": 2, "risk": 3, "note": "绕城外。"}
+  ],
+  "day": {
+    "actions_per_day": 1,
+    "night_multiplier": 2.0,
+    "night_hour": 18
+  }
+}

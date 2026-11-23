@@ -14,7 +14,9 @@
     {"name": "headless-replay-30d", "cmd": "python tools/headless_30d.py --seeds 3", "gate": "warn", "status": "ready", "note": "Python 镜像，验数据语义，不是 GDScript"},
     {"name": "nodes-map", "cmd": "python tools/nodes_map.py", "gate": "warn", "status": "ready", "note": "DEC-D1 附加条件：只读拓扑预览"},
     {"name": "char-anim", "cmd": "python tools/char_anim_build.py", "gate": "hard", "status": "ready", "note": "全人物 idle/walk/hurt/death 精灵表 + 部件拆解；逐帧过 ≤16 色 / 二值 alpha"},
-    {"name": "see-through-layers", "cmd": "python tools/see_through_export.py", "gate": "hard", "status": "ready", "note": "按 see-through bodytags_v3 的 23 个语义层名拆层；内置「所有层合回 == 原图」无损校验"}
+    {"name": "see-through-layers", "cmd": "python tools/see_through_export.py", "gate": "hard", "status": "ready", "note": "按 see-through bodytags_v3 的 23 个语义层名拆层；内置「所有层合回 == 原图」无损校验"},
+    {"name": "travel", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/travel.gd", "gate": "hard", "status": "ready", "note": "五楼路线、一天一次外出、燃料门槛、夜间风险翻倍"},
+    {"name": "endings", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/endings.gd", "gate": "hard", "status": "ready", "note": "每模板 4 槽、未解锁不剧透、四结局判定与优先级"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",

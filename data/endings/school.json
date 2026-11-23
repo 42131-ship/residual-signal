@@ -1,0 +1,72 @@
+{
+  "schema": "endings.v1",
+  "template": "school",
+  "note": "每个模板固定四个结局。这里只放定义；解锁状态进存档，不写进数据表。locked_label / locked_summary 是给结局栏的占位文本，故意不剧透。",
+  "slots": 4,
+  "endings": [
+    {
+      "id": "military",
+      "order": 1,
+      "label": "军队到来",
+      "grade": "good",
+      "locked_label": "？？？",
+      "locked_summary": "还没有走到那一步。",
+      "summary": "你和同伴守住了广播室，黎明时直升机压着屋顶下来。",
+      "conditions": {
+        "companions_alive_min": 2,
+        "bond_min": 0.8,
+        "trust_min": 0.7,
+        "control_min": 0.6,
+        "knowledge_min": 0.7,
+        "requires_finale": "hold_broadcast"
+      }
+    },
+    {
+      "id": "lone_wolf",
+      "order": 2,
+      "label": "孤狼",
+      "grade": "neutral",
+      "locked_label": "？？？",
+      "locked_summary": "还没有走到那一步。",
+      "summary": "雨夜，井盖下面黑着。他没有回头。",
+      "conditions": {
+        "companions_alive_max": 0,
+        "control_min": 0.5,
+        "knowledge_min": 0.4,
+        "day_min": 26,
+        "requires_item_any": ["sewer_map", "sewer_key"]
+      }
+    },
+    {
+      "id": "betrayal",
+      "order": 3,
+      "label": "背弃",
+      "grade": "bad",
+      "locked_label": "？？？",
+      "locked_summary": "还没有走到那一步。",
+      "summary": "门外咀嚼声渐远，回头全是影子。三发子弹，四步距离。",
+      "conditions": {
+        "bond_max": 0.15,
+        "day_min": 28,
+        "requires_finale": "hide_in_infirmary",
+        "ammo_at_end": 3
+      }
+    },
+    {
+      "id": "body_double",
+      "order": 4,
+      "label": "替身",
+      "grade": "hidden",
+      "locked_label": "？？？",
+      "locked_summary": "还没有走到那一步。",
+      "summary": "那件校服外套在他身上。他跑向东侧楼梯，你从西门走了。",
+      "conditions": {
+        "knowledge_min": 0.8,
+        "trust_max": 0.2,
+        "day_min": 28,
+        "requires_finale": "send_decoy",
+        "companions_lost_min": 1
+      }
+    }
+  ]
+}

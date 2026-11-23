@@ -538,6 +538,37 @@ python tools/see_through_export.py   # characters=31 layers_written=217
 
 全量 16 条门禁仍然全绿。
 
+---
+
+## 二十一、Stage 3.0 · 多楼战役开工（2026-11-24 凌晨）
+
+> 拍板：Q1 = A+C；Q2 = 学校先独立、30 天跨五楼；Q3 = 3+1 结局，第 4 个叫**替身**（原「回声」改名并换设定）。
+> 另：主界面剧情模式要有**结局栏**，每模板固定 4 槽，已解锁可读、未解锁灰着（只显示「？？？」）。
+> 用户的「每模板全剧情收集另类结局」按要求**只记进猜想，不动代码**（见 `design/CAMPAIGN_30D.md`）。
+
+### 本轮落地（M1 的第一块 + 结局栏数据层）
+
+| 文件 | 作用 | 验收 |
+|---|---|---|
+| `data/travel/routes.json` | 五栋楼 + 6 条无向路线 + `actions_per_day=1` + 夜间风险 ×2 | — |
+| `game/runtime/travel.gd` | `TravelService`：楼表、路线对称、燃料门槛、夜间风险 | `TRAVEL_OK buildings=5 safehouse=school first_leg=school<->gas_station actions_per_day=1 night=2x` |
+| `data/endings/school.json` | 学校 4 个结局定义（军队 / 孤狼 / 背弃 / 替身），带 `locked_label` 占位 | — |
+| `game/runtime/ending_book.gd` | `EndingBook`：读定义、解锁、**未解锁遮标题**、按 order 判定 | `ENDINGS_OK template=school slots=4 mask=no_spoiler match=order first=military` |
+
+两条新门禁已进 `pipeline.json`（hard）。
+
+### 「替身」结局（替换原「回声」）
+
+`knowledge ≥ 0.8` 且 `trust ≤ 0.2`、至少 1 名同伴因你的选择死亡、第 28–30 夜选
+**让同伴穿你的外套去引开尸群**、且不满足「军队」。演出：他跑向东侧楼梯，你从西门走了；
+片尾幸存者名单上是他的名字（标注失踪），没有你的。与「孤狼」只差一个动作——**你推了谁一把**。
+
+### 下一步（M1 续）
+
+1. `TravelMap` 场景：读 `TravelService` 画五楼节点图，选目的地 → 出门 → 回程判定（天黑未归按 ×2 风险）。
+2. 走廊尽头那扇门改成「离场 / 回学校」的出口，接 `TravelService.can_travel`。
+3. 然后才是 M2（走廊全量改读写 `world_state`，删掉并行的 `_supplies/_health`）。
+
 
 
 
