@@ -173,5 +173,33 @@ python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd
 3. **房间分隔墙/门洞仍未做**：当前是一整条可走地面带，`traverse` 验证的是整块区域可达。
 4. `data/loot/containers.json` 还没进 `validate.py` 的规则与输入台账（R 规则未覆盖战利品表）。
 
+---
+
+## 十、Stage 2.7 · 物资与容器系统 v1（2026-11-23 深夜，已提交）
+
+> 反馈原文：「剧情模式不刷新物资！……只要一个柜子搜过了，那么接下来不管过了多少个世界日，
+> 那个物资用了就再也不刷新……柜子每次物资搜索不能每次都是五个，要有随机性，数量不固定、具体不固定……
+> 给每个柜子设一个类似容器珍惜程度，且每个建筑物高珍惜容器只有一个……写物资珍惜程度表……
+> 不要把价值高的或程度写在物品详情表里，让玩家自己猜……像黑道圣徒一样写很多恶趣味的道具，
+> 每个容器容纳的东西多少根据这个容器的价值程度和开启时间而定。」
+
+| # | 项 | 做法 | 验收 |
+|---|---|---|---|
+| 1 | 剧情模式不刷新 | `LootService` 剧情模式下容器搜过永久为空（`already_searched`），不再按世界日刷新；`refresh.story = never`，无尽模式保留 `per_day` 位 | `LOOT_OK story=never`；`CORRIDOR_LOOT_OK story=never`（day 28 再搜仍是「已经搜过一次 / 剧情模式不会刷新」） |
+| 2 | 容量随机 | 件数按档位 `capacity` 区间均匀随机；同档不同盐件数会变 | `LOOT_OK capacity_random=ok` |
+| 3 | 容器珍惜度 + 每建筑唯一高珍惜 | 四档：常见 1–2 件/1s、标准 2–3/2s、贵重 3–4/3s、高珍惜 4–5/5s；加载时校验每建筑 `treasure` 唯一（学校 = 急救柜） | `LOOT_OK containers=2 tiers=4` + 加载校验 |
+| 4 | 枪械只能在高珍惜容器 | 分池：常见/标准只抽 household/junk；贵重无 weapon；`firearm`/`high_value` 只挂高珍惜，且高珍惜保底一件高价值物 | `LOOT_OK weapon_only_treasure=ok`（普通容器 64 次无 weapon；高珍惜必出高价值物且 64 次内出过枪械） |
+| 5 | 物资表与详情不写价值 | `data/loot/items.json`：104 件物品，只有名称/类别/作用/使用方式；价值信息只在 `containers.json` 的分池里 | `LOOT_OK items=104` + 门禁拒绝 item 出现 tier/rarity/value 字段 |
+| 6 | 文档 | `design/LOOT.md`（由 `tools/build_loot_doc.py` 从 JSON 生成）：剧情规则、容器珍惜度表、抽取池（内部）、104 件物品详情表（不含价值）、恶趣味清单 | `python tools/build_loot_doc.py` |
+| 7 | 面板 | E 搜索面板：两种档位容器分别显示随机件数的物品名、共 N 件；同柜第二次显示拒绝文案 | `CORRIDOR_LOOT_OK` + `CORRIDOR-LOOT_{locker_bank,first_aid_cabinet}.png` |
+
+### 仍未做
+
+1. **背包/使用未接**：搜到的物品只显示文本，`items.json.usage` 的使用方式已写好但还没有 inventory 与使用系统。
+2. **消耗效果未接**：食物/医疗的数值效果（supplies、伤口、感染）还没接到角色状态。
+3. **搜索耗时未接**：`search_seconds` 目前只是数据，还没有「按住 E 搜索 N 秒」的交互。
+4. **`data/loot/items.json` / `containers.json` 还没进 validate.py 的规则与输入台账**。
+
+
 
 

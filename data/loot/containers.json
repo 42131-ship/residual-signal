@@ -1,34 +1,173 @@
 {
-  "schema": "loot-containers.v1",
-  "note": "可搜索容器表：E = 搜索/拾取（上下文），V = 查看文本。刷新策略按世界日结算；随机数由 (容器 id, 世界日, 当日第几次搜索, 种子盐) 确定性生成，方便回放测试。",
+  "schema": "loot-containers.v2",
+  "note": "容器数据（内部）。剧情模式下容器搜过一次就永久为空：不管过多少世界日都不刷新，物资用了就永远没了。稀有度/价值只在本文件里，玩家可见的物品详情见 data/loot/items.json（不含价值）。",
+  "refresh": { "story": "never", "endless": "per_day" },
+  "tiers": {
+    "common": {
+      "label": "常见",
+      "capacity": [1, 2],
+      "search_seconds": 1,
+      "pools": ["household"]
+    },
+    "standard": {
+      "label": "标准",
+      "capacity": [2, 3],
+      "search_seconds": 2,
+      "pools": ["household", "junk"]
+    },
+    "valuable": {
+      "label": "贵重",
+      "capacity": [3, 4],
+      "search_seconds": 3,
+      "pools": ["household", "medical", "tools", "valuable"]
+    },
+    "treasure": {
+      "label": "高珍惜",
+      "capacity": [4, 5],
+      "search_seconds": 5,
+      "pools": ["medical", "tools", "valuable"],
+      "guaranteed": "high_value"
+    }
+  },
+  "pools": {
+    "household": [
+      { "item": "bottled_water", "weight": 6 },
+      { "item": "canned_food", "weight": 4 },
+      { "item": "biscuits", "weight": 4 },
+      { "item": "instant_noodles", "weight": 3 },
+      { "item": "chocolate", "weight": 2 },
+      { "item": "battery_aa", "weight": 4 },
+      { "item": "lighter", "weight": 3 },
+      { "item": "matches", "weight": 3 },
+      { "item": "candle", "weight": 2 },
+      { "item": "toilet_paper", "weight": 3 },
+      { "item": "soap", "weight": 2 },
+      { "item": "toothbrush", "weight": 2 },
+      { "item": "towel", "weight": 2 },
+      { "item": "chalk", "weight": 2 },
+      { "item": "pencil", "weight": 2 },
+      { "item": "coins", "weight": 2 },
+      { "item": "exam_papers", "weight": 2 },
+      { "item": "newspaper", "weight": 3 },
+      { "item": "gum", "weight": 2 },
+      { "item": "candy", "weight": 2 },
+      { "item": "nail_clippers", "weight": 1 },
+      { "item": "mirror", "weight": 1 },
+      { "item": "whistle", "weight": 1 },
+      { "item": "fishing_line", "weight": 1 }
+    ],
+    "junk": [
+      { "item": "expired_milk", "weight": 3 },
+      { "item": "dog_food", "weight": 3 },
+      { "item": "beer", "weight": 2 },
+      { "item": "liquor", "weight": 2 },
+      { "item": "cigarettes", "weight": 2 },
+      { "item": "underwear", "weight": 2 },
+      { "item": "adult_magazine", "weight": 2 },
+      { "item": "condom", "weight": 2 },
+      { "item": "wig", "weight": 1 },
+      { "item": "clown_mask", "weight": 1 },
+      { "item": "wedding_photo", "weight": 1 },
+      { "item": "urn", "weight": 1 },
+      { "item": "love_letter", "weight": 1 },
+      { "item": "suicide_note", "weight": 1 },
+      { "item": "bloody_shirt", "weight": 1 },
+      { "item": "human_tooth", "weight": 1 },
+      { "item": "rat_poison", "weight": 1 },
+      { "item": "bleach", "weight": 2 },
+      { "item": "earplugs", "weight": 2 }
+    ],
+    "medical": [
+      { "item": "bandage", "weight": 5 },
+      { "item": "painkillers", "weight": 3 },
+      { "item": "alcohol_wipes", "weight": 3 },
+      { "item": "disinfectant", "weight": 3 },
+      { "item": "iodine", "weight": 2 },
+      { "item": "burn_cream", "weight": 2 },
+      { "item": "cold_pack", "weight": 3 },
+      { "item": "hot_pack", "weight": 2 },
+      { "item": "vitamins", "weight": 2 },
+      { "item": "splint", "weight": 1 },
+      { "item": "tourniquet", "weight": 1 },
+      { "item": "surgical_mask", "weight": 3 },
+      { "item": "rubber_gloves", "weight": 3 },
+      { "item": "thermometer", "weight": 2 },
+      { "item": "sleeping_pills", "weight": 2 }
+    ],
+    "tools": [
+      { "item": "duct_tape", "weight": 4 },
+      { "item": "screwdriver", "weight": 3 },
+      { "item": "hammer", "weight": 2 },
+      { "item": "box_cutter", "weight": 2 },
+      { "item": "wire", "weight": 3 },
+      { "item": "fuse", "weight": 2 },
+      { "item": "light_bulb", "weight": 2 },
+      { "item": "rope", "weight": 2 },
+      { "item": "zip_ties", "weight": 2 },
+      { "item": "padlock", "weight": 2 },
+      { "item": "saw", "weight": 1 },
+      { "item": "screw_nail_bag", "weight": 2 },
+      { "item": "crowbar", "weight": 2 },
+      { "item": "kitchen_knife", "weight": 2 },
+      { "item": "scissors", "weight": 2 },
+      { "item": "dildo_bat", "weight": 1 },
+      { "item": "handcuffs", "weight": 1 },
+      { "item": "dog_collar", "weight": 1 },
+      { "item": "fire_extinguisher", "weight": 1 },
+      { "item": "crowbar_small", "weight": 1 }
+    ],
+    "valuable": [
+      { "item": "antibiotics", "weight": 2 },
+      { "item": "first_aid_kit", "weight": 2 },
+      { "item": "iv_bag", "weight": 2 },
+      { "item": "syringe", "weight": 2 },
+      { "item": "radio", "weight": 2 },
+      { "item": "walkie_talkie", "weight": 1 },
+      { "item": "map_school", "weight": 2 },
+      { "item": "notebook", "weight": 2 },
+      { "item": "student_id", "weight": 2 },
+      { "item": "keys", "weight": 3 },
+      { "item": "car_battery", "weight": 1 },
+      { "item": "fuel_can", "weight": 1 },
+      { "item": "camping_stove", "weight": 1 },
+      { "item": "gas_canister", "weight": 1 },
+      { "item": "power_bank", "weight": 1 },
+      { "item": "phone", "weight": 1 },
+      { "item": "energy_drink", "weight": 2 },
+      { "item": "coffee", "weight": 1 },
+      { "item": "uniform", "weight": 1 },
+      { "item": "flashlight_bulb", "weight": 2 },
+      { "item": "flashlight_spare", "weight": 2 }
+    ],
+    "firearm": [
+      { "item": "pistol", "weight": 2 },
+      { "item": "ammo_9mm", "weight": 3 },
+      { "item": "rifle", "weight": 1 }
+    ],
+    "high_value": [
+      { "item": "pistol", "weight": 3 },
+      { "item": "ammo_9mm", "weight": 3 },
+      { "item": "rifle", "weight": 1 },
+      { "item": "flare", "weight": 1 },
+      { "item": "firecracker", "weight": 1 },
+      { "item": "antibiotics", "weight": 2 },
+      { "item": "first_aid_kit", "weight": 2 },
+      { "item": "tourniquet", "weight": 1 }
+    ]
+  },
   "containers": [
     {
       "id": "locker_bank",
       "label": "储物柜",
-      "prompt": "搜索",
-      "rolls": 1,
-      "refresh": { "kind": "per_day", "days": 1 },
-      "loot_table": [
-        { "item": "干粮", "kind": "supply", "weight": 4 },
-        { "item": "瓶装水", "kind": "supply", "weight": 4 },
-        { "item": "电池", "kind": "tool", "weight": 3 },
-        { "item": "旧点名册", "kind": "clue", "weight": 1 },
-        { "item": "空气", "kind": "none", "weight": 3 }
-      ]
+      "building": "school",
+      "tier": "common"
     },
     {
       "id": "first_aid_cabinet",
       "label": "急救柜",
-      "prompt": "搜索",
-      "rolls": 1,
-      "refresh": { "kind": "per_day", "days": 1 },
-      "loot_table": [
-        { "item": "绷带", "kind": "medical", "weight": 4 },
-        { "item": "止痛药", "kind": "medical", "weight": 2 },
-        { "item": "酒精棉", "kind": "medical", "weight": 3 },
-        { "item": "手电电池", "kind": "tool", "weight": 2 },
-        { "item": "空气", "kind": "none", "weight": 2 }
-      ]
+      "building": "school",
+      "tier": "treasure",
+      "note": "学校建筑唯一的高珍惜容器（校医上锁柜）。可能出枪械或关键药品；其余容器只出日用品/工具/普通医疗。"
     }
   ]
 }

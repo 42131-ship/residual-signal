@@ -439,23 +439,40 @@ func _show_inspection(id: String) -> void:
 func _search_container(id: String) -> void:
 	if _loot == null:
 		return
-	var result: Dictionary = _loot.search(id, _world_day)
+	# 剧情模式：容器搜过一次就永久为空（不按天刷新）。
+	var result: Dictionary = _loot.search(id, _world_day, 0, "story")
 	if not bool(result.get("ok", false)):
-		var reason := str(result.get("reason", ""))
-		var line := "今天已经翻过" if reason == "already_searched_today" else "打不开"
-		_show_panel(_loot.label_of(id), [line, "明天再来"], id)
+		_show_panel(_loot.label_of(id), ["已经搜过一次", "剧情模式不会刷新"], id)
 		return
-	var lines: Array[String] = []
-	if bool(result.get("empty", false)):
-		lines = ["里面是空的", "明天再来"]
+	var items: Array = result.get("items", [])
+	if items.is_empty():
+		_show_panel(_loot.label_of(id), ["里面是空的", "连灰都没有"], id)
+		return
+	_show_panel(_loot.label_of(id), _loot_lines(items), id)
+
+
+func _loot_lines(items: Array) -> Array[String]:
+	var names := PackedStringArray()
+	for item: Dictionary in items:
+		names.append(str(item.get("name", "")))
+	var joined := "、".join(names)
+	var first := "找到：" + joined.substr(0, 16)
+	var rest := joined.substr(16)
+	var lines: Array[String] = [first]
+	if rest.is_empty():
+		lines.append("共 %d 件" % items.size())
 	else:
-		lines = ["找到：" + str(result.get("item", "")), "已收进背包"]
-	_show_panel(_loot.label_of(id), lines, id)
+		var second := rest.substr(0, 22)
+		if rest.length() > 22:
+			second += "…"
+		second += "（共%d件）" % items.size()
+		lines.append(second)
+	return lines
 
 
 func _load_loot() -> void:
 	_loot = LootService.new()
-	if not _loot.load_containers():
+	if not _loot.load_all():
 		push_error("LOOT_LOAD_FAILED: " + _loot.load_error())
 
 

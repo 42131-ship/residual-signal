@@ -1,15 +1,14 @@
 extends SceneTree
-## 可搜索柜门禁（真渲染）：两个柜子用 E 搜索，同一天第二次显示「翻过」，面板可关。
+## 可搜索柜门禁（真渲染）：E 搜索，面板显示随机件数的物品；剧情模式搜过永久为空。
 ## 运行（不能加 --headless，要截图）：
 ##   .tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 \
 ##     --script res://game/tests/corridor_loot.gd -- CORRIDOR-LOOT
 ## 通过输出一行 `CORRIDOR_LOOT_OK ...`。
 
 const SCENE: PackedScene = preload("res://game/scenes/corridor.tscn")
-const VIEW_SIZE := Vector2i(384, 216)
 const CONTAINERS := {
-	"locker_bank": {"x": 80.0, "y": 136.0, "label": "储物柜"},
-	"first_aid_cabinet": {"x": 416.0, "y": 136.0, "label": "急救柜"},
+	"locker_bank": {"x": 80.0, "y": 136.0},
+	"first_aid_cabinet": {"x": 416.0, "y": 136.0},
 }
 
 var _corridor: Node2D
@@ -36,6 +35,7 @@ func _run() -> void:
 		_finish()
 		return
 
+	# ① 两个容器都能搜：面板标题正确、锁移动、有随机物品与件数，并截图。
 	for id: String in CONTAINERS:
 		var spec: Dictionary = CONTAINERS[id]
 		await _place(float(spec["x"]), float(spec["y"]))
@@ -45,17 +45,28 @@ func _run() -> void:
 		_check(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")) == id,
 			"%s panel shows the wrong container" % id)
 		_check(_actor._movement_locked, "%s search did not lock movement" % id)
-		if id == "locker_bank":
-			await _capture("%s_panel" % _prefix)
+		var lines: Array = _corridor._panel_lines
+		_check(lines.size() == 2, "%s panel needs two lines, got %s" % [id, str(lines)])
+		_check(str(lines[0]).begins_with("找到："), "%s panel missing 找到 prefix: %s" % [id, str(lines)])
+		_check(str(lines[1]).contains("共") and str(lines[1]).contains("件"),
+			"%s panel missing item count: %s" % [id, str(lines)])
+		await _capture("%s_%s" % [_prefix, id])
 		await _press(KEY_ESCAPE)
 		_check(not _corridor._inspection_open, "%s panel did not close on Esc" % id)
 
-	# 同一天第二次搜同一个柜子：必须显示「今天已经翻过」，而不是再给一份物资。
+	# ② 剧情模式不刷新：搜过的柜子换多少世界日都还是空的。
 	await _place(float(CONTAINERS["locker_bank"]["x"]), float(CONTAINERS["locker_bank"]["y"]))
 	await _press(KEY_E)
 	_check(_corridor._inspection_open, "second search did not open the refusal panel")
-	_check(_corridor._panel_lines.has("今天已经翻过"),
-		"second same-day search should be refused, panel lines=%s" % str(_corridor._panel_lines))
+	_check(_corridor._panel_lines.has("已经搜过一次"),
+		"second search should be refused, panel=%s" % str(_corridor._panel_lines))
+	await _press(KEY_ESCAPE)
+	_corridor._world_day = 28
+	await _press(KEY_E)
+	_check(_corridor._panel_lines.has("已经搜过一次"),
+		"story mode must not refresh after day change, panel=%s" % str(_corridor._panel_lines))
+	_check(_corridor._panel_lines.has("剧情模式不会刷新"),
+		"refusal should explain story mode, panel=%s" % str(_corridor._panel_lines))
 	await _press(KEY_E)
 	_check(not _corridor._inspection_open, "E should also close the panel")
 	_finish()
@@ -109,7 +120,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("CORRIDOR_LOOT_OK containers=%d refresh=per_day panel=ok" % CONTAINERS.size())
+		print("CORRIDOR_LOOT_OK containers=2 story=never panel=ok")
 		quit(0)
 		return
 	print("CORRIDOR_LOOT_FAILED count=%d" % _failures.size())

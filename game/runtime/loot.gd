@@ -2,62 +2,24 @@ class_name LootService
 extends RefCounted
 
 const CONTAINERS_PATH := "res://data/loot/containers.json"
+const ITEMS_PATH := "res://data/loot/items.json"
 
 var _containers: Dictionary = {}
 var _order: Array[String] = []
-## id -> {"day": int, "count": int}：当日搜过几次；per_day 刷新按世界日结算。
+var _tiers: Dictionary = {}
+var _pools: Dictionary = {}
+var _items: Dictionary = {}
+var _refresh: Dictionary = {}
+## id -> true：剧情模式下容器搜过就永久为空（不按天刷新）。
 var _searched: Dictionary = {}
 var _load_error := ""
 
 
-func load_containers(path: String = CONTAINERS_PATH) -> bool:
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		_load_error = "LOOT_CONTAINERS_MISSING: " + path
+func load_all(containers_path: String = CONTAINERS_PATH, items_path: String = ITEMS_PATH) -> bool:
+	_load_error = ""
+	if not _load_items(items_path):
 		return false
-	var parser := JSON.new()
-	if parser.parse(file.get_as_text()) != OK:
-		_load_error = "LOOT_JSON_INVALID: %d %s" % [parser.get_error_line(), parser.get_error_message()]
-		return false
-	var data: Variant = parser.data
-	if not data is Dictionary or str(data.get("schema", "")) != "loot-containers.v1":
-		_load_error = "LOOT_SCHEMA_INVALID"
-		return false
-	var rows: Variant = data.get("containers")
-	if not rows is Array:
-		_load_error = "LOOT_CONTAINERS_NOT_ARRAY"
-		return false
-
-	_containers.clear()
-	_order.clear()
-	for value: Variant in rows:
-		if not value is Dictionary:
-			_load_error = "LOOT_CONTAINER_INVALID"
-			return false
-		var row: Dictionary = value
-		var id := str(row.get("id", ""))
-		var label := str(row.get("label", ""))
-		var table: Variant = row.get("loot_table")
-		if id.is_empty() or label.is_empty() or not table is Array or table.is_empty() or _containers.has(id):
-			_load_error = "LOOT_CONTAINER_FIELDS_INVALID: " + id
-			return false
-		var total_weight := 0.0
-		for entry: Variant in table:
-			if not entry is Dictionary:
-				_load_error = "LOOT_ENTRY_INVALID: " + id
-				return false
-			var candidate: Dictionary = entry
-			var weight := float(candidate.get("weight", 0.0))
-			if str(candidate.get("item", "")).is_empty() or weight <= 0.0:
-				_load_error = "LOOT_ENTRY_FIELDS_INVALID: " + id
-				return false
-			total_weight += weight
-		if total_weight <= 0.0:
-			_load_error = "LOOT_WEIGHT_INVALID: " + id
-			return false
-		_containers[id] = row.duplicate(true)
-		_order.append(id)
-	return true
+	return _load_containers(containers_path)
 
 
 func load_error() -> String:
@@ -72,57 +34,209 @@ func label_of(id: String) -> String:
 	return str(_containers.get(id, {}).get("label", ""))
 
 
+func tier_of(id: String) -> String:
+	return str(_containers.get(id, {}).get("tier", ""))
+
+
 func container_ids() -> Array[String]:
 	return _order.duplicate()
 
 
-func can_search(id: String, day: int) -> bool:
+func items_catalog() -> Dictionary:
+	return _items
+
+
+func can_search(id: String, mode := "story") -> bool:
 	if not _containers.has(id):
 		return false
-	var record: Dictionary = _searched.get(id, {})
-	if record.is_empty():
-		return true
-	var refresh: Dictionary = _containers[id].get("refresh", {})
-	var days: int = maxi(1, int(refresh.get("days", 1)))
-	return day >= int(record.get("day", 0)) + days
+	if bool(_searched.get(id, false)):
+		return false
+	return true
 
 
-## 返回 {ok, item, kind, empty, day, count}；同一世界日内重复搜索返回 ok=false。
-func search(id: String, day: int, salt: int = 0) -> Dictionary:
+## 返回 {ok, items:[{id,name,category,description,usage}], count, tier}。
+## mode="story"：搜过永久为空（剧情模式，不刷新）；mode="endless"：留待无尽模式接入按日刷新。
+func search(id: String, day: int, salt: int = 0, mode := "story") -> Dictionary:
 	if not _containers.has(id):
 		return {"ok": false, "reason": "unknown_container"}
-	if not can_search(id, day):
-		return {"ok": false, "reason": "already_searched_today", "day": day}
+	if not can_search(id, mode):
+		return {"ok": false, "reason": "already_searched"}
+	_searched[id] = true
 
-	var record: Dictionary = _searched.get(id, {"day": day, "count": 0})
-	var count: int = int(record.get("count", 0)) + 1
-	_searched[id] = {"day": day, "count": count}
+	var tier_id := tier_of(id)
+	var tier: Dictionary = _tiers.get(tier_id, {})
+	if tier.is_empty():
+		return {"ok": false, "reason": "unknown_tier"}
 
-	var definition: Dictionary = _containers[id]
-	var table: Array = definition.get("loot_table", [])
-	var total := 0.0
-	for entry: Dictionary in table:
-		total += float(entry.get("weight", 0.0))
 	var rng := RandomNumberGenerator.new()
-	# 确定性随机：同一 (容器, 世界日, 当日次数, 盐) 永远得到同一结果，便于回放与测试。
-	rng.seed = hash("%s|%d|%d|%d" % [id, day, count, salt])
-	var roll := rng.randf() * total
-	var picked: Dictionary = table[table.size() - 1]
-	for entry: Dictionary in table:
-		roll -= float(entry.get("weight", 0.0))
-		if roll <= 0.0:
-			picked = entry
+	# 确定性随机：同一 (容器, 世界日, 盐) 永远得到同一批物资，便于回放与测试。
+	rng.seed = hash("%s|%d|%d|%s" % [id, day, salt, tier_id])
+
+	var capacity: Array = tier.get("capacity", [1, 1])
+	var capacity_min: int = maxi(1, int(capacity[0]))
+	var capacity_max: int = maxi(capacity_min, int(capacity[1]))
+	var count: int = rng.randi_range(capacity_min, capacity_max)
+
+	var picked: Array[String] = []
+	var guaranteed := str(tier.get("guaranteed", ""))
+	if not guaranteed.is_empty():
+		var fixed := _pick_from_pool(guaranteed, rng, picked)
+		if not fixed.is_empty():
+			picked.append(fixed)
+
+	var pool_ids: Array = tier.get("pools", [])
+	while picked.size() < count and not pool_ids.is_empty():
+		var pool_id := str(pool_ids[rng.randi_range(0, pool_ids.size() - 1)])
+		var item_id := _pick_from_pool(pool_id, rng, picked)
+		if item_id.is_empty():
 			break
-	var kind := str(picked.get("kind", "none"))
+		picked.append(item_id)
+
+	var result_items: Array[Dictionary] = []
+	for item_id: String in picked:
+		var detail: Dictionary = _items.get(item_id, {})
+		if detail.is_empty():
+			continue
+		result_items.append(detail.duplicate(true))
 	return {
 		"ok": true,
-		"item": str(picked.get("item", "")),
-		"kind": kind,
-		"empty": kind == "none",
+		"count": result_items.size(),
+		"items": result_items,
+		"tier": tier_id,
+		"container": id,
 		"day": day,
-		"count": count,
 	}
 
 
 func reset() -> void:
 	_searched.clear()
+
+
+# ── 内部 ─────────────────────────────────────────────────────
+
+func _pick_from_pool(pool_id: String, rng: RandomNumberGenerator, exclude: Array[String]) -> String:
+	var pool: Array = _pools.get(pool_id, [])
+	var candidates: Array = []
+	var total := 0.0
+	for entry: Variant in pool:
+		if not entry is Dictionary:
+			continue
+		var row: Dictionary = entry
+		var item_id := str(row.get("item", ""))
+		var weight := float(row.get("weight", 0.0))
+		if item_id.is_empty() or weight <= 0.0 or not _items.has(item_id) or item_id in exclude:
+			continue
+		candidates.append(row)
+		total += weight
+	if candidates.is_empty() or total <= 0.0:
+		return ""
+	var roll := rng.randf() * total
+	for row: Dictionary in candidates:
+		roll -= float(row.get("weight", 0.0))
+		if roll <= 0.0:
+			return str(row.get("item", ""))
+	return str(candidates[candidates.size() - 1].get("item", ""))
+
+
+func _load_items(path: String) -> bool:
+	var data: Variant = _read_json(path)
+	if not data is Dictionary or str(data.get("schema", "")) != "loot-items.v1":
+		_load_error = "LOOT_ITEMS_SCHEMA_INVALID"
+		return false
+	var rows: Variant = data.get("items")
+	if not rows is Array or rows.is_empty():
+		_load_error = "LOOT_ITEMS_NOT_ARRAY"
+		return false
+	_items.clear()
+	for value: Variant in rows:
+		if not value is Dictionary:
+			_load_error = "LOOT_ITEM_INVALID"
+			return false
+		var row: Dictionary = value
+		var item_id := str(row.get("id", ""))
+		var name := str(row.get("name", ""))
+		var description := str(row.get("description", ""))
+		var usage := str(row.get("usage", ""))
+		if item_id.is_empty() or name.is_empty() or description.is_empty() or usage.is_empty():
+			_load_error = "LOOT_ITEM_FIELDS_INVALID: " + item_id
+			return false
+		if _items.has(item_id):
+			_load_error = "LOOT_ITEM_DUPLICATE: " + item_id
+			return false
+		_items[item_id] = {
+			"id": item_id,
+			"name": name,
+			"category": str(row.get("category", "")),
+			"description": description,
+			"usage": usage,
+		}
+	return true
+
+
+func _load_containers(path: String) -> bool:
+	var data: Variant = _read_json(path)
+	if not data is Dictionary or str(data.get("schema", "")) != "loot-containers.v2":
+		_load_error = "LOOT_CONTAINERS_SCHEMA_INVALID"
+		return false
+
+	var tiers_value: Variant = data.get("tiers")
+	var pools_value: Variant = data.get("pools")
+	var rows: Variant = data.get("containers")
+	var refresh_value: Variant = data.get("refresh")
+	if not tiers_value is Dictionary or not pools_value is Dictionary or not rows is Array:
+		_load_error = "LOOT_CONTAINERS_SHAPE_INVALID"
+		return false
+	_refresh = refresh_value if refresh_value is Dictionary else {}
+	_tiers = tiers_value
+	_pools = pools_value
+
+	# 池里的物品必须全部在物品表里（不让容器引用不存在的东西）。
+	for pool_id: Variant in _pools:
+		var pool: Variant = _pools[pool_id]
+		if not pool is Array or pool.is_empty():
+			_load_error = "LOOT_POOL_INVALID: " + str(pool_id)
+			return false
+		for entry: Variant in pool:
+			if not entry is Dictionary or not _items.has(str((entry as Dictionary).get("item", ""))):
+				_load_error = "LOOT_POOL_ITEM_UNKNOWN: " + str(pool_id)
+				return false
+
+	_containers.clear()
+	_order.clear()
+	var treasure_per_building: Dictionary = {}
+	for value: Variant in rows:
+		if not value is Dictionary:
+			_load_error = "LOOT_CONTAINER_INVALID"
+			return false
+		var row: Dictionary = value
+		var id := str(row.get("id", ""))
+		var label := str(row.get("label", ""))
+		var tier_id := str(row.get("tier", ""))
+		var building := str(row.get("building", ""))
+		if id.is_empty() or label.is_empty() or building.is_empty() or not _tiers.has(tier_id):
+			_load_error = "LOOT_CONTAINER_FIELDS_INVALID: " + id
+			return false
+		if _containers.has(id):
+			_load_error = "LOOT_CONTAINER_DUPLICATE: " + id
+			return false
+		_containers[id] = row.duplicate(true)
+		_order.append(id)
+		if tier_id == "treasure":
+			treasure_per_building[building] = int(treasure_per_building.get(building, 0)) + 1
+	for building: Variant in treasure_per_building:
+		if int(treasure_per_building[building]) > 1:
+			_load_error = "LOOT_TREASURE_NOT_UNIQUE: " + str(building)
+			return false
+	return true
+
+
+func _read_json(path: String) -> Variant:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		_load_error = "LOOT_MISSING: " + path
+		return null
+	var parser := JSON.new()
+	if parser.parse(file.get_as_text()) != OK:
+		_load_error = "LOOT_JSON_INVALID: %d %s" % [parser.get_error_line(), parser.get_error_message()]
+		return null
+	return parser.data

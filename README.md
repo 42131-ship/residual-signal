@@ -34,6 +34,9 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 | `F` | 手电开关 |
 | 鼠标左键 / `Tab` | 已定键位，战斗与背包系统未实现（见 CONTROLS.md） |
 
+物资与容器规则见 [`design/LOOT.md`](design/LOOT.md)：**剧情模式下容器搜过一次就永久为空（不刷新）**，
+每栋建筑只有一个高珍惜容器（学校 = 急救柜），物品详情不写价值/稀有度，玩家自己判断。
+
 ---
 
 ## 目录结构
@@ -71,8 +74,10 @@ python tools/pixelpipe.py gate art/generated_candidates/props/stage1/PROP-02_01_
 # 重建 15 件学校道具（会重写 corridor_props.tscn 与 props.json）
 python tools/prop_build.py
 
-# 重建点阵字库（PF-01 HUD / PF-02 中文检查文本）
+# 重建点阵字库（PF-01 HUD / PF-02 中文检查文本 + 战利品文案）
 python tools/font_build.py
+# 从 data/loot/*.json 重新生成物资文档 design/LOOT.md
+python tools/build_loot_doc.py
 
 # Godot 侧
 $G = ".tools/Godot_v4.7-stable_win64_console.exe"

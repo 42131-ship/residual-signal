@@ -22,8 +22,9 @@ CJK_MAP_OUT = ROOT / "art" / "generated_candidates" / "fonts" / "PF-02_cjk_12.js
 CJK_FONT = ROOT / "art" / "fonts" / "NotoSansSC-VF.ttf"
 INSPECTIONS = ROOT / "data" / "prop_inspections.json"
 LOOT_CONTAINERS = ROOT / "data" / "loot" / "containers.json"
-# 战利品面板的固定文案：与 corridor.gd 的 _search_container 保持一致，改文案时两边一起改。
-LOOT_UI_TEXT = "找到：已收进背包今天已经翻过明天再来里面是空的"
+LOOT_ITEMS = ROOT / "data" / "loot" / "items.json"
+# 战利品面板的固定文案：与 corridor.gd 的 _search_container / _loot_lines 保持一致。
+LOOT_UI_TEXT = "找到：共件已经搜过一次剧情模式不会刷新里面是空的连灰都没有、…（）"
 PAL = ROOT / "art" / "palettes" / "master.gpl"
 CELL_SIZE = 16
 CJK_COLUMNS = 16
@@ -75,15 +76,16 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
         characters.update(str(record.get("title", "")))
         for line in record.get("lines", []):
             characters.update(str(line))
-    # 可搜索柜子的标签 / 物品名 / 固定提示也必须进图集，否则面板会缺字。
+    # 可搜索柜子的标签、物品名、固定提示也必须进图集，否则面板会缺字。
     if LOOT_CONTAINERS.exists():
         loot = json.loads(LOOT_CONTAINERS.read_text(encoding="utf-8"))
         for container in loot.get("containers", []):
             characters.update(str(container.get("label", "")))
-            characters.update(str(container.get("prompt", "")))
-            for entry in container.get("loot_table", []):
-                characters.update(str(entry.get("item", "")))
         characters.update(LOOT_UI_TEXT)
+    if LOOT_ITEMS.exists():
+        items = json.loads(LOOT_ITEMS.read_text(encoding="utf-8"))
+        for entry in items.get("items", []):
+            characters.update(str(entry.get("name", "")))
     characters = sorted(characters - {"", "\n", "\r", "\t", " "})
 
     rows = (len(characters) + CJK_COLUMNS - 1) // CJK_COLUMNS

@@ -58,6 +58,8 @@
 | P15 | 三档速度：蹲下潜行 / 步行 / 疾跑 | `CORRIDOR_OK ... crouch=29.5 sprint=107.7` | **DONE** |
 | P16 | 两个可搜索柜子 + 随机战利品 + 按日刷新 | `CORRIDOR_LOOT_OK` + `LOOT_OK distinct_locker=5`（确定性随机） | **DONE** |
 | P17 | WASD 全区域可达门禁 | `TRAVERSE_OK corners=4 center=1 leaks=0` | **DONE**（房间分隔墙仍未做） |
+| P18 | 物资与容器系统 v1：剧情不刷新 / 四档珍惜度 / 每建筑唯一高珍惜容器 / 枪械只在最高档 / 104 件物品表（详情不含价值） | `LOOT_OK items=104 story=never capacity_random=ok weapon_only_treasure=ok` + `design/LOOT.md` | **DONE** |
+| P19 | 容器加载校验（稀有度池引用、每建筑唯一 treasure）与面板证据 | `LOOT_OK` 加载失败即拒；`CORRIDOR-LOOT_*.png` | **DONE** |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）
