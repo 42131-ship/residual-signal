@@ -413,26 +413,6 @@ func set_inspection_ui_enabled(enabled: bool) -> void:
 		_inspection_prompt_layer.visible = enabled
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not _inspection_ui_enabled or not event is InputEventKey or event.is_echo() or not event.is_pressed():
-		return
-	if _inspection_open:
-		if event.is_action("inspect") or event.is_action("cancel_inspect"):
-			_close_inspection()
-			get_viewport().set_input_as_handled()
-		return
-	if event.is_action("cancel_inspect"):
-		return
-	if event.is_action_pressed("inspect"):
-		var target := _nearest_inspection_id()
-		if target.is_empty():
-			return
-		_inspection_target = target
-		_draw_inspection_prompt(target)
-		_show_inspection(target)
-		get_viewport().set_input_as_handled()
-
-
 func _add_ui_frame(parent: Node, at: Vector2, size: Vector2, color: Color) -> void:
 	var x := int(at.x)
 	var y := int(at.y)
@@ -544,18 +524,35 @@ func _build_flashlight() -> void:
 func _process(_delta: float) -> void:
 	_follow_player()
 	_update_flashlight()
-	if _inspection_open:
-		if Input.is_action_just_pressed("inspect") or Input.is_action_just_pressed("cancel_inspect"):
-			_close_inspection()
-		return
-	if Input.is_action_just_pressed("cancel_inspect"):
+	# 只有提示条需要每帧刷新；开/关面板全部走 _unhandled_input。
+	# 之前这里也处理 inspect，导致真键盘同一帧先开后关（面板只闪一帧）。
+	if not _inspection_ui_enabled:
 		return
 	var target := _nearest_inspection_id()
 	if target != _inspection_target:
 		_inspection_target = target
 		_draw_inspection_prompt(target)
-	if Input.is_action_just_pressed("inspect") and not _inspection_target.is_empty():
-		_show_inspection(_inspection_target)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# 检查框唯一的按键入口：echo（按住重复）与松开都不算一次按下。
+	if not _inspection_ui_enabled or not event is InputEventKey or event.is_echo() or not event.is_pressed():
+		return
+	if _inspection_open:
+		if event.is_action("inspect") or event.is_action("cancel_inspect"):
+			_close_inspection()
+			get_viewport().set_input_as_handled()
+		return
+	if event.is_action("cancel_inspect"):
+		return
+	if event.is_action_pressed("inspect"):
+		var target := _nearest_inspection_id()
+		if target.is_empty():
+			return
+		_inspection_target = target
+		_draw_inspection_prompt(target)
+		_show_inspection(target)
+		get_viewport().set_input_as_handled()
 
 
 func _follow_player() -> void:

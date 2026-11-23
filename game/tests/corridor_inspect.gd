@@ -1,11 +1,15 @@
 extends SceneTree
-## Stage 2 检查框门禁：真图形渲染 + 真实按键事件。
+## Stage 2 检查框门禁：真图形渲染 + 真实 InputEventKey。
 ## 运行（不能加 --headless，否则读不到帧）：
 ##   .tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 \
 ##     --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT
 ##
+## 事件注入走 `_corridor._unhandled_input(InputEventKey)`：在 `--script` 的 SceneTree 里
+## `Input.parse_input_event` 不会派发给节点（实测），所以这里直接投递到同一个处理函数；
+## 事件仍是带 physical_keycode/keycode/echo 的真实 InputEventKey，动作映射也来自真实 InputMap。
+##
 ## 覆盖：数据↔节点一一对应、28px 边界含/不含、同距朝向裁决、15 条文本逐条打开、
-## 中文与按键提示真的落到像素上、Esc/E 关闭、按住与重复不重复开、面板期间锁移动。
+## 中文与按键提示真的落到像素上、Esc/E 关闭、echo 不算一次按下、按住只开一个、面板期间锁移动。
 
 const SCENE: PackedScene = preload("res://game/scenes/corridor.tscn")
 const DATA := "res://data/prop_inspections.json"
@@ -165,7 +169,7 @@ func _verify_all_records() -> void:
 func _verify_hold_and_lock() -> void:
 	var anchor := await _focus_x("desk_flipped")
 	await _place(anchor)
-	var before := _actor.global_position.x
+	var before: float = _actor.global_position.x
 
 	# 键盘重复（echo）不能当第二次按下。
 	await _send_key(KEY_E, true, true)
@@ -179,7 +183,7 @@ func _verify_hold_and_lock() -> void:
 	for _frame in range(30):
 		await process_frame
 	_check(_corridor._inspection_open, "holding E must keep a single panel")
-	_check(is_equal_approx(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")).length() > 0, true),
+	_check(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")).length() > 0,
 		"panel lost its id")
 
 	# 面板开着时按方向键，玩家不能移动。
@@ -263,12 +267,13 @@ func _place(x: float) -> void:
 
 
 func _send_key(keycode: Key, pressed: bool, echo := false) -> void:
+	# 直接投递给走廊的事件处理函数：--script SceneTree 里 Input.parse_input_event 不派发到节点。
 	var event := InputEventKey.new()
 	event.physical_keycode = keycode
 	event.keycode = keycode
 	event.pressed = pressed
 	event.echo = echo
-	Input.parse_input_event(event)
+	_corridor._unhandled_input(event)
 	await process_frame
 
 
