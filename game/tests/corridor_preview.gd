@@ -97,11 +97,12 @@ func _run() -> void:
 	steps.clear()
 	Input.action_press("walk")
 	Input.action_press("move_left")
-	for _frame in range(80):
+	# 12 px/s → 60Hz 下每帧 0.2px；150 帧约 30px，正好跨过一个 16px 步距。
+	for _frame in range(150):
 		await physics_frame
 	Input.action_release("walk")
 	var walk_distance := walk_start - _actor.position.x
-	if walk_distance < 23.0 or walk_distance > 33.0 or steps.is_empty() or steps.has(true):
+	if walk_distance < 27.0 or walk_distance > 33.0 or steps.is_empty() or steps.has(true):
 		_fail("slow movement distance=%.1f steps=%s" % [walk_distance, str(steps)])
 		return
 	if not await _walk_to(15.0, false):
@@ -297,7 +298,10 @@ func _verify_readability_structures() -> bool:
 
 
 func _walk_to(target: float, right: bool) -> bool:
-	for _frame in range(900):
+	# 24 px/s 下每帧约 0.4px；按距离推帧数上限（6 倍余量 + 缓冲），
+	# 免得「600→15」这种远距离回程撞上固定上限被误判成走不到。
+	var budget := int(absf(target - _actor.position.x) * 6.0) + 300
+	for _frame in range(budget):
 		# Floating-point collision recovery can move the body within its safe margin.
 		if absf(_actor.position.y - 128.0) > 0.25:
 			return _fail("player changed floor height: %s" % str(_actor.position))
