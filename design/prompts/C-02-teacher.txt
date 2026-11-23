@@ -1,0 +1,8 @@
+STYLE CONSTANTS (must hold across all three character sheets):
+Chinese middle school, 16 days into collapse. Pixel art with a visible pixel grid, hard edges, NO anti-aliasing, NO gradients, flat shading only. Limited cold palette: desaturated blue-grey and dark tones, near-black shadows. One small warm accent allowed (a light source). Background: plain flat near-black (no scenery, no floor line). Single full-body figure, front three-quarter view, standing, centered, feet at bottom edge. No text, no UI, no frame, no watermark.
+
+SUBJECT: a Chinese middle-school teacher, late 30s, at school on the day it collapsed.
+Silhouette must be readable at very small size: taller than a student by one full head, slightly stooped shoulders, a lanyard with a staff ID card hanging low, a cardigan over a shirt, holding a thin stack of papers against the chest with one arm.
+Face: simple — two dark eye pixels, thin glasses rendered as a single light horizontal line, no mouth detail. Tired, calm, not frightened.
+Palette usage: cardigan in a darker blue-grey than the student uniform, shirt slightly lighter, staff lanyard in cold white-grey, papers in near-white. The one warm accent: nothing.
+The figure must read as an adult at a distance, distinct from the student silhouette.

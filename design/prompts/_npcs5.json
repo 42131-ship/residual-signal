@@ -1,0 +1,268 @@
+{
+  "npcs": [
+    {
+      "npc_id": "npc_wei",
+      "display_role": "教务处的干事",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "affinity": -0.4,
+      "grief": 0.1,
+      "accessories": [
+        {
+          "semantic": "head",
+          "item": "visor"
+        },
+        {
+          "semantic": "torso_front",
+          "item": "badge"
+        }
+      ],
+      "memories": [
+        {
+          "day": 3,
+          "source_event": "evt_w0004",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "教务处干事",
+            "what": "把一串铜钥匙和一页名单放在二楼窗台",
+            "where": "学校二楼走廊",
+            "manner": "把名单压在玻璃杯下",
+            "outcome": "钥匙留在窗台，名单没有带走"
+          }
+        },
+        {
+          "day": 5,
+          "source_event": "evt_w0005",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "教务处干事",
+            "what": "问上街的人有没有学生证",
+            "where": "学校传达室门口",
+            "manner": "隔着半开的门说话",
+            "outcome": "没有身份的人没拿到钥匙和名单"
+          }
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_tan",
+      "display_role": "食堂的厨工",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "affinity": -0.3,
+      "grief": 0.2,
+      "accessories": [
+        {
+          "semantic": "torso_front",
+          "item": "apron"
+        },
+        {
+          "semantic": "neck",
+          "item": "towel"
+        }
+      ],
+      "memories": [
+        {
+          "day": 5,
+          "source_event": "evt_w0005",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "食堂厨工",
+            "what": "把半袋米藏进灶台下面",
+            "where": "学校食堂后厨",
+            "manner": "用空面粉袋盖住米袋",
+            "outcome": "米袋留在灶台下面，没有告诉门外的人"
+          }
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_xu",
+      "display_role": "班长",
+      "scope": "school",
+      "role_slot": "同行的第三个人",
+      "affinity": 0.2,
+      "grief": 0.1,
+      "accessories": [
+        {
+          "semantic": "chest_diagonal",
+          "item": "strap"
+        },
+        {
+          "semantic": "torso_front",
+          "item": "badge"
+        }
+      ],
+      "memories": [
+        {
+          "day": 3,
+          "source_event": "evt_0150",
+          "kind": "heard",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "两个高年级学生",
+            "what": "分了一壶剩水",
+            "where": "学校楼梯转角",
+            "manner": "一个人把搪瓷壶递给另一个人",
+            "outcome": "两个人各喝了几口，壶里还剩一点水"
+          }
+        },
+        {
+          "day": 5,
+          "source_event": "evt_0161",
+          "kind": "heard",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "传达室里的老师",
+            "what": "从里面打开传达室门",
+            "where": "学校传达室",
+            "manner": "先把门开了一条缝，再把门闩拉开",
+            "outcome": "门口少了一串铜钥匙"
+          }
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_he",
+      "display_role": "修车铺的学徒",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "affinity": -0.2,
+      "grief": 0.3,
+      "accessories": [
+        {
+          "semantic": "back_torso",
+          "item": "toolbag"
+        },
+        {
+          "semantic": "neck",
+          "item": "goggles"
+        }
+      ],
+      "memories": [
+        {
+          "day": 1,
+          "source_event": "evt_w0002",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "街上的行人",
+            "what": "推倒路边的自行车并撞翻一辆手推车",
+            "where": "修车铺外的十字路口",
+            "manner": "沿着街面向南跑",
+            "outcome": "十字路口被散落的车轮和货箱堵住"
+          }
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_mo",
+      "display_role": "广播站的老师",
+      "scope": "school",
+      "role_slot": "熟人",
+      "affinity": 0.3,
+      "grief": 0.4,
+      "accessories": [
+        {
+          "semantic": "neck",
+          "item": "lanyard"
+        },
+        {
+          "semantic": "arm_front",
+          "item": "script"
+        }
+      ],
+      "memories": [
+        {
+          "day": 7,
+          "source_event": "evt_w0006",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 7,
+              "fidelity": 3
+            },
+            {
+              "day": 9,
+              "fidelity": 2
+            },
+            {
+              "day": 14,
+              "fidelity": 1
+            }
+          ],
+          "slots": {
+            "who": "广播站老师",
+            "what": "在广播里说过最后一段官方通知",
+            "where": "学校广播室",
+            "manner": "对着桌上的麦克风念稿",
+            "outcome": "通知播完后广播停止"
+          }
+        },
+        {
+          "day": 7,
+          "source_event": "evt_0177",
+          "kind": "heard",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 7,
+              "fidelity": 3
+            },
+            {
+              "day": 9,
+              "fidelity": 2
+            }
+          ],
+          "slots": {
+            "who": "广播室里的女声",
+            "what": "说过半句话后停下",
+            "where": "学校广播室",
+            "manner": "声音从广播喇叭里传出",
+            "outcome": "半句话没有说完"
+          }
+        }
+      ]
+    }
+  ]
+}

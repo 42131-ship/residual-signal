@@ -1,0 +1,67 @@
+{
+  "cards": [
+    {
+      "card_id": "hospital_ward_access_blocked",
+      "layer": "S",
+      "template": "hospital",
+      "title": "住院楼通道",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "sign",
+          "options": [
+            "床架横在通道",
+            "门锁没有损坏",
+            "墙边留着擦痕"
+          ]
+        },
+        {
+          "slot": "action",
+          "options": [
+            "推床",
+            "检查门锁",
+            "退回"
+          ]
+        },
+        {
+          "slot": "outcome",
+          "options": [
+            "通道仍被堵住",
+            "门锁完好",
+            "你退开了"
+          ]
+        }
+      ],
+      "text": {
+        "default": "住院楼职工通道被病床堵住。门锁完好，通道无法通过。"
+      },
+      "effects": [
+        {
+          "when": "检查门锁",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.05
+          },
+          "evidence": "evt_hospital_ward_lock"
+        }
+      ],
+      "noise": null,
+      "leftover": "病床横堵通道，门锁没有损坏。",
+      "returns_after_days": 0
+    }
+  ]
+}

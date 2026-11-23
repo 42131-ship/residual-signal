@@ -1,0 +1,10 @@
+Generate a completely new illustration from scratch. No reference image is involved or needed.
+
+Pixel art, visible pixel grid, hard edges, no anti-aliasing, no gradients, flat shading. Limited cold palette: desaturated blue-grey walls, near-black shadows, and exactly one warm light source. 2D side view, camera at chest height. No text, no logo, no UI, no frame, no gore.
+
+Subject: a dark corridor of a Chinese middle school at night, nine days after the collapse, power long gone.
+Near the left edge, the back and shoulder of a student are visible, lit only by a narrow handheld flashlight beam cutting across the wet floor.
+Farther down the corridor, a second person stands in an open doorway. That figure is small, roughly one eighth of the image height, and almost swallowed by darkness; a school uniform and a backpack strap are just readable. The figure is not attacking and is not moving. It simply stands there facing the viewer.
+Composition: strong horizontal line, vanishing point far right, ceiling lost in black, one very weak cold emergency light far behind the doorway figure. Reflected light streaks back along the floor tiles.
+
+Mood: no jump scare, no monster, no blood, no crowd. Nothing is happening, and that is what is wrong. The corridor is silent and someone is waiting.

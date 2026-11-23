@@ -1,0 +1,15 @@
+Generate a completely new image from scratch. No reference image is involved or needed.
+
+A pixel-art UI CONCEPT SHEET for a 2D side-scrolling survival game, drawn as if it were a 384x216 game frame upscaled 3x with hard pixels. Visible pixel grid, hard edges, no anti-aliasing, no gradients. Limited cold palette: desaturated blue-grey, near-black, with a single warm amber accent.
+
+Frame content — a dark school corridor at night, mostly black, with one narrow warm flashlight wedge on wet floor tiles at the lower left. Nobody is visible.
+
+The UI overlay is deliberately minimal and diegetic:
+- Top left: a small monospaced date readout, just "DAY 3" in pale cyan, tiny.
+- Left edge, vertical stack of six thin horizontal bars of different lengths, no labels, no numbers — they read like a battery/level gauge, pale grey with one amber bar.
+- Bottom center: three empty rounded rectangles side by side, subtly outlined, like slots waiting for something. They must not glow.
+- Bottom right: a tiny envelope-like icon with a faint amber dot, suggesting an unread message.
+
+Style rules: no big health bar across the top, no minimap, no quest markers, no arrows pointing anywhere, no text other than "DAY 3". Everything is small, quiet, and easy to miss. The UI must feel like it belongs to a broken device, not to a menu.
+
+Mood: cold, restrained, slightly damaged. Not cartoonish, not cheerful, no gore.

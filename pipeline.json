@@ -1,0 +1,22 @@
+{
+  "schema": "pipeline.v1",
+  "note": "CI 步骤声明。R22 校验：风格漂移不得被设成硬门禁（gate=hard）。",
+  "steps": [
+    {"name": "json-lint", "cmd": "python tools/validate.py", "gate": "hard"},
+    {"name": "rule-selftest", "cmd": "python tools/selftest.py", "gate": "hard"},
+    {"name": "gd-structure", "cmd": "python tools/gd_sanity.py game/runtime/*.gd", "gate": "hard"},
+    {"name": "pixel-gate", "cmd": "python tools/pixelpipe.py gate --palette art/palettes/master.gpl", "gate": "hard"},
+    {"name": "style-drift-report", "cmd": "python tools/drift_report.py", "gate": "warn",
+     "note": "R22：只报警，不裁决。模型观感不得替代像素 diff。"},
+    {"name": "headless-import", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --import", "gate": "hard", "status": "ready", "note": "工程根 = 仓库根；.tools/design/logs 已 .gdignore"},
+    {"name": "gd-compile-check", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --check-only --script res://game/runtime/main.gd", "gate": "hard", "status": "ready", "note": "五个类逐个跑；2026-11-23 5/5 通过"},
+    {"name": "smoke-30d", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/smoke.gd", "gate": "hard", "status": "ready", "note": "真引擎跑 30 天；SMOKE_OK 为通过"},
+    {"name": "headless-replay-30d", "cmd": "python tools/headless_30d.py --seeds 3", "gate": "warn", "status": "ready", "note": "Python 镜像，验数据语义，不是 GDScript"},
+    {"name": "nodes-map", "cmd": "python tools/nodes_map.py", "gate": "warn", "status": "ready", "note": "DEC-D1 附加条件：只读拓扑预览"}
+  ],
+  "forbidden": [
+    "把 style-drift 设成 gate: hard",
+    "让 Skills / MCP 进入无人 CI",
+    "用截图 diff 代替像素检查"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "third-party-licenses.v1",
+  "note": "授权台账。R23 校验字体四字段齐全且 NOTICE 文件存在。商业发行前须逐条复核。",
+  "fonts": [
+    {
+      "name": "凤凰点阵体 Vonwaon",
+      "role": "正文 12px",
+      "license": "CC0-1.0",
+      "source": "https://github.com/TakWolf/fusion-pixel-font（见上游 README 指向）",
+      "author": "TakWolf 及上游贡献者",
+      "notice_path": "art/fonts/NOTICE.md",
+      "reserved_font_name": false,
+      "commercial_ok": true,
+      "verified": false
+    },
+    {
+      "name": "缝合像素 Fusion",
+      "role": "标题 / 层级 8/10/12px",
+      "license": "OFL-1.1",
+      "source": "https://github.com/TakWolf/fusion-pixel-font",
+      "author": "TakWolf 及上游贡献者",
+      "notice_path": "art/fonts/NOTICE.md",
+      "reserved_font_name": true,
+      "commercial_ok": true,
+      "verified": false
+    },
+    {
+      "name": "PF-02 检查文本点阵",
+      "role": "走廊检查框（从 Noto Sans SC 栅格化）",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notosanssc",
+      "author": "Adobe、Google 与 Noto CJK 贡献者",
+      "notice_path": "art/fonts/NOTOSANS-SC-OFL.txt",
+      "reserved_font_name": "Source",
+      "commercial_ok": true,
+      "verified": true
+    }
+  ],
+  "engines": [
+    {"name": "Godot Engine 4.x", "license": "MIT", "commercial_ok": true, "note": "无分成；导出模板随版本锁定"}
+  ],
+  "tools": [
+    {"name": "Aseprite", "license": "商业授权（自有 license）", "commercial_ok": true, "verified": false},
+    {"name": "gdtoolkit (gdformat/gdlint)", "license": "MIT", "commercial_ok": true},
+    {"name": "GUT", "license": "MIT", "commercial_ok": true},
+    {"name": "LDtk", "license": "MIT", "commercial_ok": true, "status": "D1 待拍板"},
+    {"name": "Tiled", "license": "GPLv2", "commercial_ok": null, "status": "D1 待拍板，买断发行兼容性须逐条核"},
+    {"name": "pixelfx", "license": "MIT", "commercial_ok": true},
+    {"name": "butler", "license": "免费工具", "commercial_ok": true}
+  ],
+  "rejected": [
+    {"name": "Zpix 最像素", "reason": "商用收费，不进买断包"},
+    {"name": "方正像素家族 / 系统自带点阵", "reason": "商业授权 / 授权灰区"},
+    {"name": "文泉驿点阵体", "reason": "GPL，与买断发行兼容性需评估，暂不接"},
+    {"name": "AudioCraft / MusicGen 权重", "reason": "CC-BY-NC 4.0 非商业，不可进商业包"},
+    {"name": "商业游戏截图（如《逃脱者2》）", "reason": "只作造型语言的文字描述，禁作训练 / style-reference 输入（R23）"}
+  ],
+  "reference_images_policy": {
+    "refs/external": "仅存授权记录",
+    "input_refs": "外部商业截图禁入（R23）",
+    "note": "R20 只覆盖输出资产的 provenance，输入参考图的权利另立一条"
+  }
+}

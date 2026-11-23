@@ -1,0 +1,38 @@
+{
+  "template_id": "hospital",
+  "label": "医院",
+  "entry_days": [
+    3,
+    4,
+    5
+  ],
+  "identity": {
+    "key_permission": [
+      "护士站药柜钥匙",
+      "住院楼职工通道权限"
+    ],
+    "how_recognized": "医院排班表登记的护士或值班医生。",
+    "initial_knowledge": [
+      "住院楼三层东侧病房仍有两名病人。",
+      "电梯井可由负一层通到住院楼七层。",
+      "护士站药柜内有抗生素和消毒剂，钥匙可开启药柜。"
+    ]
+  },
+  "weapon_budget": {
+    "手术剪": {
+      "rounds": 4,
+      "sediment_per_shot": 1
+    }
+  },
+  "noise_budget": {
+    "cap": 7,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "hospital_ward_access_blocked",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 5。",
+    "manifestation": "住院楼职工通道被病床堵住，门锁未损坏，通道无法通过。"
+  },
+  "identity_note": "你能接触药品和病区信息，也最先面对感染压力。"
+}

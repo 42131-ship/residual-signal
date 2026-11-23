@@ -1,0 +1,16 @@
+Generate a completely new image from scratch. No reference image is involved or needed.
+
+A pixel-art **UI kit / style sheet** for a 2D side-scrolling survival game, presented as a flat reference plate on a near-black background. Hard pixels, no anti-aliasing, no gradients, no drop shadows. Limited palette: desaturated blue-grey, near-black, pale cyan, and one warm amber.
+
+Lay it out as a grid of labeled-free samples, evenly spaced, with generous empty space between them. No captions, no numbers, no ruler.
+
+Contents, each drawn at true pixel-art scale (tiny, 2 to 16 px tall elements, then shown again enlarged 4x with nearest-neighbour so the pixel structure is visible):
+
+1. A bitmap-style alphabet specimen: uppercase A-Z and digits 0-9 in a single pixel font, very plain, 5x7 pixels tall per glyph, pale cyan, tightly spaced. Show it twice — once at 1x, once at 4x.
+2. A date readout sample rendered in that same 5x7 font, reading "DAY 3".
+3. Six thin horizontal gauge bars of varying lengths, 2 px tall, each with a crisp 1 px darker outline. Five in desaturated blue-grey, exactly one in warm amber. Show at 1x and 4x.
+4. Three empty slot frames, 12x12 px each, 1 px outline in mid grey, no fill, no glow, arranged in a row with 4 px gaps. Show at 1x and 4x.
+5. A tiny envelope glyph, 7x5 px, outline only, with a 1 px amber dot at its top right corner. Show at 1x and 4x.
+6. A 16x16 px "hand" cursor glyph — a small crosshair, 1 px lines, pale grey.
+
+Everything must look like it belongs to a broken, low-power field device: quiet, slightly worn, no rounded corners, no bright fills, nothing decorative. The whole plate should feel mostly empty.

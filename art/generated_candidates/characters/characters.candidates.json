@@ -1,0 +1,895 @@
+{
+  "schema": "characters.candidates.v1",
+  "assets": [
+    {
+      "asset_id": "chr_student_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-student_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_teacher_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_npc_wei_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": "npc_wei"
+    },
+    {
+      "asset_id": "chr_npc_tan_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": "npc_tan"
+    },
+    {
+      "asset_id": "chr_npc_xu_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": "npc_xu"
+    },
+    {
+      "asset_id": "chr_npc_he_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": "npc_he"
+    },
+    {
+      "asset_id": "chr_npc_mo_idle_r_00",
+      "category": "character",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "derived_from": null,
+      "npc_ref": "npc_mo"
+    },
+    {
+      "asset_id": "chr_student_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "derived_from": "chr_student_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_student_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "derived_from": "chr_student_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_student_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "derived_from": "chr_student_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_teacher_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "derived_from": "chr_teacher_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_teacher_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "derived_from": "chr_teacher_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_teacher_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "derived_from": "chr_teacher_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_npc_wei_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": "chr_npc_wei_idle_r_00",
+      "npc_ref": "npc_wei"
+    },
+    {
+      "asset_id": "chr_npc_wei_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": "chr_npc_wei_idle_r_00",
+      "npc_ref": "npc_wei"
+    },
+    {
+      "asset_id": "chr_npc_wei_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": "chr_npc_wei_idle_r_00",
+      "npc_ref": "npc_wei"
+    },
+    {
+      "asset_id": "chr_npc_tan_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "derived_from": "chr_npc_tan_idle_r_00",
+      "npc_ref": "npc_tan"
+    },
+    {
+      "asset_id": "chr_npc_tan_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "derived_from": "chr_npc_tan_idle_r_00",
+      "npc_ref": "npc_tan"
+    },
+    {
+      "asset_id": "chr_npc_tan_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "derived_from": "chr_npc_tan_idle_r_00",
+      "npc_ref": "npc_tan"
+    },
+    {
+      "asset_id": "chr_npc_xu_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": "chr_npc_xu_idle_r_00",
+      "npc_ref": "npc_xu"
+    },
+    {
+      "asset_id": "chr_npc_xu_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": "chr_npc_xu_idle_r_00",
+      "npc_ref": "npc_xu"
+    },
+    {
+      "asset_id": "chr_npc_xu_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "derived_from": "chr_npc_xu_idle_r_00",
+      "npc_ref": "npc_xu"
+    },
+    {
+      "asset_id": "chr_npc_he_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "derived_from": "chr_npc_he_idle_r_00",
+      "npc_ref": "npc_he"
+    },
+    {
+      "asset_id": "chr_npc_he_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "derived_from": "chr_npc_he_idle_r_00",
+      "npc_ref": "npc_he"
+    },
+    {
+      "asset_id": "chr_npc_he_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "derived_from": "chr_npc_he_idle_r_00",
+      "npc_ref": "npc_he"
+    },
+    {
+      "asset_id": "chr_npc_mo_infected_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_infected_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "derived_from": "chr_npc_mo_idle_r_00",
+      "npc_ref": "npc_mo"
+    },
+    {
+      "asset_id": "chr_npc_mo_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_infected_p1_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "derived_from": "chr_npc_mo_idle_r_00",
+      "npc_ref": "npc_mo"
+    },
+    {
+      "asset_id": "chr_npc_mo_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_infected_p2_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "derived_from": "chr_npc_mo_idle_r_00",
+      "npc_ref": "npc_mo"
+    },
+    {
+      "asset_id": "chr_student_infected_p3_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_p3_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "derived_from": "chr_student_idle_r_00",
+      "npc_ref": null
+    },
+    {
+      "asset_id": "chr_teacher_infected_p3_idle_r_00",
+      "category": "zombie_variant",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_p3_32.png",
+      "grid": [
+        32,
+        32
+      ],
+      "directions": [
+        "r"
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "derived_from": "chr_teacher_idle_r_00",
+      "npc_ref": null
+    }
+  ]
+}

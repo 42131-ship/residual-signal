@@ -1,0 +1,1072 @@
+{
+  "cards": [
+    {
+      "card_id": "l_night_encounter",
+      "layer": "L",
+      "title": "夜遇",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.6
+          }
+        ],
+        "node_tags_any": [
+          "clue_possible"
+        ],
+        "sediment_min": 0,
+        "requires_npc_alive": true
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "熟人",
+            "陌生人",
+            "同行的第三个人"
+          ]
+        },
+        {
+          "slot": "manner",
+          "options": [
+            "从阴影里走出来",
+            "一直站在那儿",
+            "边走边回头看"
+          ]
+        },
+        {
+          "slot": "want",
+          "options": [
+            "一口水",
+            "一个能锁门的地方",
+            "一句话"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "时间",
+            "物资",
+            "暴露"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "停下",
+            "继续走",
+            "隔着距离回应"
+          ]
+        },
+        {
+          "slot": "outcome",
+          "options": [
+            "你给了",
+            "你没给",
+            "你还没决定"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}{manner}，开口要{want}。远处有动静。{outcome}，路还在往前。",
+        "heard": "传闻里提过{actor}。{actor}{manner}，开口要{want}。远处有动静。"
+      },
+      "effects": [
+        {
+          "when": "停下",
+          "vars": {
+            "trust": 0.1,
+            "time": -0.1
+          },
+          "evidence": "evt_l_night_encounter_help"
+        },
+        {
+          "when": "继续走",
+          "vars": {
+            "time": 0.1
+          },
+          "evidence": "evt_l_night_encounter_pass"
+        }
+      ],
+      "noise": null,
+      "leftover": "路边留着一只空水袋。",
+      "returns_after_days": 0,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_knock_three_times",
+      "layer": "L",
+      "title": "三下敲门",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [],
+        "node_tags_any": [
+          "shelter",
+          "spawn"
+        ],
+        "sediment_min": 0,
+        "requires_npc_alive": true
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "陌生人",
+            "熟人",
+            "屋里的人"
+          ]
+        },
+        {
+          "slot": "sound",
+          "options": [
+            "敲了三下",
+            "停了一会儿又敲",
+            "敲完便没了声"
+          ]
+        },
+        {
+          "slot": "voice",
+          "options": [
+            "没有说话",
+            "报了一个称呼",
+            "只说有事相告"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "开门",
+            "不开门",
+            "隔着门问话"
+          ]
+        },
+        {
+          "slot": "trace",
+          "options": [
+            "门边有水迹",
+            "门外没有脚印",
+            "窗边有影子"
+          ]
+        }
+      ],
+      "text": {
+        "default": "门外，{actor}{sound}。{voice}。{trace}。门闩还在原处。"
+      },
+      "effects": [
+        {
+          "when": "开门",
+          "vars": {
+            "trust": 0.1,
+            "control": -0.1
+          },
+          "evidence": "evt_l_knock_open"
+        },
+        {
+          "when": "不开门",
+          "vars": {
+            "control": 0.1
+          },
+          "evidence": "evt_l_knock_closed"
+        }
+      ],
+      "noise": null,
+      "leftover": "门外留下两道湿脚印。",
+      "returns_after_days": 3,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_search_noise",
+      "layer": "L",
+      "title": "搜刮时的声音",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_tags_any": [
+          "clue_possible",
+          "noise_sink"
+        ],
+        "sediment_min": 0,
+        "requires_npc_alive": false
+      },
+      "slots": [
+        {
+          "slot": "source",
+          "options": [
+            "柜门",
+            "散落的瓶罐",
+            "脚下的碎片"
+          ]
+        },
+        {
+          "slot": "sound",
+          "options": [
+            "滚了几圈",
+            "撞上硬物",
+            "在走廊里回响"
+          ]
+        },
+        {
+          "slot": "find",
+          "options": [
+            "一袋干粮",
+            "半瓶水",
+            "一件能用的东西"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "继续搜完",
+            "立刻撤",
+            "拿了东西再走"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "时间",
+            "物资",
+            "沉积"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{source}{sound}。角落里露出{find}。走廊另一头传来拖行声。"
+      },
+      "effects": [
+        {
+          "when": "继续搜完",
+          "vars": {
+            "supplies": 0.1,
+            "time": -0.1
+          },
+          "evidence": "evt_l_search_continue"
+        },
+        {
+          "when": "立刻撤",
+          "vars": {
+            "time": 0.1
+          },
+          "evidence": "evt_l_search_leave"
+        }
+      ],
+      "noise": {
+        "level": 0.4,
+        "source": "搜刮声"
+      },
+      "leftover": "地上有一道拖行的灰痕。",
+      "returns_after_days": 0,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_checkpoint_rumor",
+      "layer": "L",
+      "title": "检查站前",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 14
+        },
+        "vars": [
+          {
+            "name": "knowledge",
+            "op": ">=",
+            "value": 0.2
+          }
+        ],
+        "node_tags_any": [
+          "clue_possible",
+          "clue_endpoint"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "source",
+          "options": [
+            "陌生人",
+            "熟人",
+            "同行的第三个人"
+          ]
+        },
+        {
+          "slot": "claim",
+          "options": [
+            "前面有人放行",
+            "前面已经封死",
+            "绕路会更快"
+          ]
+        },
+        {
+          "slot": "sign",
+          "options": [
+            "说话时避开你的目光",
+            "手上沾着新泥",
+            "身后没有同行者"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "相信传闻",
+            "先查证",
+            "按原路前进"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "知情度",
+            "时间",
+            "风险"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{source}说{claim}。{sign}。前方的路看不见尽头。"
+      },
+      "effects": [
+        {
+          "when": "相信传闻",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.1
+          },
+          "evidence": "evt_l_checkpoint_believe"
+        },
+        {
+          "when": "先查证",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.1
+          },
+          "evidence": "evt_l_checkpoint_check"
+        }
+      ],
+      "noise": null,
+      "leftover": "路边留着一截被踩断的绳子。",
+      "returns_after_days": 4
+    },
+    {
+      "card_id": "l_someone_lied",
+      "layer": "L",
+      "title": "有人撒谎",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "trust",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_tags_any": [
+          "clue_possible",
+          "shelter"
+        ],
+        "sediment_min": 0,
+        "requires_npc_alive": true
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "熟人",
+            "同行的第三个人",
+            "你救过的那个"
+          ]
+        },
+        {
+          "slot": "claim",
+          "options": [
+            "说没拿过水",
+            "说没听见动静",
+            "说没见过那个人"
+          ]
+        },
+        {
+          "slot": "proof",
+          "options": [
+            "湿袖口",
+            "沾灰的手掌",
+            "门边的新痕"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "当面拆穿",
+            "装不知道",
+            "留着证据再问"
+          ]
+        },
+        {
+          "slot": "witness",
+          "options": [
+            "屋里的人",
+            "楼上的人",
+            "没人"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}{claim}。{proof}还没干。{witness}站在门另一侧。"
+      },
+      "effects": [
+        {
+          "when": "当面拆穿",
+          "vars": {
+            "trust": -0.1,
+            "knowledge": 0.1
+          },
+          "evidence": "evt_l_someone_lied_confront"
+        },
+        {
+          "when": "装不知道",
+          "vars": {
+            "trust": 0.1
+          },
+          "evidence": "evt_l_someone_lied_silent"
+        }
+      ],
+      "noise": null,
+      "leftover": "门边留着一道新鲜的湿手印。",
+      "returns_after_days": 0,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_horde_passing",
+      "layer": "L",
+      "title": "尸群过境",
+      "trigger": {
+        "day": {
+          "min": 5,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.8
+          }
+        ],
+        "sediment_min": 2
+      },
+      "slots": [
+        {
+          "slot": "sound",
+          "options": [
+            "脚步声挤成一片",
+            "撞击声由远而近",
+            "拖行声压过风声"
+          ]
+        },
+        {
+          "slot": "direction",
+          "options": [
+            "从窗外经过",
+            "沿走廊远去",
+            "从楼下涌过"
+          ]
+        },
+        {
+          "slot": "path",
+          "options": [
+            "门另一侧",
+            "楼梯口",
+            "外面"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "躲着不动",
+            "趁乱离开",
+            "等声音远去再走"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "时间",
+            "暴露",
+            "受伤风险"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{sound}，{direction}。{path}有灰尘落下。每一步都能听见回声。"
+      },
+      "effects": [
+        {
+          "when": "躲着不动",
+          "vars": {
+            "time": -0.1
+          },
+          "evidence": "evt_l_horde_hide"
+        },
+        {
+          "when": "趁乱离开",
+          "vars": {
+            "time": 0.1,
+            "control": -0.1
+          },
+          "evidence": "evt_l_horde_move"
+        }
+      ],
+      "noise": {
+        "level": 0.8,
+        "source": "尸群脚步"
+      },
+      "leftover": "地上压着一串新鲜的脚印。",
+      "returns_after_days": 2,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_first_dark_night",
+      "layer": "L",
+      "title": "断电后的第一夜",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 4
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_tags_any": [
+          "shelter"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "light",
+          "options": [
+            "一根蜡烛",
+            "一盏小灯",
+            "一块发亮的屏幕"
+          ]
+        },
+        {
+          "slot": "source",
+          "options": [
+            "柜台下",
+            "储藏间",
+            "窗边"
+          ]
+        },
+        {
+          "slot": "sight",
+          "options": [
+            "门缝亮了",
+            "玻璃映出人影",
+            "走廊尽头动了一下"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "点灯",
+            "保持黑暗",
+            "遮住光再点"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "看见",
+            "被看见",
+            "燃料"
+          ]
+        }
+      ],
+      "text": {
+        "default": "断电后，{source}只剩黑。{light}就在手边。{sight}。"
+      },
+      "effects": [
+        {
+          "when": "点灯",
+          "vars": {
+            "knowledge": 0.1,
+            "control": -0.1
+          },
+          "evidence": "evt_l_first_dark_light"
+        },
+        {
+          "when": "保持黑暗",
+          "vars": {
+            "control": 0.1
+          },
+          "evidence": "evt_l_first_dark_black"
+        }
+      ],
+      "noise": null,
+      "leftover": "窗边留着一块烧黑的灯芯。",
+      "returns_after_days": 3
+    },
+    {
+      "card_id": "l_water_quarrel",
+      "layer": "L",
+      "title": "水源争夺",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.6
+          }
+        ],
+        "node_tags_any": [
+          "shelter",
+          "clue_possible"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "熟人",
+            "陌生人",
+            "屋里的人"
+          ]
+        },
+        {
+          "slot": "water",
+          "options": [
+            "半瓶水",
+            "一只水袋",
+            "一桶见底的水"
+          ]
+        },
+        {
+          "slot": "claim",
+          "options": [
+            "先拿到的归自己",
+            "每个人都该分到",
+            "有人藏了更多"
+          ]
+        },
+        {
+          "slot": "witness",
+          "options": [
+            "同行的第三个人",
+            "你救过的那个",
+            "楼上的人"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "分水",
+            "抢下水",
+            "把水收起来"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "声望",
+            "物资",
+            "信任"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}守着{water}。{claim}。{witness}没有移开视线。"
+      },
+      "effects": [
+        {
+          "when": "分水",
+          "vars": {
+            "reputation": 0.1,
+            "supplies": -0.1
+          },
+          "evidence": "evt_l_water_share"
+        },
+        {
+          "when": "抢下水",
+          "vars": {
+            "supplies": 0.1,
+            "reputation": -0.1,
+            "trust": -0.1
+          },
+          "evidence": "evt_l_water_take"
+        }
+      ],
+      "noise": {
+        "level": 0.3,
+        "source": "争吵声"
+      },
+      "leftover": "地上留着一圈洒开的水。",
+      "returns_after_days": 0,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_stranger_trade",
+      "layer": "L",
+      "title": "换东西",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": ">=",
+            "value": 0.15
+          }
+        ],
+        "node_tags_any": [
+          "clue_possible"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "陌生人",
+            "路边等着的人"
+          ]
+        },
+        {
+          "slot": "offer",
+          "options": [
+            "一条还能走的路",
+            "一处没被搜过的地方",
+            "一个收留过人的地址"
+          ]
+        },
+        {
+          "slot": "ask",
+          "options": [
+            "一小袋干粮",
+            "一卷绷带",
+            "一瓶水"
+          ]
+        },
+        {
+          "slot": "gesture",
+          "options": [
+            "伸出手",
+            "指了指你的包"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "交出物资，听他说",
+            "把物资留着"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}{gesture}。他要{ask}，说能告诉你{offer}。",
+        "heard": "有人拿消息换东西。价钱先说，消息后说。"
+      },
+      "effects": [
+        {
+          "when": "交出物资，听他说",
+          "vars": {
+            "supplies": -0.1,
+            "knowledge": 0.12
+          },
+          "evidence": "evt_l_stranger_trade_swap"
+        },
+        {
+          "when": "把物资留着",
+          "vars": {
+            "supplies": 0
+          },
+          "evidence": "evt_l_stranger_trade_keep"
+        }
+      ],
+      "noise": null,
+      "leftover": "他走前把价钱又说了一遍。",
+      "returns_after_days": 4,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_wounded_companion",
+      "layer": "L",
+      "title": "走不动了",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 22
+        },
+        "vars": [
+          {
+            "name": "trust",
+            "op": ">=",
+            "value": 0.2
+          }
+        ],
+        "sediment_min": 1,
+        "requires_npc_alive": true
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "走在后面的同伴",
+            "替你拿包的人"
+          ]
+        },
+        {
+          "slot": "injury",
+          "options": [
+            "膝盖一弯就跪下去",
+            "脚一沾地就站不住"
+          ]
+        },
+        {
+          "slot": "route",
+          "options": [
+            "前面是一段空路",
+            "前面没有遮挡"
+          ]
+        },
+        {
+          "slot": "request",
+          "options": [
+            "他让你先走",
+            "他叫了你一声"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "背着他走",
+            "把他留下"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}{injury}。{route}。{request}。背上他，过这段路得多花些时间。",
+        "heard": "有人掉在后面。他手里还攥着自己的包。"
+      },
+      "effects": [
+        {
+          "when": "背着他走",
+          "vars": {
+            "time": -0.15,
+            "control": -0.1,
+            "trust": 0.12
+          },
+          "evidence": "evt_l_wounded_companion_carry"
+        },
+        {
+          "when": "把他留下",
+          "vars": {
+            "time": 0.1,
+            "trust": -0.15
+          },
+          "evidence": "evt_l_wounded_companion_leave"
+        }
+      ],
+      "noise": null,
+      "leftover": "下一次点人，你还是报了他的名字。",
+      "returns_after_days": 6
+    },
+    {
+      "card_id": "l_lock_them_out",
+      "layer": "L",
+      "title": "门外有人",
+      "trigger": {
+        "day": {
+          "min": 2,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_tags_any": [
+          "shelter",
+          "clue_possible"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "knock",
+          "options": [
+            "一下比一下轻",
+            "停了片刻，又响起来"
+          ]
+        },
+        {
+          "slot": "plea",
+          "options": [
+            "让我进去。",
+            "就我一个。",
+            "门后有人吗？"
+          ]
+        },
+        {
+          "slot": "trace",
+          "options": [
+            "门缝里有影子",
+            "门把往下沉了一点"
+          ]
+        },
+        {
+          "slot": "latch",
+          "options": [
+            "插销还没合上",
+            "你的手搭在插销上"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "开门",
+            "推上插销"
+          ]
+        }
+      ],
+      "text": {
+        "default": "拍门声{knock}。外面的人说：“{plea}”{trace}。{latch}。",
+        "heard": "隔着门听不清是谁。那人拍了一阵。"
+      },
+      "effects": [
+        {
+          "when": "开门",
+          "vars": {
+            "control": -0.12,
+            "reputation": 0.1
+          },
+          "evidence": "evt_l_lock_them_out_open"
+        },
+        {
+          "when": "推上插销",
+          "vars": {
+            "control": 0.12,
+            "reputation": -0.1
+          },
+          "evidence": "evt_l_lock_them_out_bolt"
+        }
+      ],
+      "noise": null,
+      "leftover": "门外留了半个湿手印。",
+      "returns_after_days": 5,
+      "day_window_reviewed": true
+    },
+    {
+      "card_id": "l_memory_slip",
+      "layer": "L",
+      "title": "记岔了",
+      "trigger": {
+        "day": {
+          "min": 10,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "knowledge",
+            "op": ">=",
+            "value": 0.3
+          }
+        ],
+        "sediment_min": 1,
+        "requires_npc_alive": true
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "坐在你旁边的人",
+            "跟你一起值过夜的人"
+          ]
+        },
+        {
+          "slot": "occasion",
+          "options": [
+            "翻旧记录时",
+            "收起旧记录前"
+          ]
+        },
+        {
+          "slot": "slip",
+          "options": [
+            "往前记了一天",
+            "往后记了一天"
+          ]
+        },
+        {
+          "slot": "pause",
+          "options": [
+            "他停下来等你接话",
+            "他把那天又说了一遍"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "说出原来的日期",
+            "照他说的日期接话"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{occasion}，{actor}提起记录里那件你亲眼见过的事。日期{slip}。{pause}。",
+        "heard": "他提起那件旧事。话说到日期就停了。"
+      },
+      "effects": [
+        {
+          "when": "说出原来的日期",
+          "vars": {
+            "knowledge": 0.1,
+            "trust": -0.1
+          },
+          "evidence": "evt_l_memory_slip_correct"
+        },
+        {
+          "when": "照他说的日期接话",
+          "vars": {
+            "trust": 0.1
+          },
+          "evidence": "evt_l_memory_slip_agree"
+        }
+      ],
+      "noise": null,
+      "leftover": "旧记录的日期旁多了一道铅笔印。",
+      "returns_after_days": 0
+    }
+  ]
+}

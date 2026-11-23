@@ -1,0 +1,145 @@
+{
+  "npcs": [
+    {
+      "npc_id": "npc_qi",
+      "display_role": "修自行车的",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "affinity": 0.1,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "day": 1,
+          "source_event": "evt_w0002",
+          "slots": {
+            "who": "街上一个推着自行车的人",
+            "what": "把自行车内胎塞进工具袋",
+            "where": "街角",
+            "manner": "推着车从外面走来",
+            "outcome": "街面失控时他拐进了路边的门廊"
+          },
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            }
+          ],
+          "kind": "direct",
+          "via": null,
+          "provenance_lock": true,
+          "affect": 0.0,
+          "last_recalled_day": 1
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_shen",
+      "display_role": "便利店店长",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "head",
+          "name": "visor"
+        }
+      ],
+      "affinity": 0.2,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "day": 3,
+          "source_event": "evt_w0003",
+          "slots": {
+            "who": "便利店店长",
+            "what": "把半袋米放到柜台底下",
+            "where": "柜台",
+            "manner": "用围裙擦了手再搬米",
+            "outcome": "全城断电后店就没再开门"
+          },
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            }
+          ],
+          "kind": "direct",
+          "via": null,
+          "provenance_lock": true,
+          "affect": 0.0,
+          "last_recalled_day": 3
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_luo",
+      "display_role": "邮局的",
+      "scope": "shared",
+      "role_slot": "同行的第三个人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        }
+      ],
+      "affinity": 0.0,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "day": 14,
+          "source_event": "evt_w0007",
+          "slots": {
+            "who": "跑过路的邮局职员",
+            "what": "记下一张没盖戳的邮单",
+            "where": "路口",
+            "manner": "沿街走了一遍再折回",
+            "outcome": "检查站撤走后那条路已经走不通"
+          },
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 14,
+              "fidelity": 3
+            }
+          ],
+          "kind": "direct",
+          "via": null,
+          "provenance_lock": true,
+          "affect": 0.0,
+          "last_recalled_day": 14
+        }
+      ]
+    }
+  ]
+}

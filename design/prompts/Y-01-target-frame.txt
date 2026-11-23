@@ -1,0 +1,21 @@
+Generate a completely new image from scratch. No reference image is involved or needed.
+
+A single in-game frame from a 2D side-scrolling post-apocalyptic survival game, 16:9, drawn as true pixel art at 384x216 upscaled 4x with hard nearest-neighbour pixels. Visible pixel grid, absolutely no anti-aliasing, no blur, no gradients on edges.
+
+ART STYLE: clean, readable, chunky pixel art in the manner of The Escapists — every object has a clear, simple silhouette that reads instantly even when small. Flat colour fills with one shade of shadow and one shade of highlight per material. No texture noise, no dithering. Objects are placed on a strict 16-pixel grid.
+
+SCENE: an abandoned school corridor, side view, floor running horizontally across the lower third, wall behind it. This is day 3 of the collapse: electricity is gone. The palette is cold and desaturated — grey-blue walls, dirty green-grey floor, near-black shadow — with exactly one warm amber pool of light from a flashlight held low at the left, and a single amber glint elsewhere in the frame. Deep black in the upper third and at both edges. Something is very wrong and out of frame.
+
+READABILITY RULES: the floor must be clearly lighter than the wall behind it, the wall must be clearly darker than the ceiling void. Props are separated from the wall by a 1-pixel dark outline. A locker bank, a classroom door with a broken window, an overturned desk, scattered papers on the floor, a dead ceiling light, a dark smear on the wall.
+
+CHARACTER: one small figure in a hooded jacket, roughly 24 pixels tall, standing left of centre, seen in profile, holding the flashlight. Simple readable silhouette, no facial detail.
+
+HUD, kept very minimal and quiet, in the manner of a bleak survival game:
+- top left: a tiny "DAY 3" readout in a plain 5x7 pixel font, pale cyan
+- left edge: six very thin horizontal gauges, no labels; five in dim grey-blue, one in amber
+- bottom left: a small square frame containing a stack count, like an inventory slot
+- bottom centre: three empty thin-outlined slots
+- bottom right: a tiny envelope icon with an amber dot
+All HUD elements are small, flat, unlit, hard-edged. Nothing glows. No text other than "DAY 3".
+
+MOOD: suffocating, hopeless, cold. The frame should feel like the air is thin and the light is about to die. No gore, no cartoonish exaggeration, no cheerful colours.

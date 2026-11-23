@@ -1,0 +1,128 @@
+我会先核对现有模板的字段约定，再按约束生成四份 JSON；最终回复只包含指定的文件分隔符和 JSON。重点校验噪声预算：军事基地按 20 发、约 3.0/发配置，并让 cap 留有余量但明显吃紧；其余模板也会将枪械声预算控制在 cap 的 40%–65%。<<<FILE: fire_station.json >>>
+{
+  "template_id": "fire_station",
+  "label": "消防站",
+  "entry_days": [0, 1, 3],
+  "identity": {
+    "key_permission": ["器材柜钥匙", "防火门权限"],
+    "how_recognized": "消防站值班名册登记的消防员。",
+    "initial_knowledge": [
+      "器材柜位于车库东侧，钥匙可开启柜门。",
+      "后院出口的防火门可由消防站权限开启。",
+      "车库卷帘门手动释放链位于门框内侧。"
+    ]
+  },
+  "weapon_budget": {
+    "撬棍": {
+      "rounds": 8,
+      "sediment_per_shot": 0.02
+    }
+  },
+  "noise_budget": {
+    "cap": 0.3,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "fire_station_fire_door_locked",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 3。",
+    "manifestation": "后院防火门被人从里面锁死，门外的插销完好，你无法进入。"
+  },
+  "identity_note": "你有门权和器材柜钥匙，但没有枪。"
+}
+<<<FILE: hospital.json >>>
+{
+  "template_id": "hospital",
+  "label": "医院",
+  "entry_days": [3, 4, 5],
+  "identity": {
+    "key_permission": ["护士站药柜钥匙", "住院楼职工通道权限"],
+    "how_recognized": "医院排班表登记的护士或值班医生。",
+    "initial_knowledge": [
+      "住院楼三层东侧病房仍有两名病人。",
+      "电梯井可由负一层通到住院楼七层。",
+      "护士站药柜内有抗生素和消毒剂，钥匙可开启药柜。"
+    ]
+  },
+  "weapon_budget": {
+    "手术剪": {
+      "rounds": 4,
+      "sediment_per_shot": 0.03
+    }
+  },
+  "noise_budget": {
+    "cap": 0.2,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "hospital_ward_access_blocked",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 5。",
+    "manifestation": "住院楼职工通道被病床堵住，门锁未损坏，通道无法通过。"
+  },
+  "identity_note": "你能接触药品和病区信息，也最先面对感染压力。"
+}
+<<<FILE: military_base.json >>>
+{
+  "template_id": "military_base",
+  "label": "军事基地",
+  "entry_days": [3, 4, 5],
+  "identity": {
+    "key_permission": ["军械库登记权限", "基地内门禁权限"],
+    "how_recognized": "基地值勤名册登记的军人。",
+    "initial_knowledge": [
+      "军械库位于营房西侧，门禁记录可查到最后一次开启时间。",
+      "基地北门通往检查站道路，检查站已于世界日历日 14 撤走。",
+      "营房值班室内有基地通道图，标有发电机房位置。"
+    ]
+  },
+  "weapon_budget": {
+    "步枪": {
+      "rounds": 20,
+      "sediment_per_shot": 3
+    }
+  },
+  "noise_budget": {
+    "cap": 100,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "military_base_supply_record_missing",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 5。",
+    "manifestation": "军械库出入登记簿缺失，柜门已锁，无法核对剩余弹药。"
+  },
+  "identity_note": "你有基地门禁和重火力，但每次开火都会迅速消耗噪声余量。"
+}
+<<<FILE: gas_station.json >>>
+{
+  "template_id": "gas_station",
+  "label": "加油站 / 便利店",
+  "entry_days": [5, 7],
+  "identity": {
+    "key_permission": ["便利店后门钥匙", "加油机紧急断电开关权限"],
+    "how_recognized": "便利店排班表登记的店员，或在站内停留的过路人。",
+    "initial_knowledge": [
+      "便利店后门通向站点北侧公路。",
+      "站点南侧排水沟可步行通到公路涵洞。",
+      "收银台抽屉内有一张标出最近检查站位置的纸质地图。"
+    ]
+  },
+  "weapon_budget": {
+    "手枪": {
+      "rounds": 2,
+      "sediment_per_shot": 0.02
+    }
+  },
+  "noise_budget": {
+    "cap": 0.08,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "gas_station_back_door_open",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 7。",
+    "manifestation": "便利店后门被人从外面打开，门锁没有损坏，货架上少了一箱瓶装水。"
+  },
+  "identity_note": "你几乎没有补给，但公路、涵洞和检查站线索都在附近。"
+}

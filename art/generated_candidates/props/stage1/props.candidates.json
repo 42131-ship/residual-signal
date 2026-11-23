@@ -1,0 +1,110 @@
+{
+  "schema": "school-props-candidates.v1",
+  "assets": [
+    {
+      "asset_id": "prop_school_locker_bank",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_01_locker_bank.png"
+    },
+    {
+      "asset_id": "prop_school_door_broken",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_02_door_broken.png"
+    },
+    {
+      "asset_id": "prop_school_desk_flipped",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_03_desk_flipped.png"
+    },
+    {
+      "asset_id": "prop_school_window_night",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_04_window_night.png"
+    },
+    {
+      "asset_id": "prop_school_light_dead",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_05_light_dead.png"
+    },
+    {
+      "asset_id": "prop_school_wall_clock_stopped",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_06_wall_clock_stopped.png"
+    },
+    {
+      "asset_id": "prop_school_fire_extinguisher",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_07_fire_extinguisher.png"
+    },
+    {
+      "asset_id": "prop_school_first_aid_cabinet",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_08_first_aid_cabinet.png"
+    },
+    {
+      "asset_id": "prop_school_trash_bin",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_09_trash_bin.png"
+    },
+    {
+      "asset_id": "prop_school_mop_bucket",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_10_mop_bucket.png"
+    },
+    {
+      "asset_id": "prop_school_drinking_fountain",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_11_drinking_fountain.png"
+    },
+    {
+      "asset_id": "prop_school_chair_toppled",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_12_chair_toppled.png"
+    },
+    {
+      "asset_id": "prop_school_intercom_broken",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_13_intercom_broken.png"
+    },
+    {
+      "asset_id": "prop_school_classroom_plaque",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_14_classroom_plaque.png"
+    },
+    {
+      "asset_id": "prop_school_notice_board_torn",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_15_notice_board_torn.png"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "mode_profile.v1",
+  "note": "双模式共享一份运行时，差异只在本文件。AI 禁改 timeline / variables 部分。",
+  "story": {
+    "timeline": "finite(30)",
+    "save": "allowed",
+    "death": "resume",
+    "loot_curve": "dense_to_sparse",
+    "horde": "scripted_sediment",
+    "chunks": "16_nodes",
+    "endings": "on",
+    "end_state_enum": ["found_official", "missed_official_survived", "warlord", "last_one"],
+    "opening": "templated_random",
+    "noise_propagation": "adjacent_1_hop",
+    "night_multiplier": 1.5,
+    "budget": {
+      "cards_max": 12,
+      "high_value_items_max": 4,
+      "lockable_min": 1,
+      "horde_density_max": 0.85
+    },
+    "ui_ownership_marker": {
+      "shape": [3, 5],
+      "fade_day": 3,
+      "palette_steps": ["c14_warm+c15_warm_high", "c14_warm", "c13_warm_dim", "c02_dark", null],
+      "persistent": false,
+      "note": "DEC-20261122-marker：Day 0–2 教学用，Day 3 断电当夜褪尽"
+    }
+  },
+  "endless": {
+    "timeline": "epoch_decay",
+    "save": "none",
+    "load": null,
+    "carry": "none",
+    "death": "run_reset",
+    "loot_curve": "sparse_to_scatter",
+    "horde": "monotonic_f_t",
+    "chunks": "streamed_segments",
+    "endings": "off",
+    "lockable_per_n": 3,
+    "segment_fields": ["uid", "topology", "sediment", "presentation"],
+    "note": "段 = uid 不变 / topology 不变 / sediment 累积 / presentation 按纪元重算"
+  },
+  "shared": {
+    "variables": ["trust", "reputation", "supplies", "control", "knowledge", "time"],
+    "variable_groups_max": 6,
+    "fidelity_levels": [3, 2, 1, 0],
+    "decay_order": ["manner", "where", "what_detail", "who_affect_only"],
+    "rumour_max_hops": 2,
+    "memory_jitter_days": 3
+  }
+}

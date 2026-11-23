@@ -1,0 +1,98 @@
+我先核对项目里四个类的构造、方法签名和卡数据结构，再按现有 API 写成可直接运行的脚本。重点会按实际 `pick_and_fire` 返回值和变量名实现断言，避免把构造时必真的条件混进测试。extends SceneTree
+
+const VARIABLE_NAMES: Array[String] = [
+	"supplies",
+	"health",
+	"morale",
+	"trust",
+	"sediment",
+	"noise",
+]
+
+func _initialize() -> void:
+	call_deferred("_run_replay")
+
+
+func _run_replay() -> void:
+	var data: DataLayer = DataLayer.new()
+	var seeds: Array[int] = [1000, 1001, 1002]
+	var fired_counts: Dictionary = {}
+	var cards_by_id: Dictionary = {}
+
+	for card: Dictionary in data.cards:
+		cards_by_id[card.get("id", "")] = card
+
+	for seed: int in seeds:
+		var world: WorldState = WorldState.new(data, seed)
+		var engine: CardEngine = CardEngine.new(data, world)
+		var memory: Memory = Memory.new(world)
+
+		while world.day < 30:
+			var before_total: int = world.day * 24 + world.hour
+			var node: String = world.current_node
+
+			world.spend_time(1)
+			world.spend_time(2)
+			world.add_noise(node, 2)
+
+			var before_vars: Dictionary = {}
+			for variable_name: String in VARIABLE_NAMES:
+				before_vars[variable_name] = world.get_var(variable_name)
+
+			var result: Dictionary = engine.pick_and_fire(node, world.day * 7 + 1)
+
+			for variable_name: String in VARIABLE_NAMES:
+				var after_value: Variant = world.get_var(variable_name)
+				if after_value != before_vars[variable_name]:
+					var fired_card_id: String = str(result.get("card_id", ""))
+					var fired_card: Dictionary = cards_by_id.get(fired_card_id, {})
+					var declared: bool = false
+					for effect: Dictionary in fired_card.get("effects", []):
+						var effect_vars: Dictionary = effect.get("vars", {})
+						if effect_vars.has(variable_name):
+							declared = true
+							break
+					if not declared:
+						_fail(seed, "③", "card_id=%s changed undeclared variable=%s" % [fired_card_id, variable_name])
+						return
+
+			if result.get("fired", false):
+				var fired_card_id: String = str(result.get("card_id", ""))
+				fired_counts[fired_card_id] = int(fired_counts.get(fired_card_id, 0)) + 1
+				var fired_card: Dictionary = cards_by_id.get(fired_card_id, {})
+				if int(fired_card.get("returns_after_days", -1)) == 0 and int(fired_counts[fired_card_id]) > 1:
+					_fail(seed, "②", "one-shot card_id=%s fired %d times" % [fired_card_id, fired_counts[fired_card_id]])
+					return
+
+			world.spend_time(8)
+
+			var after_total: int = world.day * 24 + world.hour
+			if after_total - before_total != 11:
+				_fail(seed, "①", "before=%d after=%d delta=%d" % [before_total, after_total, after_total - before_total])
+				return
+
+		var original_supplies: Variant = world.get_var("supplies")
+		var snapshot: Dictionary = memory.snapshot()
+		world.add_var("supplies", -0.1)
+		memory.restore(snapshot)
+		if world.get_var("supplies") != original_supplies:
+			_fail(seed, "④", "supplies did not return to original value")
+			return
+
+	var oneshot_max: int = 0
+	for card_id: String in fired_counts:
+		var card: Dictionary = cards_by_id.get(card_id, {})
+		if int(card.get("returns_after_days", -1)) == 0:
+			oneshot_max = maxi(oneshot_max, int(fired_counts[card_id]))
+
+	var total_fired: int = 0
+	for card_id: String in fired_counts:
+		total_fired += int(fired_counts[card_id])
+
+	print("REPLAY_OK seeds=3 fired=%d oneshot_max=%d" % [total_fired, oneshot_max])
+	quit(0)
+
+
+func _fail(seed: int, invariant: String, detail: String) -> void:
+	print("REPLAY_FAIL seed=%d invariant=%s detail=%s" % [seed, invariant, detail])
+	quit(1)

@@ -1,0 +1,1239 @@
+{
+  "schema": "asset-manifest.v1",
+  "assets": [
+    {
+      "asset_id": "chr_npc_he_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 12,
+      "sha256": "b666aea022c4cbe5d93165f258b181c83ffd707b0cc827ccc091945f868df1e7",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "npc_ref": "npc_he",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_he_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 12,
+      "sha256": "4fd8f7b1b57a4467bdef5d930aa82d7c1b755acaf78ff5cd126b375de9ffda17",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_infected_32.png",
+      "derived_from": "chr_npc_he_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "npc_ref": "npc_he",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_he_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 12,
+      "sha256": "1139e6855d71faf332a0d51c719ec68de41f698cd5649a695872f8e89e4e6d75",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_infected_p1_32.png",
+      "derived_from": "chr_npc_he_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "npc_ref": "npc_he",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_he_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 12,
+      "sha256": "ea42dede52579cfe8dc421a32fe5fb4f4e1c7c254c61556812818a7ec2addf42",
+      "output_path": "art/generated_candidates/characters/SPR-npc_he_infected_p2_32.png",
+      "derived_from": "chr_npc_he_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ],
+      "npc_ref": "npc_he",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_mo_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "8397ebf510fb7ccd1f1f06594e21d8d012b4232d4c516c7f57c1e0170474043d",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "npc_ref": "npc_mo",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_mo_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "18fdeedf9164d0a8f31ec641a2fbcb3b4886579c11cfb2952c9a17504a363c76",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_infected_32.png",
+      "derived_from": "chr_npc_mo_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "npc_ref": "npc_mo",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_mo_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "866730be2cca0814fd46ca906954897bf8b1b9cda1e1922f5d71800e457bb36e",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_infected_p1_32.png",
+      "derived_from": "chr_npc_mo_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "npc_ref": "npc_mo",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_mo_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "1c5bfa4c0a8daca2db6ca607c11f5cc08edfbcedf927e926788561bc9d70bde7",
+      "output_path": "art/generated_candidates/characters/SPR-npc_mo_infected_p2_32.png",
+      "derived_from": "chr_npc_mo_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ],
+      "npc_ref": "npc_mo",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_tan_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 9,
+      "sha256": "809a22beb3e0695245cffaca02fd447ee9f9a824a41fe19f95d7540bf374040b",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "npc_ref": "npc_tan",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_tan_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 9,
+      "sha256": "0969607ecb48c866cb54e4424be134990a96f3a68475aba64438e535e11e0cf3",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_infected_32.png",
+      "derived_from": "chr_npc_tan_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "npc_ref": "npc_tan",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_tan_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 9,
+      "sha256": "fcb47a6ac4244ee74fdfa4f563ee1d3bb8a2cd5fd1d6238b66bd4e3849815099",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_infected_p1_32.png",
+      "derived_from": "chr_npc_tan_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "npc_ref": "npc_tan",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_tan_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 9,
+      "sha256": "24e0374f0a777256ad94888a235d253ef01b18846e53b1ba1b18fb895e0f42dd",
+      "output_path": "art/generated_candidates/characters/SPR-npc_tan_infected_p2_32.png",
+      "derived_from": "chr_npc_tan_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "npc_ref": "npc_tan",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_wei_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 9,
+      "sha256": "b7a4d290748d5a3b0416ab40ce1a9c3315b1c1fdedb1e067bee06a9b57b45f2b",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_wei",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_wei_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "3c3d3609661ad5dd2619f98ccc704f292d6abe584826fa1347943214e59bfec1",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_infected_32.png",
+      "derived_from": "chr_npc_wei_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_wei",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_wei_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "390bf7944b9c8b00e8d6a00d564844d4d267fd4d3e4446ae3e735c7c6c9ce97b",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_infected_p1_32.png",
+      "derived_from": "chr_npc_wei_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_wei",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_wei_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "cd33269bdfc383726204c7e56b6cad7562505b18bfacbbb71cb8c22fd53aea8a",
+      "output_path": "art/generated_candidates/characters/SPR-npc_wei_infected_p2_32.png",
+      "derived_from": "chr_npc_wei_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_wei",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_npc_xu_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "dee61b27d2050eec77b2bfce65d54bec928781249abf11af593492ddbb70b652",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_xu",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_xu_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "564971d63e9bc4cd1edd1318565d06f89d45b396eac9e5b31a16f0f5af2b775c",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_infected_32.png",
+      "derived_from": "chr_npc_xu_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_xu",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_xu_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "d0feadd507970347f563fda5081b95e129b75d0e757ed159c024d41e3e59c018",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_infected_p1_32.png",
+      "derived_from": "chr_npc_xu_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_xu",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_npc_xu_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "53472800ede9bf7326d693e16c02106eabd3e0d765e4a9b4f0ed534afe4c9b52",
+      "output_path": "art/generated_candidates/characters/SPR-npc_xu_infected_p2_32.png",
+      "derived_from": "chr_npc_xu_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ],
+      "npc_ref": "npc_xu",
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_student_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "0c564538b41ebb1966869e2020727a069fa38acddaf728564ab3f6ae4263715b",
+      "output_path": "art/generated_candidates/characters/SPR-student_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_student_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "111d8c707b1ea445a127c77578dc5e2d0966cfeec6bed436e86754af966ba37c",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_32.png",
+      "derived_from": "chr_student_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_student_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "7c468a6766f412e2dec742cc31339a6d11a261e41df98eab0860374268dfcdba",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_p1_32.png",
+      "derived_from": "chr_student_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_student_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "995b9289f029d0b8834885fb9e58fd11309ea136618a49fa07fbf33a48fdf7e0",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_p2_32.png",
+      "derived_from": "chr_student_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_student_infected_p3_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 11,
+      "sha256": "106d379167d372f9ee8a2aa6359c156dfc9fe68cd68f8e8b08113ddb177915df",
+      "output_path": "art/generated_candidates/characters/SPR-student_infected_p3_32.png",
+      "derived_from": "chr_student_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-23T14:56:31"
+    },
+    {
+      "asset_id": "chr_teacher_idle_r_00",
+      "category": "character",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "approved",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "f60aaee11b6017493031c51f99cb0820a63105ff40bb77fc62f19fc48725f1ad",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_32.png",
+      "derived_from": null,
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": "YG",
+      "approved_at": "2026-11-22",
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10",
+      "review_note": "blockout 阶段签核：用于验证 R21 流程，非发布级"
+    },
+    {
+      "asset_id": "chr_teacher_infected_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "6787f683b499f45096a58cf8b6dda25e83e75a5b1fe3a1a7a9d451b299fcef2d",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_32.png",
+      "derived_from": "chr_teacher_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_teacher_infected_p1_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "133c61425f9e02c1b355a4c81ae8179de36e51dcae8861de7a198a2fa62b158b",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_p1_32.png",
+      "derived_from": "chr_teacher_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_teacher_infected_p2_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "e21efc407f6c4b435c298acf33107e2198f6bd840f4a0f5f6cc3f00cf9658342",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_p2_32.png",
+      "derived_from": "chr_teacher_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:38:10"
+    },
+    {
+      "asset_id": "chr_teacher_infected_p3_idle_r_00",
+      "category": "zombie_variant",
+      "grid": [
+        32,
+        32
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 10,
+      "sha256": "c900fdc47723428de34a36a823e288a4dc60ade74c287607d7f2807c74432bc6",
+      "output_path": "art/generated_candidates/characters/SPR-teacher_infected_p3_32.png",
+      "derived_from": "chr_teacher_idle_r_00",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:37:09"
+    },
+    {
+      "asset_id": "tl_corridor_01",
+      "category": "tile",
+      "grid": [
+        128,
+        16
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 15,
+      "sha256": "34283a153530fcd589462d767bd6d3127161ef661e38a8d73d2b9eb170e3d013",
+      "output_path": "art/generated_candidates/tiles/TL-01_corridor.png",
+      "derived_from": null,
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T21:49:00"
+    },
+    {
+      "asset_id": "tl_corridor_full_20",
+      "category": "tile_sheet",
+      "grid": [
+        320,
+        16
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "approved",
+      "pixel_gate": "pass",
+      "pixel_colors": 20,
+      "sha256": "2c9a72e5663343497ec3ac923938478bfd91b656e38a0cbe847e2d4f89849dff",
+      "output_path": "art/generated_candidates/tiles/TL-02_corridor_full.png",
+      "derived_from": null,
+      "accessory_slots": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": "YG",
+      "approved_at": "2026-11-22",
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T22:30:23",
+      "review_note": "blockout 阶段签核：用于验证 R21 流程，非发布级"
+    },
+    {
+      "asset_id": "tl_corridor_worn_20",
+      "category": "tile_sheet",
+      "grid": [
+        320,
+        16
+      ],
+      "palette": "art/palettes/master.gpl",
+      "source": "authoritative",
+      "status": "draft",
+      "pixel_gate": "pass",
+      "pixel_colors": 20,
+      "sha256": "c4fb9eaca2e7bcff5af65345fba0be887209e51a74b4931e2d6dfa1c09ab00f5",
+      "output_path": "art/generated_candidates/tiles/TL-03_corridor_worn.png",
+      "derived_from": null,
+      "accessory_slots": null,
+      "npc_ref": null,
+      "directions": [
+        "r"
+      ],
+      "reviewer": null,
+      "approved_at": null,
+      "provider": null,
+      "input_refs": [],
+      "ingested_at": "2026-11-22T23:07:09"
+    }
+  ]
+}

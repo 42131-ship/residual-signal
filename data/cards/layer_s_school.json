@@ -1,0 +1,148 @@
+{
+  "cards": [
+    {
+      "card_id": "school_broadcast_last",
+      "layer": "S",
+      "template": "school",
+      "title": "最后一次播音",
+      "trigger": {
+        "day": {
+          "min": 6,
+          "max": 8
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.6
+          }
+        ],
+        "node_ids": [
+          "school_f2_broadcast"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "voice",
+          "options": [
+            "半句循环的女声",
+            "电流声",
+            "一句规程"
+          ]
+        },
+        {
+          "slot": "action",
+          "options": [
+            "听完",
+            "记下来",
+            "走开"
+          ]
+        },
+        {
+          "slot": "cost",
+          "options": [
+            "时间",
+            "暴露"
+          ]
+        },
+        {
+          "slot": "outcome",
+          "options": [
+            "你听完了",
+            "你只记住一半",
+            "你没听完"
+          ]
+        }
+      ],
+      "text": {
+        "default": "频率里卡着半句，底噪盖住了校名。",
+        "heard": "女声念到疏散铃，随后只剩底噪。"
+      },
+      "effects": [
+        {
+          "when": "听完",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.05
+          },
+          "evidence": "evt_school_broadcast_last_heard"
+        },
+        {
+          "when": "记下来",
+          "vars": {
+            "knowledge": 0.05,
+            "time": -0.02
+          },
+          "evidence": "evt_school_broadcast_last_noted"
+        },
+        {
+          "when": "走开",
+          "vars": {
+            "time": 0.02
+          },
+          "evidence": "evt_school_broadcast_last_left"
+        }
+      ],
+      "noise": null,
+      "leftover": "停播后，话筒旁压着一张写有半句校规的纸。",
+      "returns_after_days": 0
+    },
+    {
+      "card_id": "school_transmission_office_breach",
+      "layer": "S",
+      "template": "school",
+      "title": "传达室失效",
+      "trigger": {
+        "day": {
+          "min": 3
+        },
+        "node_ids": [
+          "school_f1_guard"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "sign",
+          "options": [
+            "门从里面开着",
+            "插销完好",
+            "校牌歪了"
+          ]
+        },
+        {
+          "slot": "missing",
+          "options": [
+            "铜钥匙",
+            "红色粉笔"
+          ]
+        },
+        {
+          "slot": "action",
+          "options": [
+            "检查插销",
+            "重新锁门",
+            "离开传达室"
+          ]
+        }
+      ],
+      "text": {
+        "default": "门从里面被打开。插销完好，桌上的铜钥匙不见了。",
+        "heard": "锁舌还卡在门框里，桌面空了一角。"
+      },
+      "effects": [
+        {
+          "when": "重新锁门",
+          "vars": {
+            "trust": -0.1
+          },
+          "evidence": "evt_school_transmission_office_breach"
+        }
+      ],
+      "noise": null,
+      "leftover": "传达室还能上锁；桌上留下钥匙的圆形压痕。",
+      "returns_after_days": 0
+    }
+  ]
+}

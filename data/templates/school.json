@@ -1,0 +1,46 @@
+{
+  "template_id": "school",
+  "label": "学校",
+  "entry_days": [
+    0,
+    1,
+    3,
+    5
+  ],
+  "identity": {
+    "key_permission": [
+      "学生证",
+      "器材室钥匙"
+    ],
+    "how_recognized": "同学和老师认得你，但学生身份让人低估你，不代表他们信任你。",
+    "initial_knowledge": [
+      "半张课表标出教室1、教室2和实验室的上课安排。",
+      "实验室里有可用物资。",
+      "教室3的值日生通常留到最后。",
+      "教学楼东侧楼梯平时很少有人走。",
+      "传达室的门能从里面锁上。"
+    ]
+  },
+  "weapon_budget": {
+    "撬棍": {
+      "rounds": 8,
+      "sediment_per_shot": 1
+    },
+    "手枪": {
+      "rounds": 0,
+      "sediment_per_shot": 3
+    }
+  },
+  "noise_budget": {
+    "cap": 14,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "school_transmission_office_breach",
+    "trigger_once": true,
+    "condition": "calendar_day>=3 AND current_node_tag=safehouse_lockable AND action=lock_from_inside",
+    "manifestation": "传达室门从里面被打开，插销完好；屋里少了一把器材室钥匙，其他物品未少。"
+  },
+  "identity_note": "起点偏置是熟悉校园路线与少量权限，但他人只把你当成不值得防备的学生。",
+  "note": "开放日覆盖爆发、混乱、断电和饥饿阶段；每个入口日对应不同的校园风险与可搜寻物资状态。"
+}

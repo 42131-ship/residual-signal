@@ -1,0 +1,499 @@
+{
+  "template": "school",
+  "nodes": [
+    {
+      "node_id": "school_corridor_a",
+      "role": "axis",
+      "template": "school",
+      "axis_x": 0,
+      "depth_layer": 0,
+      "segment": "corridor_a",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_b",
+        "school_f2_roof",
+        "school_f1_class1",
+        "school_b1_coldstorage"
+      ],
+      "light": "on",
+      "noise_events": [
+        "footsteps_hall_01"
+      ],
+      "tags": [
+        "spawn",
+        "teaching_1"
+      ],
+      "background_key": "bg_corridor_a",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_corridor_a",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_corridor_b",
+      "role": "axis",
+      "template": "school",
+      "axis_x": 1,
+      "depth_layer": 0,
+      "segment": "corridor_b",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_a",
+        "school_corridor_c",
+        "school_f2_broadcast",
+        "school_f1_lab",
+        "school_b1_garage"
+      ],
+      "light": "on",
+      "noise_events": [
+        "footsteps_hall_01"
+      ],
+      "tags": [
+        "teaching_2"
+      ],
+      "background_key": "bg_corridor_b",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_corridor_b",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_corridor_c",
+      "role": "axis",
+      "template": "school",
+      "axis_x": 2,
+      "depth_layer": 0,
+      "segment": "corridor_c",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_b",
+        "school_corridor_d",
+        "school_f1_guard"
+      ],
+      "light": "on",
+      "noise_events": [
+        "footsteps_hall_01"
+      ],
+      "tags": [
+        "teaching_5",
+        "shelter"
+      ],
+      "background_key": "bg_corridor_c",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_corridor_c",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_corridor_d",
+      "role": "axis",
+      "template": "school",
+      "axis_x": 3,
+      "depth_layer": 0,
+      "segment": "corridor_d",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_c",
+        "school_corridor_e",
+        "school_f2_office",
+        "school_b1_power"
+      ],
+      "light": "on",
+      "noise_events": [
+        "footsteps_hall_01"
+      ],
+      "tags": [],
+      "background_key": "bg_corridor_d",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_corridor_d",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_corridor_e",
+      "role": "axis",
+      "template": "school",
+      "axis_x": 4,
+      "depth_layer": 0,
+      "segment": "corridor_e",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_d",
+        "school_f2_class3",
+        "school_f1_class2"
+      ],
+      "light": "on",
+      "noise_events": [
+        "footsteps_hall_01"
+      ],
+      "tags": [],
+      "background_key": "bg_corridor_e",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_corridor_e",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f2_roof",
+      "role": "room",
+      "template": "school",
+      "axis_x": 0,
+      "depth_layer": 1,
+      "segment": "corridor_a",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_a"
+      ],
+      "light": "on",
+      "noise_events": [],
+      "tags": [
+        "noise_sink"
+      ],
+      "background_key": "bg_roof",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_roof_sky",
+          "ratio": 1
+        },
+        {
+          "asset_key": "bg_roof_structure",
+          "ratio": 2
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f2_broadcast",
+      "role": "room",
+      "template": "school",
+      "axis_x": 1,
+      "depth_layer": 1,
+      "segment": "corridor_b",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "gear",
+      "linked_nodes": [
+        "school_corridor_b"
+      ],
+      "light": "flashlight_only",
+      "noise_events": [
+        "broadcast_hum_01"
+      ],
+      "tags": [
+        "audio_source"
+      ],
+      "background_key": "bg_room_broadcast",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_broadcast",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f2_office",
+      "role": "room",
+      "template": "school",
+      "axis_x": 3,
+      "depth_layer": 1,
+      "segment": "corridor_d",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "keys",
+      "linked_nodes": [
+        "school_corridor_d"
+      ],
+      "light": "on",
+      "noise_events": [
+        "door_creak_02"
+      ],
+      "tags": [
+        "clue_possible"
+      ],
+      "background_key": "bg_room_office",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_office",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f2_class3",
+      "role": "room",
+      "template": "school",
+      "axis_x": 4,
+      "depth_layer": 1,
+      "segment": "corridor_e",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_e"
+      ],
+      "light": "on",
+      "noise_events": [
+        "chair_scrape_01"
+      ],
+      "tags": [
+        "shelter"
+      ],
+      "background_key": "bg_room_class",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_class",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f1_class1",
+      "role": "room",
+      "template": "school",
+      "axis_x": 0,
+      "depth_layer": 0,
+      "segment": "corridor_a",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_a"
+      ],
+      "light": "on",
+      "noise_events": [
+        "chair_scrape_01"
+      ],
+      "tags": [
+        "teaching_3"
+      ],
+      "background_key": "bg_room_class",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_class",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f1_lab",
+      "role": "room",
+      "template": "school",
+      "axis_x": 1,
+      "depth_layer": 0,
+      "segment": "corridor_b",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "chem",
+      "linked_nodes": [
+        "school_corridor_b"
+      ],
+      "light": "on",
+      "noise_events": [
+        "glass_break_01"
+      ],
+      "tags": [
+        "teaching_4"
+      ],
+      "background_key": "bg_room_lab",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_lab",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f1_guard",
+      "role": "room",
+      "template": "school",
+      "axis_x": 2,
+      "depth_layer": 0,
+      "segment": "corridor_c",
+      "lockable": true,
+      "sediment": 0,
+      "loot_table": "roster",
+      "linked_nodes": [
+        "school_corridor_c"
+      ],
+      "light": "on",
+      "noise_events": [
+        "locker_slam_01"
+      ],
+      "tags": [
+        "shelter",
+        "teaching_6"
+      ],
+      "background_key": "bg_room_guard",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_guard",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_f1_class2",
+      "role": "room",
+      "template": "school",
+      "axis_x": 4,
+      "depth_layer": 0,
+      "segment": "corridor_e",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "empty",
+      "linked_nodes": [
+        "school_corridor_e"
+      ],
+      "light": "on",
+      "noise_events": [
+        "chair_scrape_01"
+      ],
+      "tags": [
+        "clue_possible"
+      ],
+      "background_key": "bg_room_class",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_room_class",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_b1_coldstorage",
+      "role": "room",
+      "template": "school",
+      "axis_x": 0,
+      "depth_layer": -1,
+      "segment": "corridor_a",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "food",
+      "linked_nodes": [
+        "school_corridor_a"
+      ],
+      "light": "flashlight_only",
+      "noise_events": [
+        "vending_hum_01",
+        "drip_01"
+      ],
+      "tags": [],
+      "background_key": "bg_b1_cold",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_b1_cold",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    },
+    {
+      "node_id": "school_b1_garage",
+      "role": "room",
+      "template": "school",
+      "axis_x": 1,
+      "depth_layer": -1,
+      "segment": "corridor_b",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "gear",
+      "linked_nodes": [
+        "school_corridor_b"
+      ],
+      "light": "flashlight_only",
+      "noise_events": [
+        "drip_01"
+      ],
+      "tags": [
+        "clue_endpoint"
+      ],
+      "background_key": "bg_b1_parking",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_b1_parking",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": 14,
+      "clue_endpoint": true
+    },
+    {
+      "node_id": "school_b1_power",
+      "role": "room",
+      "template": "school",
+      "axis_x": 3,
+      "depth_layer": -1,
+      "segment": "corridor_d",
+      "lockable": false,
+      "sediment": 0,
+      "loot_table": "ammo_scarce",
+      "linked_nodes": [
+        "school_corridor_d"
+      ],
+      "light": "flashlight_only",
+      "noise_events": [
+        "vending_hum_01"
+      ],
+      "tags": [
+        "power_node"
+      ],
+      "background_key": "bg_b1_power",
+      "parallax_layers": [
+        {
+          "asset_key": "bg_b1_power",
+          "ratio": 1
+        }
+      ],
+      "day_locked_after": null,
+      "clue_endpoint": false
+    }
+  ]
+}

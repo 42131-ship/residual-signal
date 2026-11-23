@@ -1,0 +1,87 @@
+{
+  "schema": "ai-ledger.v1",
+  "note": "AI 产出资产的 provenance 台账。R20：model/provider/input_assets/date 必填；reviewer 仅在 approved_at 存在时必填。未签核的条目 reviewer 为 null 是正常状态。",
+  "policy": {
+    "runtime_never_calls_model": true,
+    "generated_default_status": "draft",
+    "approval_requires": ["pixel_gate=pass", "reviewer", "approved_at", "本表有对应条目"]
+  },
+  "entries": [
+    {
+      "asset_id": "REF_SA01_corridor_d3",
+      "path": "art/refs/style_anchors/SA-01_corridor_d3_128x80.png",
+      "kind": "style_reference",
+      "model": "gpt-image-2.6-flare",
+      "provider": "starryapi.com",
+      "input_assets": [],
+      "prompt_file": "design/prompts/P-image-01-style-anchor.txt",
+      "postprocess": "pixelpipe convert --ratio 8:5 --scale 8 --denoise 3",
+      "reviewer": null,
+      "approved_at": null,
+      "date": "2026-11-22"
+    },
+    {
+      "asset_id": "REF_SA02_standoff",
+      "path": "art/refs/style_anchors/SA-02_standoff.png",
+      "kind": "promo_frame_reference",
+      "model": "gpt-image-2.6-flare",
+      "provider": "starryapi.com",
+      "input_assets": [],
+      "prompt_file": "design/prompts/A-01-standoff-night.txt",
+      "postprocess": "pixelpipe convert --ratio 3:2 --scale 4 --denoise 3",
+      "reviewer": null,
+      "approved_at": null,
+      "date": "2026-11-22"
+    },
+    {
+      "asset_id": "REF_CH01_student",
+      "path": "art/generated_candidates/characters/CH-01_student_raw.png",
+      "kind": "character_reference",
+      "model": "gpt-image-2.6-flare",
+      "provider": "starryapi.com",
+      "input_assets": [],
+      "prompt_file": "design/prompts/C-01-student.txt",
+      "reviewer": null,
+      "approved_at": null,
+      "date": "2026-11-22"
+    },
+    {
+      "asset_id": "REF_CH02_teacher",
+      "path": "art/generated_candidates/characters/CH-02_teacher_raw.png",
+      "kind": "character_reference",
+      "model": "gpt-image-2.6-flare",
+      "provider": "starryapi.com",
+      "input_assets": [],
+      "prompt_file": "design/prompts/C-02-teacher.txt",
+      "reviewer": null,
+      "approved_at": null,
+      "date": "2026-11-22"
+    },
+    {
+      "asset_id": "REF_CH03_zombie_pair",
+      "path": "art/generated_candidates/characters/CH-03_zombie_pair_raw.png",
+      "kind": "character_reference_rejected",
+      "model": "gpt-image-2.6-flare",
+      "provider": "starryapi.com",
+      "input_assets": [],
+      "prompt_file": "design/prompts/C-03-zombie-pair.txt",
+      "reviewer": null,
+      "approved_at": null,
+      "date": "2026-11-22",
+      "note": "学生丧尸被画成女生穿裙，与母体不一致；R25 语义校验的标准反例"
+    },
+    {
+      "asset_id": "REF_CH04_zombie_student_male",
+      "path": "art/generated_candidates/characters/CH-04_zombie_student_male_raw.png",
+      "kind": "character_reference",
+      "model": "gpt-image-2.6-flare",
+      "provider": "starryapi.com",
+      "input_assets": [],
+      "prompt_file": "design/prompts/C-04-zombie-student-male.txt",
+      "reviewer": null,
+      "approved_at": null,
+      "date": "2026-11-22",
+      "note": "CH-03 的修正版：男生、运动裤、配件位全保留"
+    }
+  ]
+}

@@ -1,0 +1,573 @@
+extends Node2D
+
+const SHEET := preload("res://art/generated_candidates/tiles/TL-04_corridor_v2.png")
+const CHAR_PATH := "res://art/generated_candidates/characters/SPR-student_32.png"
+const INSPECTION_PATH := "res://data/prop_inspections.json"
+const TILE_SIZE := 16
+const WORLD_TILES := Vector2i(40, 14)
+const VIEW_SIZE := Vector2i(384, 216)
+const TILE_INDEX := {
+	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
+	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
+}
+
+var _world: Node2D
+var _player: Player
+var _camera: Camera2D
+var _light_material: ShaderMaterial
+var _last_step_was_running := false
+var _steps := 0
+var _inspection_range_x := 0.0
+var _inspection_records: Dictionary = {}
+var _inspection_ui: Dictionary = {}
+var _inspection_order: Array[String] = []
+var _inspection_target := ""
+var _inspection_open := false
+var _inspection_ui_enabled := true
+var _inspection_prompt_root: Node2D
+var _inspection_prompt_layer: CanvasLayer
+var _inspection_panel_root: Node2D
+
+
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_ensure_actions()
+	_build_corridor()
+	_build_bounds()
+	_build_actor()
+	_load_inspections()
+	_build_camera()
+	_build_hud()
+	_build_flashlight()
+
+
+func _place_tile(tile_name: String, tile_x: int, tile_y: int, from_x := 0, width := TILE_SIZE) -> void:
+	var tile_index: int = TILE_INDEX[tile_name]
+	var tile := Sprite2D.new()
+	tile.texture = SHEET
+	tile.region_enabled = true
+	tile.region_rect = Rect2(tile_index * TILE_SIZE + from_x, 0, width, TILE_SIZE)
+	tile.centered = false
+	tile.position = Vector2(tile_x * TILE_SIZE + from_x, tile_y * TILE_SIZE)
+	_world.add_child(tile)
+
+
+func _build_corridor() -> void:
+	_world = Node2D.new()
+	_world.name = "World"
+	_world.z_index = -1
+	add_child(_world)
+
+	var door: Sprite2D = $Props/door_broken
+	var door_top_left := Vector2i(door.position + door.get_rect().position)
+	var door_cell := door_top_left / TILE_SIZE
+	var recess := Polygon2D.new()
+	recess.name = "ClassroomRecess"
+	recess.position = Vector2(door_top_left)
+	recess.polygon = PackedVector2Array([Vector2.ZERO, Vector2(32, 0), Vector2(32, 32), Vector2(0, 32)])
+	recess.color = Color("#0b1119")
+	_world.add_child(recess)
+	var interior_floor := Polygon2D.new()
+	interior_floor.name = "ClassroomInteriorFloor"
+	interior_floor.position = Vector2(door_top_left)
+	interior_floor.polygon = PackedVector2Array([
+		Vector2(3, 24), Vector2(29, 24), Vector2(32, 32), Vector2(0, 32),
+	])
+	interior_floor.color = Color("#182433")
+	_world.add_child(interior_floor)
+	var interior_floor_edge := Polygon2D.new()
+	interior_floor_edge.name = "ClassroomInteriorFloorEdge"
+	interior_floor_edge.position = Vector2(door_top_left + Vector2i(3, 24))
+	interior_floor_edge.polygon = PackedVector2Array([Vector2.ZERO, Vector2(26, 0), Vector2(26, 1), Vector2(0, 1)])
+	interior_floor_edge.color = Color("#1f2e3f")
+	_world.add_child(interior_floor_edge)
+
+	for x in range(WORLD_TILES.x):
+		for y in range(8):
+			var wall_type := "cracked" if x % 11 == 4 else "wall"
+			if y == 6:
+				wall_type = "dado"
+			elif y == 7:
+				wall_type = "base"
+			var doorway := x in range(door_cell.x, door_cell.x + 2) and y in range(door_cell.y, door_cell.y + 2)
+			if not doorway:
+				_place_tile(wall_type, x, y)
+		for y in range(8, WORLD_TILES.y):
+			var floor_type := "wet" if x % 9 == 3 else ("scuff" if x % 7 == 5 else "floor")
+			_place_tile(floor_type, x, y)
+
+	_build_floor_seams()
+	_build_exit_cues()
+
+
+func _build_floor_seams() -> void:
+	var image := Image.create(WORLD_TILES.x * TILE_SIZE, 6 * TILE_SIZE, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	var seam := Color("#182433")
+	for y in range(32, image.get_height(), 32):
+		for x in range(image.get_width()):
+			image.set_pixel(x, y, seam)
+	for row in range(3):
+		var row_top := row * 32
+		var seam_offset := 32 if row % 2 == 0 else 16
+		for x in range(seam_offset, image.get_width(), 32):
+			for y in range(row_top + 1, row_top + 32):
+				image.set_pixel(x, y, seam)
+	var seams := Sprite2D.new()
+	seams.name = "FloorPanelSeams"
+	seams.texture = ImageTexture.create_from_image(image)
+	seams.centered = false
+	seams.position = Vector2(0, 8 * TILE_SIZE)
+	seams.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_world.add_child(seams)
+
+
+func _build_exit_cues() -> void:
+	var sign := Node2D.new()
+	sign.name = "ExitDirectionSign"
+	sign.position = Vector2(384, 108)
+	_world.add_child(sign)
+	_add_rect_polygon(sign, "Backing", Vector2.ZERO, Vector2(20, 10), Color("#0b1119"))
+	_add_rect_polygon(sign, "ColdField", Vector2(1, 1), Vector2(18, 8), Color("#245c58"))
+	var arrow := Polygon2D.new()
+	arrow.name = "ArrowRight"
+	arrow.polygon = PackedVector2Array([
+		Vector2(4, 3), Vector2(12, 3), Vector2(12, 1), Vector2(16, 5),
+		Vector2(12, 9), Vector2(12, 7), Vector2(4, 7),
+	])
+	arrow.color = Color("#4fbfae")
+	sign.add_child(arrow)
+
+	var end_wall := Node2D.new()
+	end_wall.name = "CorridorEndWall"
+	end_wall.position = Vector2(576, 48)
+	_world.add_child(end_wall)
+	_add_rect_polygon(end_wall, "WallFace", Vector2.ZERO, Vector2(32, 80), Color("#0b1119"))
+	_add_rect_polygon(end_wall, "LeftPillar", Vector2(0, 0), Vector2(4, 80), Color("#111a26"))
+	_add_rect_polygon(end_wall, "RightPillar", Vector2(28, 0), Vector2(4, 80), Color("#111a26"))
+	_add_rect_polygon(end_wall, "DoorRecess", Vector2(5, 17), Vector2(22, 63), Color("#060a12"))
+	_add_rect_polygon(end_wall, "DoorLeaf", Vector2(8, 21), Vector2(16, 59), Color("#0b1119"))
+	_add_rect_polygon(end_wall, "DoorHighlight", Vector2(8, 21), Vector2(2, 58), Color("#111a26"))
+	_add_rect_polygon(end_wall, "DoorHandle", Vector2(23, 47), Vector2(2, 4), Color("#354b60"))
+	_add_rect_polygon(end_wall, "Threshold", Vector2(4, 78), Vector2(24, 2), Color("#354b60"))
+	_add_rect_polygon(end_wall, "ExitLampFrame", Vector2(12, 5), Vector2(8, 6), Color("#0b1119"))
+	_add_rect_polygon(end_wall, "ExitLamp", Vector2(13, 6), Vector2(6, 3), Color("#4fbfae"))
+	var terminal_wall := Node2D.new()
+	terminal_wall.name = "TerminalWallFace"
+	terminal_wall.position = Vector2(608, 0)
+	_world.add_child(terminal_wall)
+	_add_rect_polygon(terminal_wall, "Face", Vector2.ZERO, Vector2(32, 128), Color("#354b60"))
+	_add_rect_polygon(terminal_wall, "LeadingEdge", Vector2.ZERO, Vector2(4, 128), Color("#0b1119"))
+	_add_rect_polygon(terminal_wall, "RightCorner", Vector2(28, 0), Vector2(4, 128), Color("#060a12"))
+	_add_rect_polygon(terminal_wall, "WallFloorContact", Vector2(0, 127), Vector2(32, 3), Color("#060a12"))
+	_add_rect_polygon(terminal_wall, "FloorContactShade", Vector2(0, 130), Vector2(32, 6), Color("#111a26"))
+
+
+func _add_rect_polygon(parent: Node, node_name: String, at: Vector2, size: Vector2, tint: Color) -> Polygon2D:
+	var shape := Polygon2D.new()
+	shape.name = node_name
+	shape.position = at
+	shape.polygon = PackedVector2Array([
+		Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y),
+	])
+	shape.color = tint
+	parent.add_child(shape)
+	return shape
+
+
+func _build_bounds() -> void:
+	var bounds := StaticBody2D.new()
+	bounds.name = "WorldBounds"
+	bounds.collision_layer = 1
+	bounds.collision_mask = 0
+	add_child(bounds)
+	_add_box_collision(bounds, Vector2(320, 136), Vector2(640, 16), "Floor")
+	_add_box_collision(bounds, Vector2(0, 96), Vector2(16, 96), "LeftWall")
+	_add_box_collision(bounds, Vector2(616, 96), Vector2(16, 96), "RightWall")
+
+
+func _add_box_collision(parent: Node2D, at: Vector2, dimensions: Vector2, node_name: String) -> void:
+	var collision := CollisionShape2D.new()
+	collision.name = node_name
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = dimensions
+	collision.shape = rectangle
+	collision.position = at
+	parent.add_child(collision)
+
+
+func _build_actor() -> void:
+	_player = Player.new()
+	_player.name = "Player"
+	_player.position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
+	var texture := load(CHAR_PATH) as Texture2D
+	if texture == null:
+		push_error("Could not load player character texture: %s" % CHAR_PATH)
+	else:
+		var sprite := Sprite2D.new()
+		sprite.name = "BodySprite"
+		sprite.texture = texture
+		sprite.centered = false
+		sprite.position = Vector2(-16, -30)
+		_player.add_child(sprite)
+	add_child(_player)
+	for child in _player.get_children():
+		if child is Camera2D:
+			(child as Camera2D).enabled = false
+	_player.stepped.connect(_on_player_stepped)
+
+
+func _on_player_stepped(is_running: bool) -> void:
+	_last_step_was_running = is_running
+	_steps += 1
+
+
+func _ensure_actions() -> void:
+	_add_action("move_left", [KEY_A, KEY_LEFT])
+	_add_action("move_right", [KEY_D, KEY_RIGHT])
+	_add_action("walk", [KEY_SHIFT])
+	_add_action("inspect", [KEY_E])
+	_add_action("cancel_inspect", [KEY_ESCAPE])
+
+
+func _add_action(action_name: String, keys: Array) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	for keycode: int in keys:
+		var already_bound := false
+		for event: InputEvent in InputMap.action_get_events(action_name):
+			if event is InputEventKey and (event as InputEventKey).physical_keycode == keycode:
+				already_bound = true
+				break
+		if already_bound:
+			continue
+		var key_event := InputEventKey.new()
+		key_event.physical_keycode = keycode
+		InputMap.action_add_event(action_name, key_event)
+
+
+func _load_inspections() -> void:
+	var file := FileAccess.open(INSPECTION_PATH, FileAccess.READ)
+	if file == null:
+		push_error("INSPECTION_DATA_MISSING: " + INSPECTION_PATH)
+		return
+	var parser := JSON.new()
+	if parser.parse(file.get_as_text()) != OK:
+		push_error("INSPECTION_JSON:%d: %s" % [parser.get_error_line(), parser.get_error_message()])
+		return
+	var data: Variant = parser.data
+	if not data is Dictionary or data.get("schema") != "corridor-inspections.v1":
+		push_error("INSPECTION_SCHEMA_INVALID")
+		return
+	var range_value: Variant = data.get("interaction_range_x")
+	var records_value: Variant = data.get("records")
+	if not range_value is int and not range_value is float:
+		push_error("INSPECTION_RANGE_INVALID")
+		return
+	if float(range_value) <= 0.0 or not is_finite(float(range_value)) or not records_value is Array:
+		push_error("INSPECTION_DATA_INVALID")
+		return
+
+	var seen := {}
+	var ui_value: Variant = data.get("ui", {})
+	if ui_value is Dictionary:
+		_inspection_ui = ui_value.duplicate(true)
+	for value: Variant in records_value:
+		if not value is Dictionary:
+			push_error("INSPECTION_RECORD_INVALID")
+			return
+		var record: Dictionary = value
+		var id := str(record.get("id", ""))
+		var title := str(record.get("title", ""))
+		var lines_value: Variant = record.get("lines")
+		if id.is_empty() or title.is_empty() or seen.has(id) or not lines_value is Array or lines_value.is_empty():
+			push_error("INSPECTION_RECORD_FIELDS_INVALID: " + id)
+			return
+		for line: Variant in lines_value:
+			if not line is String or str(line).is_empty():
+				push_error("INSPECTION_LINE_INVALID: " + id)
+				return
+		var prop := $Props.get_node_or_null(NodePath(id)) as Sprite2D
+		if prop == null:
+			push_error("INSPECTION_PROP_MISSING: " + id)
+			return
+		seen[id] = true
+		_inspection_records[id] = record.duplicate(true)
+		_inspection_order.append(id)
+	if _inspection_order.size() != $Props.get_child_count():
+		push_error("INSPECTION_PROP_COUNT_MISMATCH")
+		_inspection_records.clear()
+		_inspection_order.clear()
+		return
+	_inspection_range_x = float(range_value)
+
+
+func _nearest_inspection_id() -> String:
+	if _player == null or _inspection_records.is_empty():
+		return ""
+	var best_id := ""
+	var best_distance := INF
+	var ties: Array[String] = []
+	for id: String in _inspection_order:
+		var prop := $Props.get_node_or_null(NodePath(id)) as Sprite2D
+		if not is_instance_valid(prop):
+			continue
+		var record: Dictionary = _inspection_records[id]
+		var focus_x := prop.global_position.x + float(record.get("focus_offset_x", 0.0))
+		var distance := absf(focus_x - _player.global_position.x)
+		if distance > _inspection_range_x:
+			continue
+		if distance < best_distance and not is_equal_approx(distance, best_distance):
+			best_distance = distance
+			ties = [id]
+		elif is_equal_approx(distance, best_distance):
+			ties.append(id)
+	if ties.is_empty():
+		return ""
+	if ties.size() == 1:
+		return ties[0]
+	ties.sort()
+	var facing := _player.facing_x
+	for id: String in ties:
+		var prop := $Props.get_node_or_null(NodePath(id)) as Sprite2D
+		var focus_x := prop.global_position.x + float(_inspection_records[id].get("focus_offset_x", 0.0))
+		if signf(focus_x - _player.global_position.x) == facing:
+			return id
+	return ties[0]
+
+
+func _build_inspection_ui(_parent: Node) -> void:
+	_inspection_prompt_layer = CanvasLayer.new()
+	_inspection_prompt_layer.name = "InspectionUI"
+	_inspection_prompt_layer.layer = 30
+	add_child(_inspection_prompt_layer)
+	_inspection_prompt_root = Node2D.new()
+	_inspection_prompt_root.name = "InspectPrompt"
+	_inspection_prompt_root.visible = false
+	_inspection_prompt_layer.add_child(_inspection_prompt_root)
+	_inspection_panel_root = Node2D.new()
+	_inspection_panel_root.name = "InspectPanel"
+	_inspection_panel_root.visible = false
+	_inspection_prompt_layer.add_child(_inspection_panel_root)
+
+
+func _draw_inspection_prompt(id: String) -> void:
+	if _inspection_prompt_root == null:
+		return
+	for child: Node in _inspection_prompt_root.get_children():
+		child.queue_free()
+	_inspection_prompt_root.visible = not id.is_empty() and not _inspection_open
+	if id.is_empty():
+		return
+	var record: Dictionary = _inspection_records.get(id, {})
+	var title := str(record.get("title", ""))
+	var width := 44 + PixelFont.width_of(title)
+	var x := clampf(_player.position.x - _camera.position.x + VIEW_SIZE.x / 2.0 - width / 2.0, 4.0, VIEW_SIZE.x - width - 4.0)
+	var y := 20.0
+	_inspection_prompt_root.set_meta("target_id", id)
+	_add_rect_polygon(_inspection_prompt_root, "PromptBg", Vector2(x, y), Vector2(width, 20), Color("#0b1119"))
+	_add_ui_frame(_inspection_prompt_root, Vector2(x, y), Vector2(width, 20), Color("#354b60"))
+	PixelFont.draw(_inspection_prompt_root, "E", Vector2(x + 6, y + 6), Color("#9fb2bd"))
+	PixelFont.draw(_inspection_prompt_root, str(_inspection_ui.get("inspect", "查看")), Vector2(x + 14, y + 4), Color("#9fb2bd"))
+	PixelFont.draw(_inspection_prompt_root, title, Vector2(x + 14 + PixelFont.width_of("查看"), y + 4), Color("#f6f6f0"))
+
+
+func _show_inspection(id: String) -> void:
+	var record: Dictionary = _inspection_records.get(id, {})
+	if record.is_empty():
+		return
+	for child: Node in _inspection_panel_root.get_children():
+		child.queue_free()
+	var panel_x := 8.0
+	var panel_y := 154.0
+	var panel_w := 368.0
+	var panel_h := 54.0
+	_add_rect_polygon(_inspection_panel_root, "PanelBg", Vector2(panel_x, panel_y), Vector2(panel_w, panel_h), Color("#0b1119"))
+	_add_ui_frame(_inspection_panel_root, Vector2(panel_x, panel_y), Vector2(panel_w, panel_h), Color("#635e57"))
+	PixelFont.draw(_inspection_panel_root, str(record.get("title", "")), Vector2(16, 160), Color("#f6f6f0"))
+	var lines: Array = record.get("lines", [])
+	for index: int in mini(2, lines.size()):
+		PixelFont.draw(_inspection_panel_root, str(lines[index]), Vector2(16, 176 + index * 14), Color("#9fb2bd"))
+	PixelFont.draw(_inspection_panel_root, "ESC", Vector2(326, 160), Color("#9fb2bd"))
+	_inspection_panel_root.set_meta("inspection_id", id)
+	_inspection_panel_root.visible = true
+	_inspection_open = true
+	_player._movement_locked = true
+	_draw_inspection_prompt("")
+
+
+func _close_inspection() -> void:
+	if not _inspection_open:
+		return
+	_inspection_open = false
+	_inspection_panel_root.visible = false
+	_player._movement_locked = false
+	_player._previous_global_position = _player.global_position
+	_inspection_target = ""
+	_draw_inspection_prompt("")
+
+
+func set_inspection_ui_enabled(enabled: bool) -> void:
+	_inspection_ui_enabled = enabled
+	if _inspection_prompt_layer != null:
+		_inspection_prompt_layer.visible = enabled
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _inspection_ui_enabled or not event is InputEventKey or event.is_echo() or not event.is_pressed():
+		return
+	if _inspection_open:
+		if event.is_action("inspect") or event.is_action("cancel_inspect"):
+			_close_inspection()
+			get_viewport().set_input_as_handled()
+		return
+	if event.is_action("cancel_inspect"):
+		return
+	if event.is_action_pressed("inspect"):
+		var target := _nearest_inspection_id()
+		if target.is_empty():
+			return
+		_inspection_target = target
+		_draw_inspection_prompt(target)
+		_show_inspection(target)
+		get_viewport().set_input_as_handled()
+
+
+func _add_ui_frame(parent: Node, at: Vector2, size: Vector2, color: Color) -> void:
+	var x := int(at.x)
+	var y := int(at.y)
+	var width := int(size.x)
+	var height := int(size.y)
+	for rect: Array in [
+		[Vector2(x, y), Vector2(width, 1)],
+		[Vector2(x, y + height - 1), Vector2(width, 1)],
+		[Vector2(x, y), Vector2(1, height)],
+		[Vector2(x + width - 1, y), Vector2(1, height)],
+	]:
+		var edge := ColorRect.new()
+		edge.position = rect[0]
+		edge.size = rect[1]
+		edge.color = color
+		parent.add_child(edge)
+
+
+func _build_camera() -> void:
+	_camera = Camera2D.new()
+	_camera.name = "Camera"
+	_camera.position_smoothing_enabled = false
+	_camera.limit_left = 0
+	_camera.limit_top = 0
+	_camera.limit_right = WORLD_TILES.x * TILE_SIZE
+	_camera.limit_bottom = WORLD_TILES.y * TILE_SIZE
+	_camera.position = VIEW_SIZE / 2
+	add_child(_camera)
+
+
+func _build_hud() -> void:
+	var layer := CanvasLayer.new()
+	layer.name = "HUD"
+	layer.layer = 20
+	add_child(layer)
+
+	var ink := Color("#9fb2bd")
+	var dim := Color("#354b60")
+	var day3_mark := Color("#0b1119")
+	var frame_color := Color("#635e57")
+	PixelFont.draw(layer, "DAY 3", Vector2(8, 8), ink)
+
+	var widths := [44, 36, 28, 44, 24, 40]
+	for index in range(widths.size()):
+		var bar := ColorRect.new()
+		var column_x := 276 if index < 3 else 332
+		bar.position = Vector2(column_x, 12 + (index % 3) * 7)
+		bar.size = Vector2(widths[index], 3)
+		bar.color = day3_mark if index == 2 else dim
+		layer.add_child(bar)
+
+	var slot_size := 12
+	var slot_gap := 4
+	var total_width := slot_size * 3 + slot_gap * 2
+	var slot_x := int((VIEW_SIZE.x - total_width) / 2.0)
+	for index in range(3):
+		_frame(layer, slot_x + index * (slot_size + slot_gap), VIEW_SIZE.y - 28, slot_size, slot_size, frame_color)
+
+	_build_inspection_ui(layer)
+	var envelope_x := VIEW_SIZE.x - 15
+	var envelope_y := VIEW_SIZE.y - 21
+	_frame(layer, envelope_x, envelope_y, 7, 5, frame_color)
+	var notification := ColorRect.new()
+	notification.position = Vector2(envelope_x + 6, envelope_y - 1)
+	notification.size = Vector2(2, 2)
+	notification.color = day3_mark
+	layer.add_child(notification)
+
+
+func _frame(parent: Node, x: int, y: int, width: int, height: int, color: Color) -> void:
+	var pieces := [
+		Vector2(x, y), Vector2(width, 1),
+		Vector2(x, y + height - 1), Vector2(width, 1),
+		Vector2(x, y), Vector2(1, height),
+		Vector2(x + width - 1, y), Vector2(1, height),
+	]
+	for index in range(0, pieces.size(), 2):
+		var edge := ColorRect.new()
+		edge.position = pieces[index]
+		edge.size = pieces[index + 1]
+		edge.color = color
+		parent.add_child(edge)
+
+
+func _build_flashlight() -> void:
+	var shader := load("res://game/shaders/flashlight.gdshader") as Shader
+	if shader == null:
+		push_error("FLASHLIGHT_SHADER_MISSING")
+		return
+	_light_material = ShaderMaterial.new()
+	_light_material.shader = shader
+	_light_material.set_shader_parameter("radius_px", 240.0)
+	_light_material.set_shader_parameter("softness_px", 48.0)
+	_light_material.set_shader_parameter("cone_half", 0.42)
+	_light_material.set_shader_parameter("cone_feather", 0.16)
+
+	var layer := CanvasLayer.new()
+	layer.name = "Flashlight"
+	layer.layer = 10
+	add_child(layer)
+	var mask := ColorRect.new()
+	mask.name = "Mask"
+	mask.color = Color.WHITE
+	mask.size = Vector2(VIEW_SIZE)
+	mask.material = _light_material
+	layer.add_child(mask)
+
+
+func _process(_delta: float) -> void:
+	_follow_player()
+	_update_flashlight()
+	if _inspection_open:
+		if Input.is_action_just_pressed("inspect") or Input.is_action_just_pressed("cancel_inspect"):
+			_close_inspection()
+		return
+	if Input.is_action_just_pressed("cancel_inspect"):
+		return
+	var target := _nearest_inspection_id()
+	if target != _inspection_target:
+		_inspection_target = target
+		_draw_inspection_prompt(target)
+	if Input.is_action_just_pressed("inspect") and not _inspection_target.is_empty():
+		_show_inspection(_inspection_target)
+
+
+func _follow_player() -> void:
+	if _player == null or _camera == null:
+		return
+	var half_view := float(VIEW_SIZE.x) / 2.0
+	var rightmost_center := WORLD_TILES.x * TILE_SIZE - half_view
+	_camera.position.x = roundf(clampf(_player.position.x + 64.0, half_view, rightmost_center))
+
+
+func _update_flashlight() -> void:
+	if _light_material == null or _player == null:
+		return
+	var screen_origin := _player.get_global_transform_with_canvas().origin.round()
+	_light_material.set_shader_parameter("light_pos_px", screen_origin + Vector2(9, -13))

@@ -1,0 +1,67 @@
+{
+  "cards": [
+    {
+      "card_id": "gas_station_back_door_open",
+      "layer": "S",
+      "template": "gas_station",
+      "title": "便利店后门",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "sign",
+          "options": [
+            "后门敞开",
+            "门锁没有损坏",
+            "水箱空了一格"
+          ]
+        },
+        {
+          "slot": "action",
+          "options": [
+            "检查门锁",
+            "清点货架",
+            "关上后门"
+          ]
+        },
+        {
+          "slot": "outcome",
+          "options": [
+            "门锁完好",
+            "少了一箱瓶装水",
+            "门关上了"
+          ]
+        }
+      ],
+      "text": {
+        "default": "便利店后门被从外面打开。门锁完好，货架少了一箱瓶装水。"
+      },
+      "effects": [
+        {
+          "when": "清点货架",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.05
+          },
+          "evidence": "evt_gas_water_missing"
+        }
+      ],
+      "noise": null,
+      "leftover": "后门锁完好，货架少了一箱瓶装水。",
+      "returns_after_days": 0
+    }
+  ]
+}

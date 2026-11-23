@@ -1,0 +1,137 @@
+{
+  "schema": "world_calendar.v1",
+  "status": "唯一事实源 · AI 禁改 · 5 个模板共用",
+  "note": "世界日 0–30，收束于 30。模板只决定「从哪一天进场」，不决定这张表。",
+  "end_day": 30,
+  "interp": {
+    "numeric": "linear",
+    "enum": "hold until next keyframe",
+    "rationale": "数值连续腐烂才像时间；行为模式必须跳变，否则玩家读不出断裂"
+  },
+  "keyframes": [
+    {
+      "day": 0,
+      "label": "爆发日",
+      "civilians": { "density": 0.95, "behavior": "daily" },
+      "zombies": { "density": 0.06, "pattern": "punctate", "behavior": "bite_infect" },
+      "loot": 1.0,
+      "noise_sensitivity": 0.2,
+      "power": "on",
+      "broadcast": "normal",
+      "palette_lut": "d0_warm_neon",
+      "ambient": "traffic_crowd_city",
+      "visibility": 1.0,
+      "note": "世界还没烂。丧尸只在爆发点，感染者混在人群里——玩家此刻分辨不出谁会被咬。"
+    },
+    {
+      "day": 1,
+      "label": "打砸抢",
+      "civilians": { "density": 0.8, "behavior": "panic_loot" },
+      "zombies": { "density": 0.22, "pattern": "punctate", "behavior": "bite_infect" },
+      "loot": 0.85,
+      "noise_sensitivity": 0.4,
+      "power": "on",
+      "broadcast": "normal",
+      "palette_lut": "d1_alarm_orange",
+      "ambient": "glass_smash_shouting",
+      "visibility": 0.95,
+      "note": "路边全是正常人，打砸抢、抢购、互相推挤——恐惧驱动，不是敌意。丧尸在密集撕咬、扩散感染。玩家该考虑的是躲在哪、什么时候出去搜。"
+    },
+    {
+      "day": 3,
+      "label": "断电",
+      "civilians": { "density": 0.45, "behavior": "shelter_in" },
+      "zombies": { "density": 0.38, "pattern": "diffuse", "behavior": "roam" },
+      "loot": 0.6,
+      "noise_sensitivity": 0.7,
+      "power": "off",
+      "broadcast": "degraded",
+      "palette_lut": "d3_cyan_grey",
+      "ambient": "no_power_hum",
+      "visibility": 0.45,
+      "note": "断电当夜。环境音消失，噪声第一次变得致命——之前被车流和广播盖住的脚步声，现在整条街都听得见。"
+    },
+    {
+      "day": 5,
+      "label": "饥饿冒险",
+      "civilians": { "density": 0.25, "behavior": "hungry_risk" },
+      "zombies": { "density": 0.5, "pattern": "diffuse", "behavior": "chase" },
+      "loot": 0.35,
+      "noise_sensitivity": 0.8,
+      "power": "off",
+      "broadcast": "degraded",
+      "palette_lut": "d5_ash_green",
+      "ambient": "distant_screams",
+      "visibility": 0.3,
+      "note": "街上全是丧尸，但密度一般——扩散开了，摊薄了。已有幸存者扛不住饥饿，冒风险上街被成群追杀。一些房间进去已经搜不到物资。"
+    },
+    {
+      "day": 7,
+      "label": "最后一次广播",
+      "civilians": { "density": 0.12, "behavior": "banding" },
+      "zombies": { "density": 0.55, "pattern": "cluster", "behavior": "occupy" },
+      "loot": 0.25,
+      "noise_sensitivity": 0.9,
+      "power": "off",
+      "broadcast": "last_loop_half_sentence",
+      "palette_lut": "d7_dead_grey",
+      "ambient": "loop_stutter",
+      "visibility": 0.22,
+      "note": "广播停掉。街面开始空——不是变安全，是人都进屋了，丧尸也进屋了。半句女声循环，某一拍轻轻卡一下。"
+    },
+    {
+      "day": 14,
+      "label": "检查站撤走",
+      "civilians": { "density": 0.06, "behavior": "banding" },
+      "zombies": { "density": 0.7, "pattern": "cluster", "behavior": "migrate" },
+      "loot": 0.12,
+      "noise_sensitivity": 0.95,
+      "power": "off",
+      "broadcast": "silent",
+      "palette_lut": "d14_cold_dark",
+      "ambient": "wind_only",
+      "visibility": 0.15,
+      "note": "线索链物理失效。只剩空油箱和一句涂鸦。"
+    },
+    {
+      "day": 30,
+      "label": "收束",
+      "civilians": { "density": 0.02, "behavior": "gone" },
+      "zombies": { "density": 0.85, "pattern": "migrated", "behavior": "occupy" },
+      "loot": 0.05,
+      "noise_sensitivity": 1.0,
+      "power": "off",
+      "broadcast": "silent",
+      "palette_lut": "d30_flashlight_warm",
+      "ambient": "silence_room_tone",
+      "visibility": 0.1,
+      "note": "只剩手电一圈暖黄。尸群迁移完成，占据稳定。"
+    }
+  ],
+  "entry_days": [0, 1, 3, 4, 5, 7],
+  "entry_rule": "进场日 ∈ entry_days，局内天数 = 30 − entry_day。进场日晚 = 局内更短、世界更烂、物资更少——难度不是星级，是你进场得多晚。",
+  "density_semantics": {
+    "civilians.density": "街面 / 公共节点上的活人数量。0–1。这是视觉层，不是战斗层。",
+    "zombies.density": "同一节点内的丧尸基数，供 sediment 计算初值。",
+    "zombies.pattern": "punctate=点状极密 | diffuse=摊薄遍布 | cluster=聚群 | migrated=迁移后稳定占据",
+    "noise_sensitivity": "同一噪声事件转化的 sediment 增量系数。R11 用它，不用常量。",
+    "loot": "物资存量系数，直接乘 loot_table 的预算（R10）。"
+  },
+  "entities": {
+    "tier_1_named_npc": {
+      "has": ["memory", "affinity", "fidelity", "state_card"],
+      "cap": 20,
+      "covered_by": "R12"
+    },
+    "tier_2_crowd": {
+      "has": ["density", "behavior"],
+      "has_not": ["memory", "affinity", "dialogue", "recruit"],
+      "note": "Day 0–5 独有，Day 7 后基本归零。不可对话、不可记忆。它的消失本身就是世界在烂的证据，零文本。"
+    },
+    "tier_3_zombie": {
+      "has": ["sediment", "pattern"],
+      "has_not": ["memory", "agenda"],
+      "note": "沉积体，不是波次。熟人丧尸化变体属 tier_1 的派生物，仍保留 tier_1 的配件位（R25）。"
+    }
+  }
+}

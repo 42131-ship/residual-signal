@@ -1,0 +1,25 @@
+{
+  "schema": "render-samples.v1",
+  "note": "L2 措辞渲染的验收样例（R40）。每条都要能被 source_event 证真，且不许出现该 fidelity 档位不允许的槽内容。这是「模糊 ≠ 撒谎」唯一可机检的地方。",
+  "source_npc": "npc_lin",
+  "source_event": "evt_0142",
+  "allowed_by_fidelity": {
+    "3": ["who", "what", "where", "manner", "outcome"],
+    "2": ["who", "what", "where"],
+    "1": ["who", "what_category"],
+    "0": []
+  },
+  "samples": [
+    {"day": 1, "expect_fidelity": 3, "text": "有人没说话，从柜台底下把绷带扔过来，伤口包上了。"},
+    {"day": 9, "expect_fidelity": 3, "text": "那人从柜台底下扔绷带过来，一句话没说，我把伤口包上了。"},
+    {"day": 16, "expect_fidelity": 2, "text": "有人在柜台底下给了绷带。"},
+    {"day": 20, "expect_fidelity": 1, "text": "有人给过东西。"},
+    {"day": 24, "expect_fidelity": 0, "text": "有人帮过我。"}
+  ],
+  "forbidden_in_render": ["戴眼镜", "戴帽", "穿着", "笑着说", "哭了起来", "红了眼眶"],
+  "reject_example": {
+    "day": 16,
+    "text": "那个戴眼镜的人从柜台底下扔绷带过来。",
+    "why": "「戴眼镜的」不在 slots 也不在 L0 源文本里，是渲染层自己补的；玩家会以为 NPC 记得你戴眼镜，后续对话无法保持一致。"
+  }
+}

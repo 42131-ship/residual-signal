@@ -1,0 +1,38 @@
+{
+  "template_id": "fire_station",
+  "label": "消防站",
+  "entry_days": [
+    0,
+    1,
+    3
+  ],
+  "identity": {
+    "key_permission": [
+      "器材柜钥匙",
+      "防火门权限"
+    ],
+    "how_recognized": "消防站值班名册登记的消防员。",
+    "initial_knowledge": [
+      "器材柜位于车库东侧，钥匙可开启柜门。",
+      "后院出口的防火门可由消防站权限开启。",
+      "车库卷帘门手动释放链位于门框内侧。"
+    ]
+  },
+  "weapon_budget": {
+    "撬棍": {
+      "rounds": 8,
+      "sediment_per_shot": 1
+    }
+  },
+  "noise_budget": {
+    "cap": 14,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "fire_station_fire_door_locked",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 3。",
+    "manifestation": "后院防火门被人从里面锁死，门外的插销完好，你无法进入。"
+  },
+  "identity_note": "你有门权和器材柜钥匙，但没有枪。"
+}

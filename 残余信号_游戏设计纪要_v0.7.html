@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《残余信号》｜游戏设计纪要 v0.7</title>
+<style>
+:root{
+  --bg:#0d1114; --panel:#141a1e; --panel2:#1b2328; --line:#2b373d;
+  --ink:#d7dcd8; --dim:#8a9691; --orange:#e08a3c; --cyan:#7fb0a8;
+  --red:#c0564a; --yellow:#e2c15a; --green:#8fbf8a;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.85;font-size:15px;
+  background-image:radial-gradient(circle at 12% 0%,rgba(224,138,60,.07),transparent 42%),
+                   radial-gradient(circle at 88% 30%,rgba(127,176,168,.05),transparent 46%);}
+.wrap{max-width:880px;margin:0 auto;padding:0 18px 90px}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.88em;color:var(--cyan);background:rgba(127,176,168,.08);padding:1px 5px;border-radius:3px}
+pre{background:#0a0e10;border:1px solid var(--line);border-left:3px solid var(--orange);border-radius:6px;
+  padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#b9c7c1}
+pre code{background:none;padding:0;color:inherit}
+h1,h2,h3,h4{line-height:1.4}
+h2{font-size:20px;margin:0 0 14px;color:var(--orange);letter-spacing:.02em}
+h3{font-size:16px;margin:22px 0 8px;color:var(--cyan)}
+h4{font-size:14px;margin:18px 0 6px;color:#e8ddcc}
+p{margin:10px 0}
+ul,ol{padding-left:22px;margin:10px 0}
+li{margin:6px 0}
+strong{color:#f0e2cf;font-weight:600}
+em{color:var(--yellow);font-style:normal}
+
+.cover{padding:64px 0 34px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--cyan);text-transform:uppercase}
+.cover h1{font-size:38px;margin:14px 0 6px;letter-spacing:.06em;color:#f4ede0}
+.cover .sub{color:var(--dim);font-size:14px;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.tag{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:var(--panel);
+  padding:5px 10px;border-radius:20px;color:var(--dim)}
+.tag.hot{border-color:rgba(224,138,60,.5);color:var(--orange)}
+.tag.new{border-color:rgba(143,191,138,.55);color:var(--green)}
+
+.daybar{display:flex;gap:3px;margin:24px 0 8px;height:8px}
+.daybar i{flex:1;background:var(--panel2);border-radius:1px}
+.daybar i:nth-child(-n+3){background:rgba(224,138,60,.75)}
+.daybar i:nth-child(n+4):nth-child(-n+7){background:rgba(226,193,90,.5)}
+.daybar i:nth-child(n+8){background:rgba(127,176,168,.28)}
+.daybar-cap{font-family:var(--mono);font-size:10.5px;color:var(--dim);display:flex;justify-content:space-between}
+
+.toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:22px 0 34px}
+.toc .tt{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cyan);margin-bottom:10px}
+.toc ol{columns:2;column-gap:26px;padding-left:20px;margin:0;font-size:13.5px}
+.toc li{margin:4px 0;break-inside:avoid}
+@media(max-width:560px){.toc ol{columns:1}}
+
+section{margin:0 0 44px;scroll-margin-top:18px}
+.no{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.15em;display:block;margin-bottom:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+.card.warn{border-left:3px solid var(--red)}
+.card.key{border-left:3px solid var(--orange);background:linear-gradient(90deg,rgba(224,138,60,.06),var(--panel) 40%)}
+.card.calm{border-left:3px solid var(--cyan)}
+.card.fresh{border-left:3px solid var(--green)}
+.card .ct{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--cyan);margin-bottom:6px}
+.card.warn .ct{color:var(--red)}
+.card.key .ct{color:var(--orange)}
+.card.fresh .ct{color:var(--green)}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--cyan);font-family:var(--mono);font-size:11px;letter-spacing:.1em;font-weight:500;
+   background:var(--panel2)}
+td:first-child{color:#e8ddcc;white-space:nowrap}
+@media(max-width:560px){table{font-size:12.5px}th,td{padding:7px 6px}}
+
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin:10px 0;padding:0 14px}
+summary{cursor:pointer;padding:11px 0;font-size:14px;color:var(--cyan);font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+ ";font-family:var(--mono);color:var(--orange)}
+details[open] summary::before{content:"− "}
+details .body{padding:2px 0 14px;border-top:1px solid var(--line)}
+
+.quote{border-left:2px solid var(--orange);padding:4px 0 4px 16px;color:#cfd8d2;font-style:italic;margin:16px 0}
+.mono-line{font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:3px;
+  background:rgba(127,176,168,.12);color:var(--cyan);margin-right:5px}
+.pill.no{background:rgba(192,86,74,.14);color:var(--red)}
+.pill.p0{background:rgba(143,191,138,.14);color:var(--green)}
+.pill.p1{background:rgba(226,193,90,.14);color:var(--yellow)}
+.done{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:3px;
+  background:rgba(143,191,138,.16);color:var(--green);margin-right:6px}
+.todo{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:3px;
+  background:rgba(226,193,90,.14);color:var(--yellow);margin-right:6px}
+.test{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:3px;
+  background:rgba(224,138,60,.16);color:var(--orange);margin-right:6px}
+.defer{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:3px;
+  background:rgba(127,176,168,.14);color:var(--cyan);margin-right:6px}
+.newbadge{display:inline-block;font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;
+  background:rgba(143,191,138,.18);color:var(--green);margin-left:8px;vertical-align:middle}
+
+.toolbar{position:sticky;top:0;z-index:20;background:rgba(13,17,20,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);padding:9px 0}
+.toolbar .in{max-width:880px;margin:0 auto;padding:0 18px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.toolbar .brand{font-family:var(--mono);font-size:11px;color:var(--orange);letter-spacing:.1em}
+button{font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--panel2);
+  border:1px solid var(--line);border-radius:5px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--orange);color:var(--orange)}
+footer{border-top:1px solid var(--line);padding-top:20px;color:var(--dim);font-size:12.5px}
+@media print{
+  .toolbar,.toc{display:none}body{background:#fff;color:#111}
+  .card,pre,details{background:#fff;border-color:#bbb}pre{border-left-color:#555}
+  h2,h3,h4,strong,td:first-child{color:#111}a{color:#333}
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar"><div class="in">
+  <span class="brand">RESIDUAL SIGNAL / v0.7</span>
+  <span><button onclick="window.print()">打印 / PDF</button> <button onclick="saveHTML()">下载本页</button></span>
+</div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="kicker">Design Memorandum · Working Draft</div>
+  <h1>残余信号</h1>
+  <p class="sub">2D 横版像素 · 丧尸末世求生 · 双模式设计纪要</p>
+  <div class="meta">
+    <span class="tag">版本 v0.7 · 合并版</span>
+    <span class="tag">2026-11-22</span>
+    <span class="tag hot">讨论纪要 / 非最终 GDD</span>
+    <span class="tag">PC · 掌机 · 买断制</span>
+    <span class="tag">Godot 4 + 纯文本数据层</span>
+    <span class="tag">画风基准：逃脱者2 造型语言</span>
+    <span class="tag">demo 开局：学校</span>
+    <span class="tag">主卖点：无尽模式</span>
+    <span class="tag new">+ 16 学校节点 / 校验器规则</span>
+    <span class="tag new">+ 枪械与冷兵器动作</span>
+    <span class="tag new">+ 全流程工具栈</span>
+    <span class="tag new">+ 像素资产生产契约</span>
+    <span class="tag new">+ 字体 / 授权 / 漂移基线</span>
+    <span class="tag new">+ v0.5 决策落地</span>
+    <span class="tag hot">D1 地图工具链双轨待测试</span>
+  </div>
+  <div class="daybar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="daybar-cap"><span>DAY 0 · 便利店橙</span><span>DAY 3 · 断电</span><span>DAY 7 · 最后一次广播</span><span>DAY 30 · 手电一圈暖黄</span></div>
+</header>
+<div class="card warn" style="margin-top:18px"><div class="ct">合并说明 · v0.7</div><p>本版 = <strong>v0.5 的全部设计论述（第 00–13 节，原文保留）</strong>＋ <strong>v0.6 的全部实现状态（第 14–20 节，从仓库生成）</strong>。过时数字已就地修正（16 处）。</p><p class="mono-line">以本版为唯一准据。v0.5 与 v0.6 自此只作历史快照。</p></div>
+
+<nav class="toc">
+  <div class="tt">CONTENTS / 目录</div>
+  <ol>
+    <li><a href="#s0">一句话与决议</a></li>
+    <li><a href="#s1">缘起：那块空着的位置</a></li>
+    <li><a href="#s2">核心原则</a></li>
+    <li><a href="#s3">世界骨架：时间轴 / 变量 / 事件卡</a></li>
+    <li><a href="#s4">氛围 / 画风基准</a></li>
+    <li><a href="#s5">双模式定位与参数</a></li>
+    <li><a href="#s6">模板化开局：demo = 学校</a></li>
+    <li><a href="#s6b">地图与节点拓扑 <span class="newbadge">NEW</span></a></li>
+    <li><a href="#d1">D1 地图工具链决策门禁（强制对比后拍板）</a></li>
+    <li><a href="#s6c">16 个学校节点 + 校验器规则 <span class="newbadge">NEW</span></a></li>
+    <li><a href="#s6d">枪械与冷兵器动作 <span class="newbadge">NEW</span></a></li>
+    <li><a href="#s7">世界记忆系统</a></li>
+    <li><a href="#s8">技术栈与数据契约</a></li>
+    <li><a href="#s8b">全流程工具栈与 Skills <span class="newbadge">NEW</span></a></li>
+    <li><a href="#s8c">像素资产生产契约 <span class="newbadge">NEW</span></a></li>
+    <li><a href="#s9">可开发性与落地难点</a></li>
+    <li><a href="#s10">平台结论</a></li>
+    <li><a href="#s11">开工顺序与验收线</a></li>
+    <li><a href="#s12">明确不做</a></li>
+    <li><a href="#s13">附录：参照作品 / 待决议</a></li>
+  <li><a href="#s14">v0.6 实现状态 <span class="newbadge">NEW</span></a></li><li><a href="#s15">新增 18 条规则 <span class="newbadge">NEW</span></a></li><li><a href="#s16">像素规格 <span class="newbadge">NEW</span></a></li><li><a href="#s17">资产流程 <span class="newbadge">NEW</span></a></li><li><a href="#s18">v0.5 之后拍板的四件事 <span class="newbadge">NEW</span></a></li><li><a href="#s19">已知欠账 <span class="newbadge">NEW</span></a></li><li><a href="#s20">工具链与验收命令 <span class="newbadge">NEW</span></a></li></ol>
+</nav>
+
+<!-- ============ 00 ============ -->
+<section id="s0">
+  <span class="no">00 / SUMMARY</span>
+  <h2>一句话与决议</h2>
+  <div class="card key">
+    <div class="ct">一句话定位</div>
+    <p>一款 <strong>2D 横版像素</strong>的丧尸末世求生游戏：世界按天烂下去，不因你而停；你救过的人记得你，并且会慢慢忘。</p>
+    <p>不是"一本写不完的小说"，而是<strong>一个不会冷场的即兴剧团</strong>——模型当措辞，不当中枢；事实全部来自状态机。</p>
+  </div>
+  <ol>
+    <li><strong>时间不等人。</strong>Day 0/3/7/14/30 只改世界变量，不弹提示。</li>
+    <li><strong>宏观冷漠，微观回响。</strong>世界不记得你，某个具体的人记得你——并且会忘。</li>
+    <li><strong>事实只由状态机产生。</strong>AI 只负责口气，不发明事件、人名、地名。</li>
+    <li><strong>模型提议，代码裁决。</strong>原始输出永不直接写入存档。</li>
+    <li><strong>只写一条会过期的线索。</strong>苟与割据由系统自己长出来，不写专属内容。</li>
+    <li><strong>不指路。</strong>横版只剩左右两轴，"不告诉你去哪"才第一次成为选择。</li>
+    <li><strong>职业不加数值。</strong>身份 = 钥匙 / 别人怎么认你 / 一份会腐烂的初始情报。</li>
+    <li><strong>遗忘 = 降级粒度，不是删除、不是撒谎。</strong>每句模糊话都必须能被事件日志证真。</li>
+    <li><strong>双模式共享一份运行时。</strong>差异只在 <code>mode_profile.json</code>，不写两套游戏。</li>
+    <li><strong>先做 PC / 掌机买断制独立游戏。</strong>不先做手游。</li>
+  </ol>
+  <div class="card fresh"><div class="ct">v0.3 增补决议</div>
+  <ol>
+    <li><strong>地图不是平面图，是节点图。</strong>AD 主轴 5 段 + W/S 纵深节点，16 区块重挂为 <strong>16 个可进入节点</strong>，沉积挂 <code>node_id</code>，安全屋 = <code>lockable</code>。</li>
+    <li><strong>校验器是一等公民。</strong>不是"写完再补测试"，而是先定 20 条规则再写节点；AI 产出的任何东西都要能过一段不联网的确定性代码。</li>
+    <li><strong>枪与冷兵器不是两套数值，是两种「与世界的关系」。</strong>枪 = 远、快、<strong>响</strong>（噪声写进沉积）；冷兵器 = 近、<strong>静</strong>、可复用但贴身赌命。两者都不加伤害数值、不做连招树。</li>
+    <li><strong>Skills 放计划层，不进落盘路径。</strong><code>SKILL.md</code> 是可版本化的提示包，不是构建依赖；最小绿色 CI 路径只有一条。</li>
+  </ol></div>
+  <div class="card fresh"><div class="ct">v0.4 增补决议</div>
+  <ol>
+    <li><strong>资产清单即美术预算。</strong><code>asset-manifest.json</code> 定「产什么、产多少」，补上 v0.3 只有生成器、没有清单的空洞。</li>
+    <li><strong>美术侧也要人审。</strong>AI 出品默认 <code>draft</code>；人眼签核 + pixel gate + provenance 三齐才进 <code>approved/</code>（R21）。</li>
+    <li><strong>漂移只报警，不裁决。</strong>风格一致性是启发式、不是科学指标；硬门禁仍只有 R14（R22）。</li>
+    <li><strong>字库与参考图是资产，也是法律对象。</strong>中文点阵字体按授权选型；商业游戏截图禁止进训练 / style-reference 输入（R23）。</li>
+    <li><strong>四类缺图补齐。</strong>背景视差 / 道具图标 / 熟人丧尸化派生 / 环境腐烂独立贴图；LUT 只管色温，管不了涂鸦（R24 / R25）。</li>
+  </ol></div>
+  <div class="card key"><div class="ct">v0.5 决策落地</div>
+  <ol>
+    <li><strong>字体定稿（P09 → A）。</strong>凤凰点阵体 Vonwaon（CC0 1.0）作正文，缝合像素 Fusion（OFL 1.1）作标题层级；两款字体与 OFL 声明一并进 <code>THIRD_PARTY_LICENSES.json</code>。</li>
+    <li><strong>旁白定稿（P01 → C）。</strong>全程无「规程口误」；Day 7 那半句循环女声带一次极轻卡顿——是信号衰减，不是台词失误。</li>
+    <li><strong>操控归属定稿（P04 → B + UI 修订）。</strong>保留「书包带晃一下」的物理反馈，<strong>并补一个极轻的归属 UI</strong>：否则玩家会以为仍在过场、傻等剧情。UI 只回答「哪个是我」，不回答「往哪走」，不指路。</li>
+    <li><strong>地图工具链不预选（P06 → D1）。</strong>LDtk 与 Tiled 两条<strong>同时作为待测试项写入文档</strong>；任何后续落地者（含 AI 辅助开发）提取本栏时必须先逐维对比、再拍板，才允许固定单栈。详见 <a href="#d1">D1 决策门禁</a>。</li>
+    <li><strong>其余 7 项延后至 demo。</strong>带推荐默认值写进 §13「延后至 demo 后」，垂直切片实测后再完善，不在本版拍板。</li>
+  </ol></div>
+  <div class="quote">判据的翻面：不是"游戏要永远记得你"，而是——有人在忘，而你在记。到第 20 天，你是全世界唯一还清楚记得 Day 1 怎么见面的人。</div>
+</section>
+
+<!-- ============ 01 ============ -->
+<section id="s1">
+  <span class="no">01 / ORIGIN</span>
+  <h2>缘起：那块空着的位置</h2>
+  <p>市面上"2D 像素 + 末世求生"并不空白，但两条都严丝合缝的很少。活下来的同类给人的"每次都不一样"，全靠<strong>程序化地图 + 系统涌现</strong>，剧情基本是固定事件池与碎片文本；没有一款是 AI 实时写剧情的。缺的不是更大的地图，是中间那层<strong>叙事状态机</strong>。</p>
+  <details><summary>为什么没人做：四道墙（含 PZ 删库现场）</summary><div class="body">
+    <p>《僵尸毁灭工程》早期真有剧情模式（Bob 与断腿的 Kate），还有更野的 meta-game 规划：NPC 在你看不见的地方自行搜刮、结社、死掉，再抛成剧情事件。2013 年因 NPC 代码跟不上、小团队养不起两套系统，故事模式和教程一起被砍。后来取舍被写成规格：开场 <em>This is how you died</em> 用过去式——不造玩家该遭遇的时刻，只造系统让玩家自己解题。</p>
+    <ul>
+      <li><strong>轻加载不是门槛。</strong>省下的是渲染，不是叙事。</li>
+      <li><strong>小说级文本 × 任意顺序 = 作者侧爆炸。</strong>常规收敛是状态变量，一收敛"小说"就降级成事件池。</li>
+      <li><strong>三条路线是三套系统，不是三个结局。</strong></li>
+      <li><strong>"刚爆发"和"开放式"的时间观是反的。</strong>经典的紧迫感悖论。</li>
+    </ul>
+    <p class="mono-line">最底层哲学冲突：生存沙盒的爽点是"世界不在乎你是谁"，小说的爽点是"世界非常在乎你"。</p>
+  </div></details>
+  <details><summary>市面参照作品</summary><div class="body">
+    <p><span class="pill">PC 硬核</span>僵尸毁灭工程（等距 2D 像素、无主线）· Cataclysm: DDA（开源回合制）· NEO Scavenger（像素拾荒）· Sheltered（横版剖面像素）· Deadly Days</p>
+    <p><span class="pill">手机</span>Mini DayZ 2 · 像素危城 · The Wanderer · 阿瑞斯病毒（严格讲是单色圆珠笔手绘，非像素）</p>
+    <p><span class="pill no">别算进来</span>This War of Mine（剪影）、Last Day on Earth（3D）、饥荒（2D 手绘且非末世）</p>
+  </div></details>
+</section>
+
+<!-- ============ 02 ============ -->
+<section id="s2">
+  <span class="no">02 / PRINCIPLES</span>
+  <h2>核心原则</h2>
+  <div class="card calm"><div class="ct">宏观冷漠 / 微观回响</div>
+  <p>借环世界时得反着用：RimWorld 的叙述者会看你的财富、人口、最近有没有死人；而丧尸末世最要命的那口气氛，恰恰来自<strong>世界根本不记得你</strong>。所以调度器只读<strong>地点历史</strong>，不读玩家状态。</p></div>
+  <ul>
+    <li><strong>不做动态难度补偿。</strong>快死了就少给事件，一秒出戏。</li>
+    <li><strong>不为高潮强行刷尸潮。</strong>会毁掉冷漠感。</li>
+    <li><strong>每条氛围必须改一个决策。</strong>改不了的只是壁纸。<span class="pill p0">这条在 §6d 决定枪械设计</span></li>
+    <li><strong>UI 藏进物件。</strong>不弹"任务已更新"；用频段扫描、地图上的铅笔划痕、标签褪色、日记自动多一行。</li>
+    <li><strong>留白是主要手段。</strong>连着四五天不落任何事件卡，玩家会自己吓自己。</li>
+  </ul>
+  <div class="card warn"><div class="ct">绝不破的两条边界</div>
+  <p>① 模型输出永远不直接写存档；② AI 写的传闻必须能被变量证伪。事实全来自变量，AI 只负责口气。</p></div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section id="s3">
+  <span class="no">03 / WORLD SPINE</span>
+  <h2>世界骨架：时间轴 / 变量 / 事件卡</h2>
+  <h3>三条硬约束</h3>
+  <ol>
+    <li>时间不等人：世界按天烂下去，不因玩家逛地图而暂停。</li>
+    <li>事实只由状态机产生：谁活着、哪块地被清过、哪条线索断了，都是变量，不是过场动画。</li>
+    <li>文本不写分支树：写"事件卡 + 条件片段 + 回响句库"，靠拼装出组合感。</li>
+  </ol>
+  <h3>Day 0–30 时间轴（剧情模式；无尽改为纪元衰减）</h3>
+  <table>
+    <tr><th>日</th><th>世界变量变化</th><th>感官表现</th></tr>
+    <tr><td>Day 0</td><td>爆发；供电正常、频段正常</td><td>便利店橙、霓虹、警灯一格一格闪</td></tr>
+    <tr><td>Day 3</td><td>断电；夜尸活跃度上升</td><td>青灰压饱和；真黑屏；教程频段终止</td></tr>
+    <tr><td>Day 7</td><td>最后一次官方广播</td><td>半句女声循环，之后再没换过；<strong>带一次极轻卡顿</strong>（信号衰减，非口误）</td></tr>
+    <tr><td>Day 14</td><td>撤离检查站撤走，线索链物理失效</td><td>只剩空油箱和一句涂鸦</td></tr>
+    <tr><td>Day 30</td><td>尸群迁移、聚落自行合并或团灭</td><td>只剩手电一圈暖黄；收束日</td></tr>
+  </table>
+  <p class="mono-line">每个节点只改世界变量，不弹提示。玩家从收音机底噪、路障新旧、NPC 不再提某个地名里察觉。</p>
+
+  <h3>变量控制在六组以内</h3>
+  <p><span class="pill">信任</span><span class="pill">声望</span><span class="pill">物资</span><span class="pill">控制度</span><span class="pill">知情度</span><span class="pill">时间</span> —— 模板扩容只改「开场参数 + 身份三样 + 初始知情度」，不改这六组的定义。</p>
+
+  <h3>事件卡：一张卡 = 场景 + 触发条件 + 5~8 插槽</h3>
+  <p>例：<strong>加油站夜遇</strong>　<code>旧识_存活=是</code> → 喊外号并提起第 2 天那卷绷带；<code>声望&gt;阈值</code> → 不搜身直接分半罐汽油；<code>控制度&gt;0</code> → 改口叫"站长"；三者皆无 → 陌生人版本，仍依 <code>车辆</code> 决定抢或躲。同一张卡四种读法，没有一条分支是单独写的。<strong>小说感来自回响，不来自选项数量。</strong></p>
+
+  <h3>三条路线的落法</h3>
+  <table>
+    <tr><th>路线</th><th>做法</th><th>性质</th></tr>
+    <tr><td>找官方</td><td>5 环线索链：电台→公告栏→路标→检查站→终点；会随时间失效</td><td>唯一 authored 线</td></tr>
+    <tr><td>苟着</td><td>不写任何专属内容，损耗 / 潜行 / 伤病 / 库存曲线自己讲故事</td><td>系统涌现</td></tr>
+    <tr><td>土皇帝</td><td>控制度过阈值后 NPC 投奔、聚落改旗、称呼变化、清剿频率自动变</td><td>结局的样子，不是按钮</td></tr>
+  </table>
+  <p>收束不做三选一，做一张<strong>世界快照</strong>：谁还活着、哪块地亮着灯、尾声由当前变量拼成。</p>
+</section>
+
+<!-- ============ 04 ============ -->
+<section id="s4">
+  <span class="no">04 / ATMOSPHERE &amp; ART BIBLE</span>
+  <h2>氛围 / 画风基准：环世界 + 逃脱者2</h2>
+  <h3>借造型语言，不借镜头</h3>
+  <p>《逃脱者2》是<strong>俯视 / 等距</strong>视角、16×16 tile、有限色调、物件靠轮廓一眼可辨、服装配件分人。取三样弃一样：</p>
+  <table>
+    <tr><th></th><th>取</th><th>落地</th></tr>
+    <tr><td>网格与限色</td><td>16×16 tile + 每 asset 有限色调</td><td>正好等于已锁的 <code>.gpl</code> + 单帧 ≤16 色</td></tr>
+    <tr><td>物件辨识度</td><td>不开 UI 高亮也能认出这是什么</td><td><strong>「不指路、不设万能互动键」能成立的前提</strong></td></tr>
+    <tr><td>人物差异</td><td>服装 / 配件体系分人</td><td>「一个差异位」升级为配件位（帽檐、面罩、背斧、袖标、书包、校牌）</td></tr>
+    <tr><td>镜头</td><td class="mono-line">不取</td><td>它是俯视 / 等距；本作仍是<strong>横版为骨、纵深为影</strong></td></tr>
+  </table>
+  <div class="card warn"><div class="ct">容易翻车的点</div>
+  <p>《逃脱者2》的明快配色是给<strong>喜剧越狱</strong>用的。基准只取造型语言，<strong>情绪色板仍由 Day 0→30 的 LUT 插值负责</strong>：Day 0 允许一点校园亮色，Day 3 断电后压饱和拉青灰，Day 30 只剩手电一圈暖黄。照搬它的颜色，整套压迫感会当场泄掉。</p></div>
+
+  <h3>把 Storyteller 从"导演"改成"会计"</h3>
+  <p>RimWorld 的叙述者管的是<strong>节奏，不是难度</strong>：给一次压力、留一段恢复、再给一次。本作调度器<strong>只读地点历史 + 全局日历</strong>，负责"账上这笔该结了"，不负责"给你制造戏剧"。输入不含玩家贫富、库存、死亡数。</p>
+
+  <h3>NPC 是"你管不了的人"</h3>
+  <p>状态要够持久：伤口、grief、宿怨、谁跟谁吃过饭，跨身体与关系一直挂着；游戏从不宣布这些线存在，只让它们攒到要紧那一刻才显形。<strong>反着用：RimWorld 你能下命令，这里下不了。</strong>半夜堵门、死活不开灯、看见你带伤退半步、把绷带默默放回台子上——三帧动画，比五百字对白沉。</p>
+
+  <h3>丧尸的恐怖不是"多"，是"不消失"</h3>
+  <p>别做波次。尸群是<strong>沉积</strong>：哪里响过枪、哪里死过人、哪条路被堵，就往哪聚、就地留着。一只在楼下反复撞门的丧尸撑三小时，比一百只潮水更压人。再叠上<strong>感染不可逆，且熟人会变成它</strong>：第 3 小时分了半卷绷带的人，第 40 小时在雾里以敌对单位出现，背包里还带着那卷。</p>
+
+  <h3>像素工具箱（每条都改一个决策）</h3>
+  <ul>
+    <li><strong>调色板随时间腐烂</strong>：不改一张贴图，只做全局 LUT 插值。</li>
+    <li><strong>视野即资源</strong>：黑暗不是"调暗"，是"信息被拿走"。</li>
+    <li><strong>声音先于画面</strong>：铁门、拖行、楼上一步、收音机底噪。</li>
+    <li><strong>少帧留白</strong>：3~4 帧别做满，窗帘动一下、影子错半格、NPC 站在门口不进来。</li>
+    <li><strong>等宽低速逐字</strong>：信号差时卡一下。</li>
+    <li><strong>不做跳杀</strong>：像素跳杀廉价，还会把慢压一刀切断。</li>
+  </ul>
+  <div class="card calm"><div class="ct">验收样本</div>
+  <p>Day 9，雨。断电第六天，招牌只剩一格残缺的橙。你带第 3 天救下的人绕回加油站——调度器已经四天没落卡。没有尸潮，没有提示。雨盖住脚步，手电扫过门缝照见一道旧拖痕，方向和你上次来时相反。某个频段还循环着半句女声，Day 7 之后就没换过，只在某一拍轻轻卡了一下。同伴忽然停在门口不进去：他状态卡里"弟弟在这栋楼失联"是 Day 5 写下的，你没读过，但你看得见他不动。</p>
+  <p class="mono-line">整段没有一句剧情文本，玩家却会自己把它讲成故事。</p></div>
+</section>
+
+<!-- ============ 05 ============ -->
+<section id="s5">
+  <span class="no">05 / MODES &amp; POSITIONING</span>
+  <h2>双模式定位与参数</h2>
+  <div class="card key"><div class="ct">产品定位：无尽是卖点，剧情是人物发生器</div>
+  <p><strong>剧情模式</strong>：线性、开局定好、塑造人物，让玩家结束时意犹未尽。<strong>无尽模式</strong>：开放性与自由性全在这里，承担复玩、时长与直播传播。</p>
+  <p>「意犹未尽」<strong>不能只靠剧情短</strong>，必须机制化：剧情收束后，把"你记得的人"以<strong>名字 / 传闻碎片</strong>写进无尽模式的随机池。于是某次开局可能刷出一个你认识的名字，<em>而对方根本不认识你</em>。这一下同时做到三件事：把情感预载带进无尽、不破坏无存档、狠狠扣住"世界不记得你，有人记得你，并且会忘"。</p>
+  <p class="mono-line">铁律：这是随机池参数，不是存档继承。绝不把剧情档、变量值、好感度直接搬进无尽。</p></div>
+  <div class="card warn"><div class="ct">留存目标与买断制的边界</div>
+  <p>"拉长在线时长"成立，但买断制下别借 F2P 那套钩子（每日任务、签到、体力、复活）。让时长来自<strong>想知道下一次会遇见谁</strong>，不来自系统催你回来。</p></div>
+
+  <table>
+    <tr><th>维度</th><th>剧情模式（人物发生器 / 线性）</th><th>无尽模式（主卖点 / 字面意思）</th></tr>
+    <tr><td>时间轴</td><td>finite(30)，Day 30 收束</td><td>epoch_decay，无终点</td></tr>
+    <tr><td>存档</td><td>允许</td><td><strong>无存档、无加载</strong>，死了只能重来</td></tr>
+    <tr><td>死亡</td><td>可读档续玩</td><td>一击致死，世界一并重置</td></tr>
+    <tr><td>尸潮</td><td>脚本化沉积</td><td>密度随时间单调增，不读玩家状态</td></tr>
+    <tr><td>地图</td><td>固定 16 节点（学校模板）</td><td>街道段流式拼接，节点按需生成</td></tr>
+    <tr><td>物资</td><td>密集→稀疏</td><td>更散；特定建筑 / 场景可搜出高价值物</td></tr>
+    <tr><td>安全屋</td><td>可建设据点</td><td><strong>只躲夜晚丧尸</strong>，自动长出昼出夜伏</td></tr>
+    <tr><td>开局</td><td><strong>定好，demo 单一模板（学校）</strong></td><td>同模板 + 参数化变体 + 空手开局低概率</td></tr>
+    <tr><td>结局</td><td>定死第 30 天，多结局</td><td>关闭</td></tr>
+  </table>
+
+  <h3>「线性」的准确含义</h3>
+  <p>线性的是<strong>骨架</strong>：章节 / 日程 / 收束日定死，开局模板定死。<strong>非线性的是状态</strong>：事件卡插槽、NPC 措辞、好感度门禁、fidelity 降级仍全由六组变量驱动。不是"每一句台词都写死"，否则整套数据契约就白做了。</p>
+
+  <h3>多结局的正确写法</h3>
+  <p>定死<strong>收束日</strong> + 定死<strong>终局态枚举（4~6 个）</strong>，中间仍由变量驱动。结局是第 30 天按六组变量坍缩出来的，不是三选一按钮。Day 14 之后才摸到检查站的人，结局池里自动少掉那几个。</p>
+
+  <h3>好感度是门禁，不是数值成长</h3>
+  <p>NPC 可查看的信息按好感度分层：高好感谈话间可能就把信息透露；低好感会抗拒，跌破阈值还可能<strong>反目成仇</strong>。反目写成<strong>状态迁移</strong>（信任跌破阈值 → 关系态翻转 → 后续卡的插槽换组），不是随机事件。</p>
+  <div class="card key"><div class="ct">两处漂亮耦合</div>
+  <p>① <strong>无存档反向保护了记忆系统</strong>：玩家没法 SL 重刷好感度、重刷那句模糊回响、重刷传闻链。</p>
+  <p>② <strong>一击致死让情报成为真资源</strong>：哪栋楼有货、哪条路夜里不走尸群、谁在撒谎——好感度从附加功能升成核心生存轴。</p></div>
+
+  <h3>一份运行时，两张配置</h3>
+  <pre><code>mode_profile.json
+  timeline      finite(30) | endless(epoch_decay)
+  save          allowed | none        # 无尽：连载入入口都不生成
+  death         resume | run_reset
+  loot_curve    dense→sparse | sparse→scatter
+  horde         scripted沉积 | f(t) 单调增
+  chunks        16 nodes | 流式按需
+  endings       on | off
+  opening       fixed(school) | templated+random
+  carry         none                 # 无尽永不继承剧情存档</code></pre>
+</section>
+
+<!-- ============ 06 ============ -->
+<section id="s6">
+  <span class="no">06 / OPENING &amp; CONTROL</span>
+  <h2>模板化开局：demo = 学校</h2>
+  <div class="card warn"><div class="ct">视角修订 + 重挂口径</div>
+  <p>视角从<strong>等距俯视改为 2D 横版</strong>。折中叫<strong>「横版为骨、纵深为影」</strong>：AD 是主移动轴；W/S 做<em>进出纵深</em>（爬梯、上屋顶、下地下室、推门进楼）。横版反而是"不指路"唯一能立住的形态——俯视有八个方向，"不告诉你去哪"没意义；<strong>横版只剩左右两轴，不指路才第一次成为选择</strong>。</p>
+  <p><strong>16 区块重挂结论：改为 16 个「可进入节点」，不是 16 块地图。</strong>详见 §6b / §6c。</p></div>
+
+  <h3>demo 开局：学校</h3>
+  <p>学校不只是市场选择，<strong>它在结构上比消防站更适配横版纵深</strong>：天然多层、天然多门洞。走廊 = AD 主轴；楼梯 / 天台 = W/S 纵深；教室门、实验室、食堂冷库、地下车库 = 纵深节点；能上锁的那间 = 安全屋。一块场地把整套坐标系演完。</p>
+  <p><strong>v0.5 修订（P04 → B + UI）。</strong>开场仍是「静止群像里有一帧突然动起来」：课间走廊几个人在聊天调侃，被选中的那个<strong>书包带晃一下</strong> —— 这是物理反馈，不弹选择界面。但<strong>紧接一帧必须补一个极轻的归属 UI</strong>：脚下浮出一个 3×5 的暖橙像素小标记（或等宽首字母牌），淡入约 0.6 秒后转为极淡常驻。</p>
+  <div class="card key"><div class="ct">为什么改：v0.3 那条原则被实测口径推翻了</div>
+  <p>原本写的是「不用高亮框、不用选中箭头」。只靠一帧动起来，玩家分不清<strong>哪个是自己</strong>，会以为还在过场、傻乎乎站着等下一段剧情。所以这里明确修订：去掉的是<strong>「全屏高亮框 / 选中箭头 / 按任意键开始」</strong>，不是去掉所有 UI。</p>
+  <p><strong>三条不破的限定</strong>：① 这个 UI 只回答「哪个是我」，<strong>绝不回答「往哪走」</strong>（§0「不指路」不变）；② 不高亮任何可拾取物、不接万能互动键；③ 它是 §02「UI 藏进物件」的<strong>唯一例外</strong>，且是归属标识，不是任务 UI。玩家认出自己之后，就该继续没有提示。</p></div>
+  <p><strong>像素规格</strong>：16×16 网格 + 锁死调色板，单帧 ≤16 色。学生靠<strong>色块 + 一个配件位</strong>区分（校服色 / 书包 / 校牌 / 眼镜 / 身高差一格），沿用逃脱者2 那套"一眼可辨"的造型语言。</p>
+  <div class="card warn"><div class="ct">两条硬提醒</div>
+  <p>① <strong>别写成青春校园剧。</strong>学校是<em>物资与门洞的容器</em>，课桌、黑板、广播体操铃都得变成掩护、噪音源或线索载体。</p>
+  <p>② <strong>面向大陆是传播钩子，也是审查变量。</strong>末世丧尸 + 校园题材走国内上架 / 版号路径是实打实的不确定性；先走 Steam / itch.io 买断。</p></div>
+
+  <h3>消防站：不删，降级为模板 B</h3>
+  <p>原消防站开场（黄帽堆砌成帽子形状 · 黑眼 · 红消防服 · 黑鞋，靠帽檐反光 / 面罩 / 背斧 / 袖口一条杠分人）保留为<strong>后期扩容模板之一</strong>。扩容节奏：<strong>demo 1 模板（学校，固定）</strong> → <strong>首发 3 模板 × N 起手</strong> → <strong>后期扩可选模板剧情</strong>。模板只改开场参数、身份三样、初始知情度，不改时间轴与变量定义。</p>
+
+  <h3>操作引导</h3>
+  <table>
+    <tr><th>键</th><th>行为</th></tr>
+    <tr><td>A / D</td><td>左右移动（主移动轴：走廊 / 街道）</td></tr>
+    <tr><td>W</td><td>爬梯 / 上行 / 靠近可交互物时进入纵深节点</td></tr>
+    <tr><td>S</td><td>下梯 / 下行 / 退出纵深</td></tr>
+    <tr><td>F / G</td><td>拾取 / 丢弃</td></tr>
+  </table>
+  <p><strong>不加 E 万能互动键</strong>——一按就高亮全屏可拾取物，等于偷偷告诉你"这边有东西"。具体指引玩家去左去右？<strong>不需要。</strong>给<strong>物理反馈，不给方向指令</strong>：左边玻璃碎了一声、右边广播底噪变强、走廊尽头应急灯还一格一格闪。</p>
+
+  <h3>旁白：不要《艾希》那个，要「频段」</h3>
+  <p>《艾希》的旁白是元叙事，等于给世界装了一个"非常在乎你"的声音，直接推翻宏观冷漠。把旁白<strong>降级成 Day 0 就存在的校园广播 / 官方频段</strong>：只教按键、只播规程（「请各班按疏散路线有序撤离」「本区域供电中断」），从不说往左往右。然后 <strong>Day 3 断电、Day 7 最后一次广播停掉</strong>——「上课铃 → 疏散铃 → 底噪」三段，教程结束的那一刻就是世界开始烂的那一刻。</p>
+  <p><strong>v0.5 定稿（P01 → C）：全程无「规程口误」。</strong>频段从不为制造戏剧性说错话、不骗玩家、不做元叙事。唯一的「不完美」落在 Day 7 那半句循环女声里：<strong>某一拍轻轻卡一下</strong>，之后每轮循环都在同一处卡。它是信号衰减的物理痕迹，不是台词、不是暗示、不是旁白在犯错——世界依旧不在乎你，只是磁带旧了。</p>
+
+  <h3>身份三样：学生版（仍不加数值）</h3>
+  <ol>
+    <li><strong>钥匙 / 权限</strong>：学生证、教室 / 器材室钥匙，知道哪间实验室有东西、哪扇门能从里面锁上。</li>
+    <li><strong>别人怎么认你</strong>：同学、老师认得你；但学生身份带来的是<strong>「被低估」而不是「被信赖」</strong>——低好感不是敌意，是<em>不把你的话当真</em>。</li>
+    <li><strong>你一开始知道什么</strong>：半张课表 + 校园平面图 = 初始知情度（谁在哪间教室、哪条楼梯平时没人走），<strong>会随 fidelity 一起模糊</strong>，第 16 天你自己也记不清哪条能走。</li>
+  </ol>
+  <p class="mono-line">消防站模板对应版：器材柜 / 防火门权限 · 制服带来的预设信任 · 半张消防通道图。同一套字段，换内容不换结构。</p>
+
+  <h3>不做职业选择，做「操控三人里的哪一个」</h3>
+  <p>选谁 = 谁在 Day 0 记得那句调侃、谁跟谁有过节、谁兜里揣着什么。叙事差异，不是数值差异，完全复用 <code>memory</code> schema。</p>
+  <div class="card key"><div class="ct">起手携带物随机表（含空手开局）</div>
+  <p><strong>不同人物 / 不同场景开场携带不同物品，并加入随机性</strong>：一例为「一个带撬棍、一个带钥匙串、一个带半张课表」；只改<strong>开局可达的空间</strong>，不改进度条。叠加随机：哪几人还在、柜子剩什么、初始知情度多少、节点初始沉积分布。</p>
+  <p><strong>空手开局：允许，但低概率且必须给信息补偿</strong>——空手，但知道一条别人不知道的通道。一击致死 + 无存档下纯劣势只会变成劝退；"情报才是真资源"正好由它兑现。<strong>不进 demo</strong>，进首发随机表。</p></div>
+</section>
+
+<!-- ============ 06b NEW ============ -->
+<section id="s6b">
+  <span class="no">06b / MAP TOPOLOGY <span class="newbadge">NEW</span></span>
+  <h2>地图与节点拓扑</h2>
+  <div class="card fresh"><div class="ct">先补的缺口</div>
+  <p>v0.2 只把「16 区块 → 16 节点」的字段定死了，没给拓扑和布局。这里补齐：<strong>地图不是一张 2D 平面图，是「一条轴 + 挂上去的房间」</strong>。</p></div>
+
+  <h3>三层结构</h3>
+  <ul>
+    <li><strong>主轴层（AD）</strong>：一条连续可走线，按 <code>axis_x</code> 切段；每段负责轻微加载与沉积记账。玩家永远能沿 A/D 回到上一间。</li>
+    <li><strong>纵深节点（W/S）</strong>：门洞 / 楼梯 / 天台 / 地下室。进入后切镜头，退出回到主轴<strong>同一个 x</strong>，不产生平面坐标漂移。</li>
+    <li><strong>拓扑层</strong>：<code>linked_nodes[]</code> 定义「哪扇门通向哪间房」，不是几何坐标，是<strong>可进入关系</strong>。</li>
+  </ul>
+
+  <h3>学校模板 16 节点（剧情 demo）</h3>
+  <pre><code>  depth +1   [天台]   [广播室]    ·      [办公室]  [教室3]
+                 |        |       ·         |         |
+  axis_x →   ==  0 ───── 1 ───── 2 ───── 3 ───── 4 ==      AD 主轴
+                 |        |       |         |         |
+  depth  0   [教室1]  [实验室] [传达室*]    ·     [教室2]
+                 |        |       |         |         |
+  depth -1   [冷库]   [地下车库]  ·     [配电间]  [器材室]
+
+  5 段主轴 corridor_a..e  +  11 间纵深房  =  16 节点
+  * 传达室 lockable=true（安全屋）</code></pre>
+
+  <table>
+    <tr><th>装置</th><th>挂在哪</th><th>作用</th></tr>
+    <tr><td>广播室（+1, x=1）</td><td><code>audio_source</code></td><td>频段旁白出处；Day 7 后只剩循环半句</td></tr>
+    <tr><td>配电间（-1, x=3）</td><td><code>power_node</code></td><td>Day 3 断电的地理锚点，之后 <code>light=flashlight_only</code></td></tr>
+    <tr><td>传达室（0, x=2）</td><td><code>lockable</code></td><td>能上锁的安全屋；夜间退路</td></tr>
+    <tr><td>地下车库（-1, x=1）</td><td><code>clue_endpoint</code></td><td>Day 14 检查站线索链的地理端点；过期后只读到涂鸦</td></tr>
+    <tr><td>食堂冷库（-1, x=0）</td><td><code>loot_table=food</code></td><td>高价值但需夜间穿越主轴</td></tr>
+    <tr><td>天台（+1, x=0）</td><td><code>noise_sink</code></td><td>枪声向上传导、尸群沉积的观察点</td></tr>
+  </table>
+
+  <h3>完整 <code>nodes.json</code> 字段</h3>
+  <pre><code>{
+  "node_id": "school_f1_guard",
+  "template": "school",
+  "axis_x": 2,
+  "depth_layer": 0,
+  "segment": "corridor_c",
+  "lockable": true,
+  "sediment": 0,
+  "loot_table": "office_med",
+  "linked_nodes": ["school_corridor_c", "school_f2_broadcast"],
+  "light": "flashlight_only",
+  "noise_events": ["door_creak_02"],
+  "tags": ["shelter", "clue_possible"],
+  "day_locked_after": null,
+  "clue_endpoint": false
+}</code></pre>
+  <p class="mono-line">字段一定死，垂直切片的 card / npc / memory / weapon schema 就能全部对齐。</p>
+
+  <h3>无尽模式：街道段流式拼接</h3>
+  <p>不用更大的地图，用<strong>同一条轴上不断换段</strong>。每段 3~5 个门洞，从模板库抽（便利店 / 加油站 / 居民楼 / 学校 / 消防站 / 诊所），带 <code>biome / sediment / loot_table / lockable_count</code>；安全屋每 N 段稀疏散布；特定建筑出高价值物（医院→药、消防站→斧与钥匙、学校→平面图）。沉积挂 <code>node_id</code> 不挂坐标，纪元越久段池越破败、可进入节点渐封。</p>
+  <div class="card calm"><div class="ct">这正好绕开「内容池有限」那道墙</div>
+  <p>字面无限不靠无限地图，靠<strong>有限段池 × 纪元参数 × 沉积历史</strong>重访。同一段在第 3 纪元和你在那儿开过一枪之后，读起来完全是另一块地。</p></div>
+
+  <h3>AI 在这层的边界</h3>
+  <p><strong>不让模型画 TileMap。</strong>它只输出高层参数 JSON（段类型 / 门洞数 / 物资预算 / 事件预算 / 安全屋数 / seed），确定性 PCG 生成节点图，校验器查可达性、回路、预算、沉积合法。普通 JSON Schema 只能管结构，可达性必须由代码判。</p>
+  <div class="card warn"><div class="ct">引擎侧硬事实（写错就得返工）</div>
+  <p>Godot <strong>4.3 起 <code>TileMap</code> 已弃用，改为每层一个 <code>TileMapLayer</code></strong>。碰撞来自 <code>TileSet</code> 的 physics layer 多边形——"导入后没碰撞"最常见原因就是没建 physics layer。<code>nodes.json</code> 必须按新 API 写。导入器两条候选（LDtk / Tiled）见 <a href="#d1">D1 决策门禁</a>：<strong>必须双轨实测对比后拍板</strong>，未拍板前 <code>nodes.json</code> 不写死导入器字段。</p></div>
+</section>
+
+<!-- ============ D1 DECISION GATE ============ -->
+<section id="d1">
+  <span class="no">D1 / DECISION GATE <span class="test">待测试</span></span>
+  <h2>D1 · 地图工具链决策门禁（强制对比后拍板）</h2>
+  <div class="card key"><div class="ct">状态：双轨待测试，不是已拍板</div>
+  <p>本项目<strong>不预先选定</strong>地图工具链。P06 的两条候选<strong>同时写入本文档作为待测试项</strong>，由 demo 垂直切片实测结果决定。<strong>在 D1 拍板之前，<code>nodes.json</code> 只保留中性字段，不得写死任何导入器。</strong></p></div>
+
+  <table>
+    <tr><th>轨道</th><th>组合</th><th>许可证</th><th>已知风险</th></tr>
+    <tr><td><strong>A</strong></td><td>LDtk + <code>godot-ldtk-importer</code>（Godot 4.1+）</td><td>MIT / MIT</td><td>类型化 JSON 最贴纯文本数据层；须实测是否产出 <code>TileMapLayer</code>、physics layer 碰撞是否带过来</td></tr>
+    <tr><td><strong>B</strong></td><td>Tiled + YATI（Godot 4.3+，Tiled 1.12.x）</td><td>GPLv2 / MIT</td><td>生态成熟、terrain 规则丰富；GPLv2 与买断发行的兼容性须逐条核，导入器同样要实测 <code>TileMapLayer</code></td></tr>
+  </table>
+
+  <div class="card warn"><div class="ct">提取本栏的强制流程（给后续任何落地者，含 AI 辅助开发）</div>
+  <ol>
+    <li><strong>先对比，再发言。</strong>任何读取本栏、准备落地地图工具链的一方，必须先把下表六个维度对 A / B <strong>逐条实测并输出对比结果</strong>；不得只跑一条、不得凭印象或偏好直接选、不得把「二选一」当成已选。</li>
+    <li><strong>对比完才允许拍板。</strong>输出一句明确结论：「本项目后续固定使用 <strong>A / B</strong>」，并同时写明<strong>落败方为什么落败</strong>（哪一维度不达标）。没有这句结论与落败理由，视为未拍板。</li>
+    <li><strong>拍板前不得写死。</strong>结论写进 <code>mode_profile.json</code> / 构建脚本 / <code>nodes.json</code> 导入器字段之前，两条都只能以 PoC 形式存在；D1 未拍板时 CI 不接任何导入器。</li>
+    <li><strong>拍板后固定单栈。</strong>另一条从正式管线移除并写进 §12；<strong>PoC 阶段并行对比不算双栈上线</strong>。之后新增节点、模板、无尽段池一律走同一条，不得回流。</li>
+  </ol>
+  <p class="mono-line">D1 是<strong>决策门禁</strong>，不是 CI 校验规则，因此不占 R01–R43 的编号；它约束的是「人 / 模型怎么下结论」，不是「资产怎么过门禁」。</p></div>
+
+  <h3>对比维度表（demo 实测后填写，未填即未拍板）</h3>
+  <table>
+    <tr><th>维度</th><th>A 实测</th><th>B 实测</th><th>判定口径</th></tr>
+    <tr><td>产出 Godot 4.3+ <code>TileMapLayer</code></td><td>待填</td><td>待填</td><td>必须逐层产出，不能是已弃用的 <code>TileMap</code></td></tr>
+    <tr><td>TileSet physics layer 碰撞</td><td>待填</td><td>待填</td><td>导入后走廊 / 门洞碰撞可用，不需手工补多边形</td></tr>
+    <tr><td>许可证与买断发行</td><td>待填</td><td>待填</td><td>逐条核 LICENSE / NOTICE，GPLv2 兼容性写清依据</td></tr>
+    <tr><td>JSON 可 diff / 可版本化</td><td>待填</td><td>待填</td><td>纯文本、可回滚、能进 <code>data/</code> 唯一事实源</td></tr>
+    <tr><td><code>--headless --import</code> CI 可复现</td><td>待填</td><td>待填</td><td>干净 runner 一键重建，不依赖人点编辑器</td></tr>
+    <tr><td>横版纵深适配</td><td>待填</td><td>待填</td><td><code>depth_layer</code> / <code>linked_nodes[]</code> / 切镜头换背景的挂接成本</td></tr>
+  </table>
+  <p class="mono-line">复评触发：demo 垂直切片（1 条走廊 5 段 + 3 个纵深节点）跑通之日。结论与落败理由回填本表 + §13，并同步 §8b 环节④、§11 开工字段。</p>
+</section>
+
+<!-- ============ 06c NEW ============ -->
+<section id="s6c">
+  <span class="no">06c / VALIDATOR RULES <span class="newbadge">NEW</span></span>
+  <h2>16 个学校节点 + 校验器规则</h2>
+
+  <h3>节点清单（可直接落 <code>data/nodes.json</code>）</h3>
+  <table>
+    <tr><th>#</th><th>node_id</th><th>x / depth</th><th>关键字段</th></tr>
+    <tr><td>01</td><td>school_corridor_a</td><td>0 / 0</td><td>主轴；spawn</td></tr>
+    <tr><td>02</td><td>school_corridor_b</td><td>1 / 0</td><td>主轴</td></tr>
+    <tr><td>03</td><td>school_corridor_c</td><td>2 / 0</td><td>主轴；邻接安全屋</td></tr>
+    <tr><td>04</td><td>school_corridor_d</td><td>3 / 0</td><td>主轴</td></tr>
+    <tr><td>05</td><td>school_corridor_e</td><td>4 / 0</td><td>主轴；末端</td></tr>
+    <tr><td>06</td><td>school_f2_roof</td><td>0 / +1</td><td><code>noise_sink</code></td></tr>
+    <tr><td>07</td><td>school_f2_broadcast</td><td>1 / +1</td><td><code>audio_source</code>；Day 7 后停播</td></tr>
+    <tr><td>08</td><td>school_f2_office</td><td>3 / +1</td><td>loot: keys / roster</td></tr>
+    <tr><td>09</td><td>school_f2_class3</td><td>4 / +1</td><td>可清空据点候选</td></tr>
+    <tr><td>10</td><td>school_f1_class1</td><td>0 / 0</td><td>纵深；初始 NPC 群像</td></tr>
+    <tr><td>11</td><td>school_f1_lab</td><td>1 / 0</td><td>loot: chem / 玻璃噪声</td></tr>
+    <tr><td>12</td><td>school_f1_guard</td><td>2 / 0</td><td><code>lockable=true</code> 安全屋</td></tr>
+    <tr><td>13</td><td>school_f1_class2</td><td>4 / 0</td><td>纵深；传闻高发</td></tr>
+    <tr><td>14</td><td>school_b1_coldstorage</td><td>0 / −1</td><td>loot: food；夜间高风险</td></tr>
+    <tr><td>15</td><td>school_b1_garage</td><td>1 / −1</td><td><code>clue_endpoint</code>；Day 14 过期</td></tr>
+    <tr><td>16</td><td>school_b1_power</td><td>3 / −1</td><td><code>power_node</code>；Day 3 后熄灯</td></tr>
+  </table>
+  <p class="mono-line">备用第 17 位 <code>school_b1_storage</code>（x=4, −1，器材室）留给首发扩容；demo 严格 16 个，方便全组合回归。</p>
+
+  <h3>43 条校验器规则（§6c 的 R01–R35 + §8c 的 R36–R43，全部纯函数、离线、进 CI）</h3>
+  <table>
+    <tr><th>ID</th><th>规则</th><th>失败后果</th></tr>
+    <tr><td>R01</td><td><code>node_id</code> 全局唯一；命名 <code>^[a-z0-9_]+$</code>；必须在 <code>lexicon.json</code></td><td>拒绝写入</td></tr>
+    <tr><td>R02</td><td>主轴 <code>axis_x</code> 从 0 连续到 max，无空洞、无重复段</td><td>AD 会走进死路</td></tr>
+    <tr><td>R03</td><td><code>depth_layer ∈ {-1,0,+1}</code>；每个纵深节点的 <code>linked_nodes</code> 必须含其挂载主轴段</td><td>W/S 退出后坐标漂移</td></tr>
+    <tr><td>R04</td><td><strong>链接对称 + 有回路</strong>：A→B 则 B→A；每个纵深节点至少一条返回主轴的路径（借 Tiled-MCP-Server <code>validate_world</code> 语义）</td><td>玩家被永久困住</td></tr>
+    <tr><td>R05</td><td><code>lockable</code> 节点 ≥1；无尽模式每 N 段不超过上限且至少 1</td><td>夜间无处可躲</td></tr>
+    <tr><td>R06</td><td>从 spawn 做 BFS，<strong>所有节点可达</strong>；被 <code>day_locked_after</code> 封的节点单独标注</td><td>孤儿节点</td></tr>
+    <tr><td>R07</td><td><code>sediment ∈ [0,MAX]</code>；剧情模板初始值必须为 0，只能由事件写入</td><td>模板偷改世界状态</td></tr>
+    <tr><td>R08</td><td><code>loot_table</code> / <code>noise_events</code> / <code>tags</code> 引用必须存在于对应词表</td><td>运行时空引用</td></tr>
+    <tr><td>R09</td><td>时间轴冲突：Day 3 后 <code>power_node</code> 必须 <code>flashlight_only</code>；Day 14 后 <code>clue_endpoint</code> 不可再产出线索</td><td>过期线复活</td></tr>
+    <tr><td>R10</td><td>预算不超 <code>mode_profile</code>：事件卡数 / 尸潮密度 / 高价值物数 / 安全屋数</td><td>难度曲线失控</td></tr>
+    <tr><td>R11</td><td><strong>噪声→沉积传导</strong>：任何 <code>noise_events</code> 非空（尤其枪械）必须写回本节点与相邻节点的沉积增量，夜间系数更高</td><td>「枪响喊来尸群」退化成文案</td></tr>
+    <tr><td>R12</td><td>记忆：<code>source_event</code> 必须存在于 L0；降级后不得出现 L0 未登记的专名；传闻跳数 ≤2</td><td>NPC 撒谎 / 谣言</td></tr>
+    <tr><td>R13</td><td><code>fidelity</code> 单调不升；唯一例外是"被谈起"且只 +1、不还原细节、有成本</td><td>无限记忆 / 刷屏污染</td></tr>
+    <tr><td>R14</td><td>像素门禁：16×16 网格、单帧 ≤16 色、每个不透明像素颜色必须在 <code>.gpl</code>、整数倍最近邻、tile 四边逐像素一致</td><td>伪像素混进包</td></tr>
+    <tr><td>R15</td><td>武器动画 tag 契约：one-shot 标 <code>loop:false + repeat:"1"</code>、帧时长 ≠0、<code>--trim</code> 关闭、split-layers 层名稳定、<code>socket_muzzle</code> 存在</td><td>帧抖动 / 枪口错位</td></tr>
+    <tr><td>R16</td><td>音频：每个游戏事件都有 <code>asset_key</code>；声源文件存在且头信息合法；SEGAN 资产 <code>status=approved</code> 才可入包</td><td>哑事件 / 未审音频</td></tr>
+    <tr><td>R17</td><td>双模式：无尽 profile 不得生成 save/load 入口，<code>carry=none</code></td><td>存档继承破坏无存档</td></tr>
+    <tr><td>R18</td><td>模板约束：<code>opening_template</code> 不得改写时间轴、变量定义、终局态枚举</td><td>组合态爆炸</td></tr>
+    <tr><td>R19</td><td>存档迁移：旧档样本 → 新 schema → 语义等价断言（保留真实旧版快照）</td><td>上线后旧档全废</td></tr>
+    <tr><td>R20</td><td>provenance：AI 资产必须有 <code>model/provider/input_assets/reviewer/date</code>，缺一不得进发布包</td><td>授权与披露风险</td></tr>
+  </table>
+
+  <h3>验收伪代码</h3>
+  <pre><code>def validate_all(repo, profile):
+    data  = load_json(repo / "data")            # 唯一事实源
+    l0    = load_appendonly(repo / "L0")
+    art   = load_assets(repo / "art")
+
+    for rule in [R01..R25]:
+        errs = rule.check(data, l0, art, profile)
+        if errs:
+            reject(rule.id, errs)               # 带具体路径与约束说明
+            return retry_with_reason(rule.id)   # 模型提议 → 失败带原因重试
+                                                # → 降级到规则模板 → 才写入
+
+    if profile.timeline == "finite(30)":
+        assert headless_replay(days=0..30)      # 全组合可回放
+    else:
+        assert sample_to_epoch(N)               # 抽样 + 属性测不变量
+        assert invariants_never_broken()
+
+    assert godot_headless_import()              # 干净 runner 重建
+    assert pixel_gate(art)                      # R14 / R15
+    return APPROVED                             # 全绿才进引擎看画面</code></pre>
+
+  <div class="card key"><div class="ct">一条绿色路径</div>
+  <p><code>commit → gdformat/gdlint → ajv + R01–R43 → godot --headless --import → GUT 逻辑 / 存档测试 → Aseprite recipe + pixel gate → 关键场景 screenshot diff → export → butler</code>。Skills 只在这条链的<strong>左侧</strong>帮忙起草，不在链上。</p></div>
+</section>
+
+<!-- ============ 06d NEW ============ -->
+<section id="s6d">
+  <span class="no">06d / WEAPONS &amp; COMBAT <span class="newbadge">NEW</span></span>
+  <h2>枪械与冷兵器动作</h2>
+  <div class="card fresh"><div class="ct">先说结论：前两轮没专门覆盖，这轮补了</div>
+  <p>之前两轮的工具调研集中在「地图 / 像素生成 / 数据契约 / 音频」，<strong>武器动作这一环确实漏了</strong>。补检索后发现两件好事：① 上一轮已列入的 <strong>pixelfx</strong> 里其实<strong>内置了近战 12 款、投射物 13 款、12 套完整连招</strong>，不用另找；② 有个 Godot 4 开源武器库的 <code>noise Field</code> 直接命中我们「枪响把尸群喊来」的设计。下面按「设计判断 → 项目 / Skills → 落地配方」排。</p></div>
+
+  <h3>设计判断：不是两套数值，是两种「与世界的关系」</h3>
+  <div class="card key">
+  <p><strong>枪 = 远、快、响。</strong>噪声是一次<strong>世界事件</strong>：写进本节点与相邻节点的 <code>sediment</code>，夜间系数更高，可能把别的幸存者引来或吓跑。于是"开不开枪"不是伤害计算，是<strong>要不要在这块地上留下痕迹</strong>——直接兑现 §02「每条氛围必须改一个决策」。</p>
+  <p><strong>冷兵器 = 近、静、可复用。</strong>不引噪声，但一击致死下贴身就是赌命，且消耗时间与暴露。斧/撬棍同时是「钥匙」（开器材柜、防火门），和身份三样里的权限层共用字段。</p>
+  <p><strong>都不加伤害数值、不做 build、不做三段连招树。</strong>Combo 爽感与「一击致死 + 留白 + 慢压」正面冲突。近战只做<strong>一次挥击 + 命中冻结 + 收招</strong>。弹药稀少：枪是「一次性解决问题的工具，但会留下后果」，不是主战手段。</p>
+  </div>
+  <table>
+    <tr><th>字段</th><th>枪械</th><th>冷兵器</th></tr>
+    <tr><td><code>range</code></td><td>远（可跨主轴段）</td><td>贴身（同节点）</td></tr>
+    <tr><td><code>noise</code></td><td>高 → 触发 R11 沉积传导</td><td>低 / 零</td></tr>
+    <tr><td><code>exposure</code></td><td>低</td><td>高（感染风险）</td></tr>
+    <tr><td><code>scarcity</code></td><td>弹药稀缺、不可再生</td><td>耐久损耗、可修</td></tr>
+    <tr><td>附带</td><td>枪口闪光（唯一暖色光源）</td><td>同时是 <code>key_permission</code></td></tr>
+  </table>
+
+  <h3>GitHub 项目与 Skills：找到什么</h3>
+  <table>
+    <tr><th>项目 / Skill</th><th>形态</th><th>为什么对我们有用</th><th>优先级</th></tr>
+    <tr><td><strong>pixelfx</strong><br><span class="mono-line">patch-gg/pixelfx · MIT</span></td><td>代码特效库 + 自带 SKILL.md</td><td>已含<strong>近战 12 款</strong>（爪击 / 重劈 / 双重斩）、<strong>投射物 13 款</strong>（子弹曳光 / 箭矢）、<strong>12 套完整连招</strong>含起手→命中冻结→收招；<code>createAct</code> 与 <code>stop: 0.14</code> 命中冻结、<code>Sword slash 0.75s</code> / <code>impact frame 0.3s</code>。seeded RNG、颜色/光照双缓冲、直接导出 Godot sheet + Aseprite JSON。<strong>上一轮只写了「244 特效」，没展开武器部分，这是现成答案</strong></td><td><span class="pill p0">P0</span></td></tr>
+    <tr><td><strong>Vanguard</strong><br><span class="mono-line">Sparrowworks/Vanguard · MIT · GDScript</span></td><td>Godot 4 开源 2D 武器库</td><td><code>Ranged</code> / <code>Projectile</code> / <code>Field</code> / <code>Melee</code> / <code>Hitbox</code> / <code>Hurtbox</code> / <code>kits</code>。<strong><code>Field</code> 原生支持「noise 与状态效果区域」</strong>——枪响引尸群几乎不用自己写。代码量小、全注释、按蓝图继承</td><td><span class="pill p0">P0 借鉴</span></td></tr>
+    <tr><td><strong>Combat Core Template</strong><br><span class="mono-line">old-man77/… · MIT · Godot 4.0</span></td><td>2D 战斗模板</td><td>data-driven <code>weapon resource</code>、input buffering、attack window。抄「武器是资源文件」这一层，不抄它的 hack&amp;slash 节奏</td><td><span class="pill p1">P1</span></td></tr>
+    <tr><td><strong>Godot 4 Melee Combo &amp; Cancel</strong><br><span class="mono-line">Template Foundry · Godot 4.3</span></td><td>可下载战斗包</td><td><strong>每次挥击对同一敌人只登记一次命中</strong>（避免多帧重复伤害）、缓冲输入、可检视攻击相位、带自动化 runtime checks。这条正好补 R15 的判定侧</td><td><span class="pill p1">P1 借鉴</span></td></tr>
+    <tr><td><strong>PixelDoll</strong><br><span class="mono-line">Shilo/PixelDoll · MIT</span></td><td>纸娃娃装备层生成器（基于 PixelLab）</td><td>生成<strong>与帧对齐的可换武器层</strong>，held items 用同一 pivot；自带 direction / persistence / export 自动检查；Godot 4.7 与 Phaser 渲染像素一致。已知限制：生成图仍需人工视觉复核，部分姿态草稿未验收</td><td><span class="pill p1">P1 PoC</span></td></tr>
+    <tr><td><strong>OrthoRig</strong><br><span class="mono-line">@crenet/orthorig · MIT</span></td><td>Blender → 2D 骨骼编译器</td><td>抄<strong>命名 socket 契约</strong>（<code>socket_muzzle</code> / <code>socket_offhand_grip</code>）、2-bone IK、FK↔IK 混合、<strong>Layer 1 additive Recoil</strong>、timeline events 用于帧精确音效与粒子。<strong>不接它的 PixiJS 运行时</strong></td><td><span class="pill p1">P1 借契约</span></td></tr>
+    <tr><td><strong>SPA / aseprite-automation</strong><br><span class="mono-line">aigengame/aseprite-automation</span></td><td>CLI + SKILL.md + MCP</td><td><code>plan check / plan run</code> 先校验一串编辑再一次性保存；覆盖 layers / frames / tags / slices / palettes / tilesets；导出 sheet+JSON，附可玩 Godot 例子。比上轮 aseprite-mcp 更贴「批量、可验证」</td><td><span class="pill p0">P0</span></td></tr>
+    <tr><td><strong>sprite-export skill</strong></td><td>SKILL.md</td><td><code>--expect-tags idle,walk</code> 强校验、one-shot tag 契约（<code>loop:false + repeat:"1"</code>）、contact-sheet review。直接写进 R15</td><td><span class="pill p0">P0</span></td></tr>
+    <tr><td><strong>Zephyr</strong><br><span class="mono-line">AristurtleDev/zephyr · MIT · Rust</span></td><td>atlas + 动画编辑器</td><td>拖十字定 <strong>pivot</strong>、逐 sprite 挂矩形/圆/多边形 <strong>hitbox</strong>、每帧 delay、导出 <code>atlas.png + atlas.json</code>。武器攻击盒落地用</td><td><span class="pill p1">P1</span></td></tr>
+    <tr><td><strong>PixelLab</strong></td><td>商业 API + MCP + Aseprite 扩展</td><td>object editor 可<strong>跨所有帧给角色加/改剑或帽子</strong>（不用重生成整张 sheet）、skeleton-based animation、4/8 向。武器 sprite 主力生成器；仍须过 <code>.gpl</code> 门禁。条款以官网为准</td><td><span class="pill p1">P1</span></td></tr>
+    <tr><td><strong>CoolFighter / HeartBeast Galaxy Defiance</strong></td><td>开源示例项目</td><td>抄状态机分离、combo queue、hit reaction、<strong>统一 sprite flipping</strong>、hitbox/hurtbox/flash/shake 组件化。不抄连招数量</td><td><span class="pill p1">P1 参考</span></td></tr>
+    <tr><td><strong>DragonBones / PySpine / Spine</strong></td><td>骨骼运行时</td><td>只借 <code>replaceSlotDisplay</code>「换武器 slot」的概念。引入专有运行时会破坏纯文本数据层，且 PySpine 成熟度低</td><td><span class="pill">P2 仅注记</span></td></tr>
+    <tr><td><strong>Simple FPS Weapon System</strong><br><span class="mono-line">Jeh3no/… · MIT · 3D</span></td><td>Godot 4 武器系统</td><td>3D 不对口，但<strong>resource-based weapons + weapon manager + shoot/reload/animation/ammo 组件分离 + procedural recoil + muzzle flash</strong> 的分层值得抄</td><td><span class="pill">P2 仅注记</span></td></tr>
+  </table>
+
+  <h3>落地配方：Aseprite 分层 + 时序</h3>
+  <pre><code># 武器必须独立成层，才能运行时换武器 / 换帧而不重画角色
+aseprite -b --split-layers hero.aseprite --list-tags --list-layers \
+  --sheet hero_layers.png --data hero_layers.json --format json-array
+
+# 层名保持稳定：body / weapon / effects → 成为 frame 名的一部分
+# tag 约定（写进 art bible）：小写无空格 idle, run, attack_1, hit, die
+#   一 animation 一 tag、不重叠；每帧毫秒时长 ≠ 0；one-shot 用 repeat=1
+#   --trim 必须关（否则帧抖动）；padding 2px；不要用 --format json-hash</code></pre>
+  <ul>
+    <li><strong>枪口挂点</strong>：<code>socket_muzzle</code> 必须存在于每个朝向帧，CI 查 R15；枪口闪光用 pixelfx 的投射物 / 光缓冲，且是 Day 3 之后<strong>唯一暖色光源</strong>——开一枪就短暂照亮整条走廊，然后更黑。</li>
+    <li><strong>命中冻结</strong>：借用 <code>stop: 0.14</code> 这类参数，把「少帧留白」延伸到打击瞬间；不做屏幕震动堆叠。</li>
+    <li><strong>后坐力</strong>：上层 additive 动作（OrthoRig 语义），不改基准 locomotion；横版里表现为半格退步 + 一帧抬手，不做镜头大晃。</li>
+    <li><strong>换武器</strong>：只换 <code>weapon</code> 层的 tag 集，<code>body</code> 层不动；斧同时是 <code>key_permission</code>，与身份三样共用字段。</li>
+    <li><strong>音效</strong>：game-sfx / SEGAN 各出「枪响 / 空仓 / 挥空 / 命中血肉 / 金属门」的可编辑 JSON patch；枪响事件必须同时在 <code>audio/sounds.json</code> 与 <code>nodes.json</code> 留下 <code>noise_event</code>，由 R11 传导到沉积。</li>
+  </ul>
+  <div class="card warn"><div class="ct">三个别踩的坑</div>
+  <p>① 别把 combo / 连招树接进来，会和一击致死的紧张感对冲；② 别让 AI 逐帧生成挥砍动作（帧间漂移），用参数化特效 + 锁盘；③ 别让枪变成"主战解法"——弹药稀缺 + 噪声沉积必须同时成立，否则整套慢压崩掉。</p></div>
+</section>
+
+<!-- ============ 07 ============ -->
+<section id="s7">
+  <span class="no">07 / MEMORY</span>
+  <h2>世界记忆系统</h2>
+  <p>以<strong>时间轴为记忆点</strong>：每个 NPC 有约 0–15 天游戏时间的记忆，记得玩家对他的所作所为，也可能记得幸存者传闻。第 16 天开始自动增删早期记忆，可能忘了第一天怎么见面的，<strong>比较模糊而不是彻底撒谎</strong>；第 17 天可能忘了第二天怎么进入庇护所。</p>
+  <h3>三层必须分开</h3>
+  <table>
+    <tr><th>层</th><th>内容</th><th>规则</th></tr>
+    <tr><td>L0 世界事实日志</td><td>Day 3 断电、Day 14 检查站撤走</td><td>append-only，永不忘、不可覆盖</td></tr>
+    <tr><td>L1 NPC 情景记忆</td><td>私有、带 owner、指向 L0 指针</td><td>可衰减、可降级</td></tr>
+    <tr><td>L2 措辞渲染</td><td>只读降级后的槽位</td><td>自己没有记忆</td></tr>
+  </table>
+  <p><strong>「找官方线会过期」和「NPC 会忘」是两口钟，绝不能混。</strong>NPC 忘不掉世界，也改不动世界。</p>
+  <pre><code>{
+  "owner": "npc_07",
+  "source_event": "evt_0142",     // 指向 L0，永不删
+  "day": 1,
+  "kind": "direct",               // direct | heard
+  "via": null,
+  "slots": { "who":"player", "what":"给了绷带",
+             "where":"加油站柜台", "manner":"从底下扔过来，没说话",
+             "outcome":"伤口包上了" },
+  "fidelity": 3,                  // 3精确 2概括 1印象 0情绪残影
+  "affect": 0.8,
+  "last_recalled_day": 9,
+  "provenance_lock": true
+}</code></pre>
+  <p>衰减<strong>只动 slots 的粒度，不动真值字段</strong>。降级顺序写死：<code>manner → where → what 细节 → 只留 who + affect</code>。压缩保留 <code>evidenceEventIds</code>；衰减只降低检索优先级，不擦除证据。</p>
+  <ul>
+    <li>打分：<strong>近因（指数衰减）+ 重要性 + 相关性</strong> 等权相加；高层反思带 citation 指回原记忆。</li>
+    <li><strong>每个 NPC 加 ±2~3 天个体抖动</strong>，不存在统一的 Day 16。</li>
+    <li><strong>被谈起会刷新</strong>：<code>last_recalled_day</code> 一更新衰减变慢，但提醒有成本、只提一级、不还原细节。</li>
+    <li><strong>传闻</strong>：每跳降一级、跳数 ≤2、保留 <code>via</code>；来源确定性本身也退化。玩家单方面陈述只进听说区。</li>
+  </ul>
+  <table>
+    <tr><th>日 / 保真度</th><th>NPC 会说</th></tr>
+    <tr><td>Day 9 / 3</td><td>「你把那卷绷带从柜台底下扔给我，没说话。」</td></tr>
+    <tr><td>Day 16 / 2</td><td>「头几天……你给过我东西。绷带？反正是能用的。」</td></tr>
+    <tr><td>Day 17 / 1</td><td>「我不太记得你怎么进来的了。那阵子门一直关着，反正后来你就在了。」</td></tr>
+    <tr><td>Day 24 / 0</td><td>「那阵子挺冷的。你……来过吧。」</td></tr>
+  </table>
+  <p>四句都能被 <code>evt_0142</code> 证真，没有一句补出新事实。<strong>颗粒在掉，真值没动。</strong></p>
+  <div class="card key"><div class="ct">好感度与 fidelity 必须拆成两根轴</div>
+  <p><strong>好感度 = 肯不肯说（门禁）</strong>；<strong>fidelity = 记不记得清（保真度）</strong>。一个 NPC 可以记得一清二楚但死都不告诉你，也可以只剩情绪残影却愿意全掏给你。</p></div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section id="s8">
+  <span class="no">08 / TECH STACK</span>
+  <h2>技术栈与数据契约</h2>
+  <p><strong>「AI 最适配」的判据</strong>不是哪个引擎最火，而是整条链路能不能<strong>不靠人点鼠标跑完</strong>。重头是 30 天时间轴、六组变量、12 张卡、20 张 NPC 状态卡、8~12 万字片段——全是数据，渲染反而最轻。</p>
+  <h3>引擎：Godot 4.x 主选</h3>
+  <p><code>.tscn</code> / <code>.tres</code> 是人类可读的类 INI 文本；<code>--headless --import</code> 可在 CI 从源文件重建缓存；2D 原生，Nearest 纹理过滤 + Snap 2D Transforms to Pixel 锁定像素不抖；MIT 无分成。<strong>反过来的用法：别把逻辑写进 <code>.gd</code>，写进外部数据，引擎只当薄运行时。</strong></p>
+  <pre><code>residual/
+  data/          # 唯一事实源，纯文本
+    timeline.json        Day0–30（AI 禁改）
+    variables.json       六组变量定义（AI 禁改）
+    mode_profile.json    剧情 / 无尽两份
+    nodes.json           16 个可进入节点（§6b/§6c）
+    opening_templates/   school.json / fire_station.json / ...
+    loot_tables/         起手携带物随机表（含空手局）
+    weapons/             武器资源（§6d，resource 驱动）
+    cards/               12 张事件卡 + 片段插槽
+    npcs/                20 张状态卡
+    audio/sounds.json    事件 → asset_key
+    lexicon.json         允许出现的专名词表
+  schema/        # JSON Schema
+  tools/         # 校验器 R01–R43 / Aseprite 批处理 / 导出
+  art/           # authoritative / generated_candidates / approved
+                 # refs/{style_anchors,external} / palettes / fonts
+                 # + asset-manifest.json（详见 §8c）
+  game/          # Godot：加载、渲染、FOV、LUT、音频、输入
+  L0/            # append-only 世界事实日志
+  THIRD_PARTY_LICENSES.json / AI_LEDGER.json</code></pre>
+  <p class="mono-line">备胎：TS + PixiJS / 浏览器栈。不建议：Unity（序列化偏二进制）、RPG Maker（装不下变量驱动）。</p>
+  <h3>最关键的一层：数据契约，不是提示词</h3>
+  <p class="mono-line">模型提议 → Schema 校验 → 领域校验（R01–R43）→ 失败带具体原因重试 → 降级到规则模板 → 才写入存档</p>
+  <h3>AI 在各层干什么</h3>
+  <table>
+    <tr><th>层</th><th>AI 干</th><th>AI 不碰</th></tr>
+    <tr><td>文本</td><td>片段、条件变体、回响句、传闻</td><td>时间轴、变量定义、事实</td></tr>
+    <tr><td>美术</td><td>tile 变体、3~4 帧、UI 图标、VFX 候选</td><td>主视觉、调色板、拼接方向</td></tr>
+    <tr><td>音频</td><td>JSON patch 草稿、listen sheet 复核</td><td>最终 WAV（须人工 approved）</td></tr>
+    <tr><td>代码</td><td>校验器、导出脚本、编辑器小工具</td><td>运行时状态机裁决</td></tr>
+  </table>
+  <h3>像素工具链</h3>
+  <p><strong>锚点是 Aseprite（不是 AI，但不能没有）</strong>：CLI 支持 <code>-b --sheet --data --format json-array --list-tags</code>、<code>--palette</code> 强制换板、<code>--color-mode indexed</code>、<code>--split-layers</code>、<code>--script</code> 跑 Lua。<strong>调色板先锁再画</strong>：DB32 / Endesga 32 存成 <code>.gpl</code>，16×16 tile、单帧 ≤16 色。</p>
+  <p>生成器按"有无 API / MCP / CLI"挑：Retro Diffusion（真网格 + 可锁盘 + REST/MCP）· PixelLab（4/8 向、骨骼动画、object editor 跨帧改武器、MCP + API）· Scenario（自有参考图训 custom model 锁整套风格）· ComfyUI-FL-PixelGen（本地像素空间，<strong>不等于锁盘</strong>，后面必须接后处理）· Ludo.ai Asset Toolbox（MIT 离线 CLI，pivot / collider / <code>--engine godot</code> 直出 SpriteFrames；Toolbox 免费、生成才收费）。</p>
+  <div class="card warn"><div class="ct">真像素 vs 伪像素：分界线是「能否自动证明」</div>
+  <p>四条 CI 断言：① 1× 下每像素映射逻辑格、无次像素边缘 ② 只有整数最近邻缩放、无抗锯齿 ③ 每像素映射到 <code>.gpl</code> 某一项、颜色集有限 ④ tile / sheet / TileMap 坐标落 16px 整数边界。Midjourney / SD / DALL·E 出的是"平滑图穿像素服装"，只能当概念图。所有生成图必须走 <strong>regrid → 量化回 <code>.gpl</code> → 手清轮廓</strong>。"锁盘"分三层：提示词锁盘 / 工作流量化 / <strong>最终资产审计</strong>，只有第三层算数。</p></div>
+  <p><strong>最大工程红利：离线生成 + 代码裁决。</strong>没有推理延迟、没有账单、没有"模型崩了游戏卡住"。<strong>运行时绝不调用模型。</strong></p>
+</section>
+
+<!-- ============ 08b NEW ============ -->
+<section id="s8b">
+  <span class="no">08b / FULL PIPELINE &amp; SKILLS <span class="newbadge">NEW</span></span>
+  <h2>全流程工具栈与 Skills</h2>
+
+  <h3>先定 Skills 放在哪一层</h3>
+  <div class="card fresh"><div class="ct">判断题 A</div>
+  <p><code>SKILL.md</code> 不是工具，是<strong>可版本化的提示包</strong>：一个文件夹 + YAML frontmatter + Markdown 指令，三层渐进披露（元数据约 100 token 常驻 → 匹配时读正文 → <code>scripts/</code> 按需执行），<strong>脚本执行只把输出进上下文、不烧 token</strong>。它和 MCP 的分工是：<strong>MCP 给"手脚"（连接），Skills 给"打法"（程序性知识）</strong>；而且 Skill 触发是<strong>概率性</strong>的，MCP 工具由 schema 强约束。</p>
+  <p><strong>结论：Skills 放「计划 / 解释 / 草拟」层，绝不进无人 CI 的落盘路径。</strong>给它：art bible 草拟、像素规则解释、Aseprite recipe 设计、关卡约束描述、事件卡草稿、QA scenario、许可证归类。<strong>一给它就破坏确定性的七处</strong>：像素落盘、最终 WAV、关卡最终布局、叙事最终字符串、存档迁移、截图回归判定、发布披露。另外它是「以自然语言写成的可执行意图」，frontmatter 注入、恶意 <code>scripts/</code>、装后被替换都是真实攻击面，社区技能必须审查 + 锁 commit。</p>
+  </div>
+
+  <h3>按开发流程顺序（10 环节）</h3>
+  <table>
+    <tr><th>环节</th><th>推荐工具 / Skill</th><th>优先级</th><th>入 HTML</th></tr>
+    <tr><td>① 概念 / 风格</td><td>awesome-gamedev-agent-skills（77 SKILL.md + router，按 <code>project.godot</code> 只选一个引擎，<strong>只取 Godot 子集</strong>）· GDQuest pixel-art skill（MIT，讲原则/可读性）· Art Director Loop（Style DNA 迁移验证）· NousResearch hermes-agent（MIT，预设调色板）· 自写 <code>art-bible.json</code> + <code>.gpl</code> gate</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>② 像素美术</td><td><strong>pixel-art-studio</strong>（MIT，Pillow 逐像素 build script + <code>pixelpipe.py</code> 修伪像素 + <code>study.py</code> 提参考色板，<strong>不需要 Aseprite / MCP / 图像模型</strong>）· unfake.py（尺度检测 / Wu 量化 / <code>snap_grid</code>）· image-to-pixel（<code>.gpl</code> 导入 / 索引 PNG / sheet JSON）· ComfyUI-PixelGridHelpers · SpriteGrid · Sprite Fusion Pixel Snapper（MIT）· Pixelize（Python CLI，Endesga-32 / Aseprite JSON，作者明确「无 AI 原则」）· agent-sprite-forge（生成层随机、本地只吃确定性处理）· omer-metin / layerai / mkurman 的 pixel-art skills（挑一个，别全装）· Pixelorama（MIT，只作备选编辑器）· SPA / aseprite-automation（CLI + SKILL.md + MCP，<code>plan check/run</code>）</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>③ 动画 / VFX</td><td><strong>pixelfx</strong>（MIT，244 代码特效 / seeded RNG / Godot sheet 导出 / 自带 SKILL.md；见 §6d）· Aseprite frame tags + Lua · Godot AnimationPlayer / Particles（贴 1px 栅格）· 自写 contact sheet + loop seam / anchor drift gate</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>④ 地图 / PCG</td><td><strong>D1 双轨待测试</strong>：LDtk（MIT）+ <code>godot-ldtk-importer</code> <strong>与</strong> Tiled（GPLv2）+ YATI <strong>同时进 PoC，逐维对比后拍板固定单栈</strong>（<a href="#d1">见 D1</a>，未拍板不得写死） · Godot 4 <code>TileMapLayer</code> + terrains · YATI / godot-ldtk-importer（实测是否产出 TileMapLayer）· WaveFunctionCollapse（MIT，仅无尽 tile 变体）· Better Terrain（P2）· godot-map-cli（CLI + MCP，仅 PoC）· Tiled-MCP-Server 的 <code>validate_world</code>（抄进 R04）· 自写 <code>nodes.json</code> + PCG</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>⑤ 音频</td><td><strong>game-sfx</strong>（MIT，先 grep「没有声音的游戏事件」→ 写 <code>SOUND_STYLE.md</code> → 每个音效留可编辑 JSON patch；默认离线，仅 Freesound 脚本联网）· <strong>SEGAN</strong>（MIT，文本→WAV + Godot <code>.import</code>/<code>AudioStreamRandomizer</code>，listen sheets 让 Agent「听」，<code>status: draft</code> 必须人耳 approved）· <strong>Gamestruments</strong>（MIT / gdext MPL-2.0，运行时 recipe+seed <strong>全合成、不联网</strong>，自带 Suspense 配方）· 自写 <code>audio/sounds.json</code></td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>⑥ 叙事 / 内容</td><td>JSON Schema / Ajv / Pydantic（结构，<strong>不保证事实一致</strong>）· Storylet Studio（MIT，借 card/deck/state 模型）· 自写 event-card schema + narrative consistency suite（最值得投入）</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>⑦ 代码 / 引擎</td><td>gdtoolkit <code>gdformat</code>/<code>gdlint</code>（MIT，<code>--check</code> 进 CI）· GUT（MIT，Godot 4 单测 + 输入回放）<strong>或</strong> GdUnit4（二选一，别双栈）· Godot 4 CI 模板（MIT，只作脚手架）· Godotwright（P1，真实 4.7 API + 项目地图，不做唯一门禁）</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>⑧ 测试 / QA</td><td><strong>Godot QA</strong>（JSON scenario 回放输入 + 断言节点状态/屏上文字 + screenshot diff + JUnit；这是「第 17 天 fidelity=1 的 NPC 用两跳传闻触发某张卡」唯一可行的回归形态）· GUT / GutInputSender · 自写 pixel diff（ROI 分 HUD/tilemap/动画/粒子）+ seed replay + schema migration + bot harness</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>⑨ 构建 / 发行</td><td>Godot CLI export（锁 patch + 模板）· butler（itch 官方）· Ship-Itch / mg-cli（P1）· REUSE / reuse-tool（SPDX + 每文件许可证）· 自写 <code>THIRD_PARTY_LICENSES.json</code> + <code>AI_LEDGER.json</code>（<code>model/provider/input_assets/reviewer/date</code>，无批准记录不得进发布包）</td><td><span class="pill p0">P0</span></td><td>是</td></tr>
+    <tr><td>⑩ Agent 层</td><td>Claude-Code-Game-Studios（MIT，49 agents / 72 skills，<strong>只抄阶段门禁与 release-checklist</strong>；README 自承工作室模式产出 30 份文档却在盲测垫底）· aseprite-mcp / tiled-ai / Godotwright 中最多各选一个，<strong>都不进无人构建</strong></td><td><span class="pill p1">P1 / 外围</span></td><td>仅注记</td></tr>
+  </table>
+  <p class="mono-line">本表刻意不列 URL / License，避免列数膨胀；已核实的仓库路径与许可证速查见 §8c 末。</p>
+
+  <div class="card warn"><div class="ct">两条不写进正文的红线</div>
+  <p>① <strong>AudioCraft / MusicGen</strong>：代码 MIT，但<strong>权重 CC-BY-NC 4.0（非商业）</strong>，买断发行不能直接用；stable-audio 另有 Community License 需逐版核对。只做离线原型。② <strong>NarraLoom / AI Dungeon 系 / VibeGame</strong>：运行时 LLM 或 Agent 自动构建整个工程，与「离线措辞层」正面冲突，只作反例参考。</p></div>
+
+  <h3>成熟参考项目：抄哪一层</h3>
+  <table>
+    <tr><th>项目</th><th>值得抄</th><th>不要抄</th></tr>
+    <tr><td><strong>Cataclysm: DDA</strong></td><td>内容数据化、mod 契约、大量内容测试、存档迁移 —— 我们「六组变量 + 纯文本事实源」最硬的先例</td><td>庞大 C++ 架构、ASCII 假设</td></tr>
+    <tr><td><strong>Pixelorama</strong>（MIT，开源像素编辑器）</td><td>调色板 / 帧标签 / tilemap 的开放数据结构</td><td>用第二个编辑器当真源</td></tr>
+    <tr><td><strong>WaveFunctionCollapse</strong>（MIT）</td><td>约束求解、例图邻接、失败重试</td><td>把地图随机化当成设计</td></tr>
+    <tr><td><strong>Godot QA</strong></td><td>可复现 JSON scenario schema</td><td>所有断言都写截图</td></tr>
+    <tr><td><strong>GDQuest 2D / Godot Open RPG</strong></td><td>inventory / save-load / 对话 / 状态机的系统边界</td><td>Godot 3 API、完整美术风格</td></tr>
+    <tr><td><strong>Comedot</strong>（MIT）、Tuxemon、Mr. Rescue</td><td>Entity/Component 边界、小体量完整交付边界</td><td>120+ 组件过度抽象、专有战斗 / 俯视假设</td></tr>
+    <tr><td><strong>VibeGame / AI Dungeon 系</strong></td><td class="mono-line">只作反例</td><td>运行时模型、Agent 自动构建整个工程</td></tr>
+  </table>
+  <p class="mono-line">成熟项目值钱的是数据边界和验证方式，不是文件数量或生成能力。</p>
+
+  <h3>判断题 B：最小工具栈</h3>
+  <ul>
+    <li><strong>必须自写</strong>：<code>art-bible.json</code> · <code>.gpl</code> gate · Aseprite recipe · pixel/anchor/loop gate · <strong>R01–R43 校验器</strong> · event-card schema + 叙事一致性 · 存档迁移 · seed replay · <code>nodes.json</code> · <code>audio/sounds.json</code> · asset/AI ledger。全部与 16×16 / 16 色 / 双模式 / 离线措辞层强绑定，外部项目不会给。</li>
+    <li><strong>直接拿开源</strong>：Godot 4 headless · gdformat/gdlint · GUT · <strong>D1 拍板后固定一条</strong>（LDtk 或 Tiled，未拍板前不接） · WFC · pixelfx · game-sfx / SEGAN / Gamestruments · REUSE · butler · Godot QA · unfake / image-to-pixel / PixelGridHelpers。</li>
+    <li><strong>可接但外围</strong>：awesome-gamedev-agent-skills（Godot 子集）· pixel-art-studio · SPA · aseprite-mcp · Godotwright。</li>
+    <li><strong>坚决不接</strong>：运行时联网模型 · 无 commit/许可证锁定的 skill · 自动覆盖手工关卡的生成器 · MCP 进无人 CI · 非商业权重音频进商业包 · 用模型「看起来差不多」代替像素 diff · 通用图像模型直出资源 · 让 LLM 直接改 <code>.tscn/.tres</code> 再靠目测。</li>
+  </ul>
+  <p class="mono-line">每增加一个源格式，就增加一个迁移、版本和许可证风险。<strong>唯一例外是 D1：PoC 阶段允许 LDtk / Tiled 并行对比，但必须对比后拍板、拍板即单栈</strong>；其余一律不双栈（GUT + GdUnit4、多个音频模型、多个 Agent Skill 都不接）。</p>
+</section>
+
+<!-- ============ 08c NEW ============ -->
+<section id="s8c">
+  <span class="no">08c / PIXEL ASSET CONTRACT <span class="newbadge">NEW</span></span>
+  <h2>像素资产生产契约</h2>
+  <div class="card fresh"><div class="ct">补的是什么</div>
+  <p>v0.3 把<strong>生成 / 后处理 / 单帧门禁</strong>写满了，缺的是「产什么、产多少、谁签收、怎么保证第 40 批还像第 3 批」。本节补的就是这层：<strong>资产清单 = 美术预算</strong> · <strong>人审门槛</strong> · <strong>漂移基线</strong> · <strong>字体与参考图授权</strong>，以及四类此前没写怎么产的资产。</p></div>
+
+  <h3>① 三层目录隔离（先修 v0.3 的 <code>art/</code> 单目录）</h3>
+  <pre><code>art/
+  authoritative/          # .aseprite 源 + 帧标签 / slice / 图层（唯一真源，人工签核）
+  generated_candidates/   # AI 产出，status: draft，永不直接进发布包
+  approved/               # 人眼签核 + pixel gate 通过后的 PNG / JSON
+  refs/style_anchors/     # 6–10 张人工签核的自有风格锚点图
+  refs/external/          # 仅存授权记录；外部图禁止作为训练 / style-reference 输入
+  palettes/master.gpl     # 唯一调色板真源
+  asset-manifest.json     # 资产清单 = 美术预算（每资产一行）
+  fonts/                  # 位图字体 + 各自 LICENSE / NOTICE</code></pre>
+  <p class="mono-line">红线：AI 资产与人工资产严禁混入同一个无 provenance 的目录。<code>generated_candidates/</code> 与 <code>authoritative/</code> 之间只准经 <code>approved/</code> 单向流动。</p>
+
+  <h3>② asset.schema.json：清单即预算</h3>
+  <pre><code>{
+  "asset_id": "chr_student_a_walk_r_02",
+  "category": "character",        // character|zombie_variant|tile|prop_icon|
+                                  // background|parallax|ui|font|vfx|
+                                  // decay_overlay|weapon_layer
+  "grid": [16,16],
+  "palette": "master.gpl",
+  "directions": ["r","l"],
+  "frames": 4,
+  "variants": ["school_uniform_a"],
+  "source": "generated",          // authoritative | generated
+  "status": "draft",              // draft | approved | rejected
+  "provider": "PixelLab",
+  "prompt_hash": "sha256:…", "seed": 20261122,
+  "input_refs": [],               // 参考图 asset_id，须带授权记录
+  "derived_from": null,           // 丧尸化变体指向母体 NPC
+  "depends_on": [],
+  "reviewer": null, "approved_at": null,
+  "output_path": "art/approved/…",
+  "day_locked_after": null
+}</code></pre>
+  <p><strong>demo 切片预算（估算，待实测后锁死）</strong>：3 个可操控学生 × 2 朝向 × 4 动作 × 3~4 帧 ≈ 72–96 帧；20 具名 NPC × 2 朝向 × 2 状态；<strong>20 张丧尸化派生体</strong>；tile 去重后约 120–160；背景 / 视差按 depth_layer × 昼夜两态；道具图标 40–60；环境腐烂 overlay 12–20；武器层 1 枪 1 冷兵器 × 2 朝向；UI = 1 套位图字体 + 少量图标。<strong>没有这份 manifest，生成器不知道何时算完成，R10 也管不到美术。</strong></p>
+
+  <h3>③ 美术侧 draft → approved（R16 的镜像，新增 R21）</h3>
+  <p>音频侧 SEGAN 已有 <code>status: draft → 人耳 approved</code>（R16），<strong>美术侧此前没有对应状态</strong>。补齐：<strong>任何 AI 产出默认 draft</strong>，必须同时满足 ① pixel gate（R14 / R15）② 人眼签核 <code>reviewer + approved_at</code> ③ provenance 完整（R20），才可移入 <code>approved/</code>。PixelKiln 的 <code>refine approve --from --reviewer</code>、LootForge 的 <code>review → select</code>、ArtWorkflow 的 <code>review_required</code>（明确「不是通过」）都是这个语义。<strong>破例一律视为 CI 失败。</strong></p>
+
+  <h3>④ 风格漂移：只报警，不自动拒绝（R22）</h3>
+  <p>R14 只查<strong>单帧</strong>合规，不查「第 40 批角色和第 3 批是不是同一套轮廓 / 描边 / 色阶 ramp」。做法：以 <code>refs/style_anchors/</code> 建基线，每批生成后跑一致性检查（近重复 / 离群 / 聚类 / style deviation）。可用 <strong>StyleScope</strong>（SigLIP2 embedding + CLI 出 JSON / HTML 报告）或 <strong>LootForge</strong>（consistency-group outlier scoring + style-bible policy checks）。</p>
+  <div class="card warn"><div class="ct">必须带上的限定</div>
+  <p>StyleScope 作者自己声明<strong>「风格一致性分数是透明启发式，不是验证过的科学指标」</strong>，UMAP 坐标仅供探索。所以这类工具<strong>只能当评审辅助，不能当 CI 硬门禁</strong>；硬门禁仍然只有 R14。把它写成自动拒绝，等于让模型「看起来差不多」替代像素 diff，直接违反 §8b 红线。</p></div>
+
+  <h3>⑤ 中文像素字体与参考图授权（R23）</h3>
+  <p>「等宽低速逐字」「UI 藏进物件」全靠文字呈现，而 v0.3 的 <code>font</code> 只出现在 CSS 里。面向大陆 = 需要点阵中文字库，这是选型 + 授权问题，不是美术问题。</p>
+  <table>
+    <tr><th>字体</th><th>规格 / 覆盖</th><th>授权 / 结论</th></tr>
+    <tr><td>凤凰点阵体 Vonwaon</td><td>12 / 16px，7543 字符含 6763 汉字</td><td><strong>CC0 1.0 — v0.5 定稿：正文</strong>，授权最干净、无声明负担</td></tr>
+    <tr><td>方舟像素 Ark Pixel</td><td>10 / 12px，简繁日</td><td>OFL 1.1 — <strong>落选备选</strong>（P09 选 A）；16px 规格官方已废弃，别写死</td></tr>
+    <tr><td>缝合像素 Fusion</td><td>8 / 10 / 12px</td><td><strong>OFL 1.1 — v0.5 定稿：标题 / 层级</strong>，8px 小标签到放大主标一套撑完</td></tr>
+    <tr><td>寒蝉点阵体 ChillBitmap</td><td>7 / 16px，简繁日英约 13600 字符</td><td>OFL 1.1 — 覆盖最宽的备选</td></tr>
+    <tr><td>目哉像素 MuzaiPixel</td><td>8×12px，GB/T 2312</td><td>OFL 1.1</td></tr>
+    <tr><td>精品點陣體 / 俐方體11號</td><td>9×9 / 11×11px</td><td>OFL 1.1 — 繁体为主，简中覆盖有限</td></tr>
+    <tr><td>GNU Unifont / Silver</td><td>16px</td><td>OFL·GPL / CC BY 4.0 — 补字用</td></tr>
+    <tr><td>Zpix 最像素</td><td>12×12px，约 2.2 万字</td><td><strong>商用收费</strong> — 不进买断包</td></tr>
+    <tr><td>方正像素家族 / 系统自带点阵</td><td>12–24px / 11–12px</td><td>商业授权 / <strong>授权灰区</strong> — 不用</td></tr>
+    <tr><td>文泉驿点阵体</td><td>12–16px，GB18030 逾 21 万字</td><td>GPL — 与买断发行兼容性需评估，暂不接</td></tr>
+  </table>
+  <p class="mono-line">字体一律入 <code>THIRD_PARTY_LICENSES.json</code>；OFL 字体保留版权声明与 Reserved Font Name，游戏内 credits 由该 JSON 生成。字库也属资产，同样要进 <code>asset-manifest.json</code>（<code>category=font</code>）。</p>
+  <p><strong>v0.5 定稿（P09 → A）</strong>：正文 = Vonwaon 12px，标题 / 层级 = Fusion 8/10/12px，<strong>两款共两层，不加第三款</strong>。UI、日记、地图划痕、频段逐字全部走这两款；Fusion 的 OFL 版权声明与 Reserved Font Name 随包保留。</p>
+  <p><strong>参考图另立一条</strong>：Scenario 要「自有参考图训 custom model」、PixelLab 要 style-reference image，而 R20 只管<strong>输出</strong>资产的 provenance、不管输入参考图的权利。<strong>《逃脱者2》及任何商业游戏截图只能作造型语言的文字描述，不得作为训练或 style-reference 输入。</strong>外部放大参考图先用 PixelKiln <code>unzoom</code> 缩回原生网格再用；手修生成图用 <code>edit</code> 落到 <code>/edits/</code>，不覆盖 provenance 原文件。</p>
+
+  <h3>⑥ 四类此前没写怎么产的资产（R24 / R25）</h3>
+  <table>
+    <tr><th>资产</th><th>落地规则</th></tr>
+    <tr><td><strong>横版背景 / 视差</strong></td><td><code>nodes.json</code> 补 <code>background_key</code> + <code>parallax_layers[]</code>；按 depth_layer 与昼夜 / 纪元换套。切镜头进房间要换背景，这是横版最大工作量之一。R24 校验引用存在、视差比例锁整数倍、不越 <code>.gpl</code>。</td></tr>
+    <tr><td><strong>道具图标</strong></td><td>从 <code>loot_tables/</code> 反向生成清单，一物一 <code>asset_id</code>，拾取 / 丢弃两态；<strong>不设高亮</strong>（承接「不加 E 万能互动键」）。</td></tr>
+    <tr><td><strong>熟人丧尸化变体</strong></td><td>§04 那句「第 40 小时在雾里以敌对单位出现，背包里还带着那卷绷带」是全案最狠的一笔，必须写派生规则：<strong>从该 NPC 的 authoritative sprite 派生</strong>，保留配件位（书包 / 校牌 / 绷带卷）与校服色块，只改姿态、肤色、眼部黑点、拖行帧；<code>derived_from = npc_xx</code>。<strong>绝不让模型重画</strong>——重画会丢配件，回响当场断掉。R25 校验派生体与母体配件位一致。</td></tr>
+    <tr><td><strong>环境腐烂独立贴图</strong></td><td>§04「不改一张贴图只做 LUT 插值」要补限定：LUT 管全局色温，<strong>残缺招牌 / 涂鸦 / 空油箱 / 新旧路障 / 门缝拖痕是独立 overlay</strong>，按 <code>day_locked_after</code> 与 <code>sediment</code> 挂载；Day 14 检查站那句涂鸦必须能被 R09 证真。</td></tr>
+  </table>
+
+  <h3>R36–R43（并入统一校验器）</h3>
+  <table>
+    <tr><th>ID</th><th>规则</th><th>失败后果</th></tr>
+    <tr><td>R21</td><td>AI 资产默认 <code>status=draft</code>；进 <code>approved/</code> 必须同时有 pixel gate 通过 + <code>reviewer/approved_at</code> + R20 provenance</td><td>未审素材混入发布包</td></tr>
+    <tr><td>R22</td><td>风格漂移检查只产出报告与告警，不得自动拒绝或自动改写资产；硬门禁仅 R14</td><td>模型观感替代像素 diff</td></tr>
+    <tr><td>R23</td><td>字体与参考图必须有 <code>license / source / author / notice_path</code>；外部商业游戏截图禁止进入 <code>input_refs</code></td><td>授权与抄袭风险</td></tr>
+    <tr><td>R24</td><td><code>background_key</code> 引用存在；视差层比例为整数倍；背景同受 <code>.gpl</code> 与漂移基线约束</td><td>切镜头黑屏 / 风格脱节</td></tr>
+    <tr><td>R25</td><td><code>zombie_variant.derived_from</code> 指向真实 NPC；派生体配件位 / 色块与母体一致</td><td>熟人认不出，回响断裂</td></tr>
+  </table>
+
+  <h3>工具来源与许可证速查</h3>
+  <p class="mono-line">按 §8b「不写 star / 版本 / 定价」的口径，这里只补 URL 与 License 两列；查不到的一律标「未核实」，不写死路径。</p>
+  <table>
+    <tr><th>工具</th><th>仓库 / 包</th><th>许可证</th></tr>
+    <tr><td>pixel-art-studio</td><td><code>Gamezxz/pixel-art-studio</code></td><td>MIT</td></tr>
+    <tr><td>pixelfx</td><td><code>patch-gg/pixelfx</code></td><td>MIT（字体另见 NOTICE.md）</td></tr>
+    <tr><td>PixelDoll</td><td><code>Shilo/PixelDoll</code></td><td>MIT</td></tr>
+    <tr><td>Vanguard</td><td><code>Sparrowworks/Vanguard</code></td><td>MIT</td></tr>
+    <tr><td>Combat Core Template</td><td><code>old-man77/combat-core-template-godot</code></td><td>MIT</td></tr>
+    <tr><td>Zephyr</td><td><code>AristurtleDev/zephyr</code></td><td>MIT（内置美术除外）</td></tr>
+    <tr><td>Pixelorama</td><td><code>Orama-Interactive/Pixelorama</code></td><td>MIT</td></tr>
+    <tr><td>awesome-gamedev-agent-skills</td><td><code>gamedev-skills/awesome-gamedev-agent-skills</code></td><td>Apache-2.0</td></tr>
+    <tr><td>Claude-Code-Game-Studios</td><td><code>Donchitos/Claude-Code-Game-Studios</code></td><td>MIT</td></tr>
+    <tr><td>GDQuest 2D 示例</td><td><code>gdquest-demos/godot-make-pro-2d-games</code></td><td>MIT</td></tr>
+    <tr><td>gdtoolkit / GUT / godot-4-ci</td><td><code>Scony/gdtoolkit</code> · <code>bitwes/Gut</code> · <code>hatmix/godot-4-ci</code></td><td>MIT</td></tr>
+    <tr><td>SEGAN / Gamestruments</td><td><code>lukasgolino/segan</code> · <code>jfrader/gamestruments</code></td><td>MIT（gdext 为 MPL-2.0）</td></tr>
+    <tr><td>LDtk / Tiled</td><td><code>deepnight/ldtk</code> · <code>mapeditor/tiled</code></td><td>MIT / GPLv2 — <strong>D1 双轨待对比，未拍板</strong></td></tr>
+    <tr><td>YATI / LDtk 导入器</td><td><code>Kiamo2/YATI</code> · <code>heygleeson/godot-ldtk-importer</code></td><td>MIT</td></tr>
+    <tr><td>Sprite Fusion Pixel Snapper</td><td><code>Hugo-Dz/spritefusion-pixel-snapper</code></td><td>MIT</td></tr>
+    <tr><td>PixelGridHelpers / FL-PixelGen</td><td><code>molbal/ComfyUI-PixelGridHelpers</code> · <code>filliptm/ComfyUI-FL-PixelGen</code></td><td>未核实</td></tr>
+    <tr><td>unfake.py / Pixelize / SpriteGrid / SPA / game-sfx</td><td class="mono-line">仓库路径未核实，以官方 CLI / 包页为准</td><td>未核实</td></tr>
+    <tr><td>PixelKiln / LootForge / StyleScope</td><td class="mono-line">PixelKiln·StyleScope 仓库路径未核实；LootForge 见 npm <code>lootforge</code></td><td>未核实，采购前逐条审</td></tr>
+  </table>
+  <p class="mono-line">WaveFunctionCollapse 的仓库归属在检索结果中存在两种写法，此处不写死 owner，以官方仓库为准。字体授权以各字体仓库 LICENSE / OFL 文本为准。</p>
+</section>
+
+<!-- ============ 09 ============ -->
+<section id="s9">
+  <span class="no">09 / FEASIBILITY</span>
+  <h2>可开发性与落地难点</h2>
+  <div class="card key"><div class="ct">总判：绿灯，但只在「切片口径」下</div>
+  <p>它从"小说级开放末世"被一路砍成"30 天、16 节点、20 个具名 NPC 的密室剧"——正是这些砍法把它从不可能变成可交付。v0.3 把 demo 进一步收成「一个学校模板 + 固定开局 + 25 条校验规则」，v0.4 再补上资产清单与美术人审门槛，可开发性又升一档。一个 2~4 人小组甚至熟练单人能立住。</p></div>
+  <p><strong>仍不可开发的部分</strong>：三条主线全铺 + 无限地图 + NPC 自由生活 + 实时写剧情。那正好等于 PZ 当年做了一半又删掉的那一套。</p>
+  <h3>难点按风险排序</h3>
+  <ol>
+    <li><strong>组合态调试，不是内容量。</strong>「第 17 天，一个 fidelity=1 的 NPC 用两跳传闻触发了某张卡」——人玩不出来，只能靠无头脚本跑全组合 + 属性测试。全项目最贵、无现成工具。模板扩容会放大它，所以模板只准改开场参数。</li>
+    <li><strong>「模糊 ≠ 撒谎」的可验证性。</strong>全案最新、最无成熟解法。模型多补一个细节（"你当时戴着帽子"）沉浸当场破功。</li>
+    <li><strong>留白调参。</strong>四五天不落卡是压抑还是无聊，只能真人试玩判断；又不能偷偷动态补偿。</li>
+    <li><strong>氛围必须挂机制。</strong>校园模板尤其危险，最容易滑成情怀布景；武器噪声必须真写进沉积（R11），否则退化成文案。</li>
+    <li><strong>8~12 万字不是写作量，是审核量。</strong></li>
+    <li><strong>存档迁移。</strong>L0 只增 + 记忆指针 + fidelity，schema 一改旧档就废，第一天就做 migration。</li>
+    <li><strong>AI 资产管线隐性成本。</strong>regrid / 量化 / 手清、商用核对、平台披露；管线要能换供应商。</li>
+    <li><strong>横版重挂字段已定，预算仍在。</strong>16 区块 → 16 节点、沉积挂 <code>node_id</code>、安全屋 <code>lockable</code>；Godot 4.3+ 的 <code>TileMapLayer</code> 必须实测。</li>
+    <li><strong>「意犹未尽」的转化是设计难点，不是文案难点。</strong>传多了变存档继承，传少了玩家不会点开无尽。</li>
+    <li><strong>武器动作的一致性。</strong>AI 逐帧生成挥砍会漂移；必须靠资源驱动 + 参数化特效 + R15 帧契约 + 统一 sprite flipping。</li>
+    <li><strong>美术侧的人眼瓶颈。</strong>R21 把「每张 AI 图都要人签」写成了硬规则，于是 72–96 帧主角 + 上百 tile + 20 张丧尸化派生体的<strong>审核量才是真成本</strong>，生成量反而不是。漂移报告只报警不裁决，同样要人读。</li>
+    <li><strong>D1 未拍板前的字段冻结。</strong>地图导入器没定，<code>nodes.json</code> 就只能保持中性字段，切片里的 TileSet / physics layer 都得写成可替换层；若有人提前写死一条，后面 A/B 对比就失去意义。这是 v0.5 新增的短期成本，demo 跑通即解除。</li>
+  </ol>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <span class="no">10 / PLATFORM</span>
+  <h2>平台结论</h2>
+  <div class="card key"><div class="ct">先做 PC / 掌机买断制独立游戏，不先做手游</div>
+  <p><strong>Steam + itch.io 买断制</strong>；最优第二落点是 Steam Deck / Switch 这类掌机（保住耳机、暗环境、长时段，Godot 4 导出成本低）。</p></div>
+  <ul>
+    <li><strong>时间轴反手游</strong>：核心是"你逛地图时世界也在烂"，手游 3~5 分钟会话 + 通知直接冲突。</li>
+    <li><strong>氛围依赖耳机 + 暗环境</strong>：真黑屏、手电一圈、雨盖脚步、底噪，公放亮屏地铁上全毁。</li>
+    <li><strong>文本与 UI 密度</strong>：竖屏小字下玩家会直接跳过"模糊回响"，而那恰恰是魂。</li>
+    <li><strong>变现模式打架</strong>：无体力、无抽卡、无词条刷取，与 F2P 留存天然对冲。</li>
+    <li><strong>双模式反而是加分</strong>：剧情扛口碑与人物塑造，无尽扛复玩与直播传播。</li>
+    <li><strong>题材与审查</strong>：AI 生成对话 + 末世丧尸 + 校园，走国内上架 / 版号路径是额外不确定性；<strong>"面向大陆"作为宣发辨识度可以，作为发行前提要谨慎</strong>。</li>
+  </ul>
+  <p><strong>手游不是不能做，是要承认那是另一个产品</strong>：等 PC 验证完，把记忆衰减换成固定 flag、留白换成每日任务、真黑换成常亮、砍成竖屏 10 分钟一章。</p>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <span class="no">11 / ROADMAP</span>
+  <h2>开工顺序与验收线</h2>
+  <ol>
+    <li>写 <code>mode_profile.json</code> 两份 + <strong>16 个学校节点的 <code>nodes.json</code></strong>（含 <code>background_key</code> / <code>parallax_layers[]</code>）+ <strong><code>schema/</code> 与 R01–R43 校验器</strong> + <code>opening_templates/school.json</code> + 共享的 <code>card / npc / memory / weapon / asset</code> schema + <code>lexicon.json</code> + Day 0–30 感官表（色板 / 频段 / 环境音 / 可见度 / 尸群沉积，每天五格）+ <strong><code>asset-manifest.json</code> 与 <code>art/</code> 三层目录</strong> + 字体已定稿（Vonwaon 正文 / Fusion 标题，LICENSE 与 NOTICE 入库）+ 6–10 张风格锚点图 + <strong>地图工具链按 <a href="#d1">D1</a> 双轨起 PoC，未对比拍板前 <code>nodes.json</code> 不写死导入器</strong>。</li>
+    <li><strong>无头先跑剧情 30 天全量</strong>（有限，能全回放），再跑<strong>无尽到第 N 纪元抽样</strong>，只断言变量与不变量、不渲染。</li>
+    <li>做「<strong>学校模板：1 条走廊 5 段 + 3 个纵深节点 + 3 NPC + 2 卡 + 1 把冷兵器 + 1 把枪</strong>」垂直切片，<strong>同一个切片两种 profile 都要能开</strong>；demo 固定开局、不接随机表、不做空手局。验收样本改为「Day 9 教学楼走廊」。<strong>此切片跑通之日即 D1 复评触发点</strong>：A / B 六维对比表在此回填并拍板。</li>
+    <li>真人 10~15 人，测六件事：留白有没有被读成无聊、模糊有没有被读成 bug、<strong>一击致死的前十分钟劝退阈值</strong>、<strong>打完剧情后有没有立刻想点开无尽</strong>、<strong>开一枪之后有没有后悔</strong>、<strong>开场那 0.6 秒归属 UI 有没有让玩家立刻明白「哪个是我」，而不是继续站着等剧情</strong>（P04 决策的验收线）。</li>
+    <li>全绿再进<strong>首发 3 模板 × N 起手</strong>（含空手局低概率），后期才扩可选模板剧情；CI 常驻校验器 + 无头回归 + 调色板像素检查。</li>
+  </ol>
+  <div class="card calm"><div class="ct">四条建议优先产出的文件</div>
+  <p><code>memory_schema.json</code> · Day 0–30 × fidelity 衰减表 · 「Day 1 见面 / Day 2 进庇护所」在第 1 / 9 / 16 / 17 / 24 天的五组渲染样例 · <strong><code>asset-manifest.json</code> + <code>refs/style_anchors/</code></strong>。<strong>拿样例当验收线最省事</strong>：任何一句模糊话都得能被事件日志证真，且不冒出一个新事实；任何一张 AI 图都得能被 R21 追到签核人。</p></div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12">
+  <span class="no">12 / OUT OF SCOPE</span>
+  <h2>明确不做</h2>
+  <p><span class="pill no">×</span> 跳杀 <span class="pill no">×</span> 全程旁白 <span class="pill no">×</span> 高清立绘插画 <span class="pill no">×</span> 动态难度补偿 <span class="pill no">×</span> 为戏剧性刷新尸潮 <span class="pill no">×</span> 三条线全铺</p>
+  <p><span class="pill no">×</span> 全地图语音 <span class="pill no">×</span> 多结局 CG <span class="pill no">×</span> 实时剧情生成 <span class="pill no">×</span> 移动端同屏百人 <span class="pill no">×</span> 万能互动键 E <span class="pill no">×</span> 元叙事式骗人旁白 <span class="pill no">×</span> 职业数值 / 技能 grind</p>
+  <p><span class="pill no">×</span> 无尽模式的存档与加载 <span class="pill no">×</span> 把两个模式写成两套游戏 <span class="pill no">×</span> 把剧情档 / 变量 / 好感度继承进无尽 <span class="pill no">×</span> 把校园写成青春剧 <span class="pill no">×</span> F2P 式每日任务与复活 <span class="pill no">×</span> 照搬《逃脱者2》的俯视镜头与明快配色</p>
+  <p><span class="pill no">×</span> 三段连招树 / 武器 build / 伤害数值 <span class="pill no">×</span> AI 逐帧生成挥砍动作 <span class="pill no">×</span> 枪当主战解法 <span class="pill no">×</span> 通用图像模型直出资源 <span class="pill no">×</span> 运行时联网调用模型 <span class="pill no">×</span> 非商业权重音频进商业包 <span class="pill no">×</span> Skills / MCP 进入无人 CI <span class="pill no">×</span> D1 拍板后仍双栈上线（PoC 并行对比不算） <span class="pill no">×</span> 多套测试栈</p>
+  <p><span class="pill no">×</span> 未审 AI 素材直接进发布包 <span class="pill no">×</span> 用风格漂移分数自动拒收资产 <span class="pill no">×</span> 商业游戏截图当训练 / 参考图 <span class="pill no">×</span> 商用收费或授权灰区字库 <span class="pill no">×</span> 让模型重画熟人丧尸化变体 <span class="pill no">×</span> 把 LUT 当腐烂贴图的替代品 <span class="pill no">×</span> AI 资产与人工资产混进同一个无 provenance 目录 <span class="pill no">×</span> 归属 UI 指路 / 高亮可拾取物 / 弹「按任意键开始」 <span class="pill no">×</span> 频段旁白说错话或骗玩家</p>
+  <div class="quote">这项目最难的不是"做出来"，是忍住不做那些看起来更酷的东西。三条路线、实时生成、动态难度、无限地图、模板全铺、连招树——每一个都诱人，每一个都足以把它拖回 PZ 当年那个删库现场。</div>
+</section>
+
+<!-- ============ 13 ============ -->
+<section id="s13">
+  <span class="no">13 / APPENDIX</span>
+  <h2>附录：参照作品 / 待决议</h2>
+  <h3>外部参照的取与舍</h3>
+  <table>
+    <tr><th>对象</th><th>借什么</th><th>反着用什么</th></tr>
+    <tr><td>RimWorld</td><td>不露面的调度者、节奏而非难度、持久状态、反思带 citation</td><td>它围着殖民地转；本作世界不读玩家状态、NPC 不下命令</td></tr>
+    <tr><td>The Escapists 2</td><td>16×16 tile、有限色调、物件一眼可辨、服装配件分人</td><td>它是俯视 / 等距 + 明快喜剧配色；本作横版纵深 + LUT 压暗</td></tr>
+    <tr><td>Project Zomboid</td><td>氛围即机制、声音吸引尸群</td><td>它删掉了故事；本作只补状态机，不补自由生活 NPC</td></tr>
+    <tr><td>CDDA</td><td>阶段设计、内容数据化、mod 契约</td><td>它是"漠不关心的机器"且无收束；本作要一条会过期的线</td></tr>
+    <tr><td>pixelfx / Vanguard</td><td>代码化特效时序、noise Field 与沉积传导</td><td>连招爽感、伤害数值体系</td></tr>
+  </table>
+  <p class="mono-line">商业服务的能力、定价与商用条款以各家官网当前说明为准；社区仓库的许可证与维护状态以仓库 LICENSE / README / releases 为准。本纪要刻意不写 star 数、版本号与价格。</p>
+
+  <h3>已拍板（v0.5 新增 4 项，共 12 项）</h3>
+  <ul>
+    <li><span class="done">已拍板</span>横版重挂口径：16 区块 → <strong>16 个可进入节点</strong>，沉积挂 <code>node_id</code>，安全屋 = <code>lockable</code>（§6b）。</li>
+    <li><span class="done">已拍板</span>学校 16 节点清单与 <code>nodes.json</code> 字段（§6c）。</li>
+    <li><span class="done">已拍板</span>R01–R43 校验器规则与一条绿色 CI 路径（§6c / §8c）。</li>
+    <li><span class="done">已拍板</span><code>art/</code> 三层目录隔离、<code>asset-manifest.json</code> 即美术预算、美术侧 <code>draft→approved</code> 人审（R21）（§8c）。</li>
+    <li><span class="done">已拍板</span>风格漂移只报警不裁决（R22）；字体与参考图授权（R23）；四类缺图规则，含熟人丧尸化派生与腐烂独立 overlay（R24 / R25）（§8c）。</li>
+    <li><span class="done">已拍板</span>枪 / 冷兵器 = 两种与世界的关系，不加数值、不做连招树（§6d）。</li>
+    <li><span class="done">已拍板</span>Skills 放计划层；最小工具栈与「必须自写 / 直接拿开源 / 坚决不接」三分类（§8b）。</li>
+    <li><span class="done">已拍板</span>起手随机表允许空手开局（低概率 + 信息补偿，不进 demo）、画风基准、双模式定位、demo 学校开局、消防站降级模板 B。</li>
+    <li><span class="done">v0.5 已拍板</span><strong>P09 → A｜正文字体定稿</strong>：Vonwaon（CC0 1.0）正文 + 缝合像素 Fusion（OFL 1.1）标题 / 层级，共两款两层，不加第三款；LICENSE 与 NOTICE 入库（§8c）。</li>
+    <li><span class="done">v0.5 已拍板</span><strong>P01 → C｜旁白定稿</strong>：全程无规程口误、无元叙事；Day 7 半句循环女声只在某一拍轻轻卡一下，是信号衰减不是台词失误（§3 / §6）。</li>
+    <li><span class="done">v0.5 已拍板</span><strong>P04 → B + UI 修订｜操控归属定稿</strong>：书包带晃一下的物理反馈 <strong>+</strong> 脚下 3×5 暖橙归属标记（淡入 0.6s 后极淡常驻）。理由：只靠动一帧玩家会以为还在过场、傻等剧情。UI 只回答「哪个是我」，不指路、不高亮可拾取物（§6）。</li>
+    <li><span class="done">v0.5 已拍板</span><strong>P06 → 不预选，转 D1</strong>：地图工具链两条同时进文档作待测试项，强制逐维对比后拍板固定单栈（<a href="#d1">D1</a>）。</li>
+  </ul>
+
+  <h3>待测试（1 项 · 必须对比后拍板，不得直接选）</h3>
+  <ul>
+    <li><span class="test">待测试</span><strong>D1 地图工具链决策门禁</strong>：A = LDtk + <code>godot-ldtk-importer</code>（MIT / MIT）　vs　B = Tiled + YATI（GPLv2 / MIT）。<strong>任何提取本栏并准备落地的一方（含 AI 辅助开发）必须先输出六维对比、写明落败方理由，才允许给出「本项目后续固定使用 A / B」并写死字段；未拍板前 <code>nodes.json</code> 保持中性。</strong>复评触发：demo 垂直切片跑通之日（§6b / §11）。</li>
+  </ul>
+
+  <h3>延后至 demo 后（7 项 · 推荐默认值占位，切片实测后完善）</h3>
+  <p class="mono-line">本组按用户决策<strong>不在此版拍板</strong>，但已写入文档、带默认值，等 demo 做出来后再逐条完善并回填结论。</p>
+  <ul>
+    <li><span class="defer">延后</span><strong>无尽回归阈值（原 P02）</strong> · 默认 <code>N=3 纪元</code> 抽样 + 属性测不变量；内容池见底后用「纪元参数 × 沉积历史」重访，不扩卡池。demo 后按实测纪元长度修订。</li>
+    <li><span class="defer">延后</span><strong>终局态枚举（原 P03）</strong> · 默认先锁 <strong>4 个</strong>（找到官方 / 错过官方但活下来 / 割据 / 只剩你一个），六组变量坍缩阈值等切片跑完标定；是否扩到 6 个在 demo 后定。</li>
+    <li><span class="defer">延后</span><strong>跨模式名字池（原 P05 + P12 合并）</strong> · 默认<strong>只放活人名字</strong>（不引爆 R25 派生体）；是否纳入已丧尸化熟人、是放「名字」还是「那张脸」，demo 后与 R25 一起定。首发第三模板同期决定。</li>
+    <li><span class="defer">延后</span><strong>枪械与弹药（原 P07）</strong> · 默认 demo 严格 <strong>1 枪 1 冷兵器</strong>，首发 2 枪 3 冷；弹药按「整局只够开 3~5 次」倒推，稀缺曲线 demo 后标定。</li>
+    <li><span class="defer">延后</span><strong>大陆合规路径（原 P08）</strong> · 默认<strong>先不决策</strong>，PC 买断先行结论不变；等 PC 版验证完再单独评估。</li>
+    <li><span class="defer">延后</span><strong>风格锚点签核（原 P10）</strong> · 默认 <strong>6 张</strong>、主美一人签核；demo 帧数实测后按 <code>asset-manifest</code> 实测值 <strong>+20% 余量</strong>锁死上界。</li>
+    <li><span class="defer">延后</span><strong>资产流程工具（原 P11）</strong> · 默认 PixelKiln / LootForge / StyleScope <strong>三个全只做 PoC</strong>，先把 <code>asset-manifest.json</code> 与 R36–R43 自写跑通；三者仓库路径与许可证均未核实，demo 后再决定是否接入一个。</li>
+  </ul>
+</section>
+
+
+<!-- ============ 14 v0.6 实现状态 ============ -->
+<section id="s14">
+  <span class="no">14 / IMPLEMENTATION <span class="newbadge">NEW</span></span>
+  <h2>v0.6 实现状态（机器可证）</h2>
+  <div class="card key"><div class="ct">本节的数字不是写上去的</div>
+  <p>它们由 <code>tools/build_gdd.py</code> 在生成时从仓库实际读取。文档与代码不可能不一致。</p></div>
+  <table>
+    <tr><th>项</th><th>值</th><th>验收命令</th></tr>
+    <tr><td>校验规则</td><td>43 条，ERROR 0 / WARN 0 / SKIP 0</td><td><code>python tools/validate.py</code></td></tr>
+    <tr><td>规则自测</td><td>19 条 ERROR 规则全部能开火</td><td><code>python tools/selftest.py</code></td></tr>
+    <tr><td>GDScript</td><td>5 类 / 1300 行，<strong>Godot 4.7 编译 5/5 通过</strong></td><td><code>--headless --check-only</code></td></tr>
+    <tr><td>节点拓扑</td><td>16（5 主轴 + 11 房间，6 个教学节拍）</td><td>R01–R09 / R30 / R41</td></tr>
+    <tr><td>事件卡</td><td>L 层 12 张 + 学校 S 层 2 张</td><td>R26 / R33–R35 / R39 / R42</td></tr>
+    <tr><td>NPC</td><td>11 张状态卡 / 16 条记忆</td><td>R12 / R13 / R36 / R43</td></tr>
+    <tr><td>模板</td><td>5 份（学校/消防站/医院/军事基地/加油站）</td><td>R18 / R27 / R28 / R37 / R38</td></tr>
+    <tr><td>L0 世界事实</td><td>12 条，append-only</td><td>R12</td></tr>
+    <tr><td>资产</td><td>32 条，其中 <strong>approved 3 条</strong></td><td>R14 / R21</td></tr>
+    <tr><td>数据语义回放</td><td>30 天不变量成立（Python 镜像）</td><td><code>python tools/headless_30d.py</code></td></tr>
+  </table>
+  <div class="card warn"><div class="ct">这一节最重要的四个字</div>
+  <p><strong>从未试玩。</strong>上面每一行都是机器判定。没有任何一条来自真人手感——
+  「留白会不会被读成无聊」「一击致死前十分钟劝退不劝退」这些问题，一条都还没被回答。</p></div>
+</section>
+
+<!-- ============ 15 新增规则 ============ -->
+<section id="s15">
+  <span class="no">15 / RULES 26–43 <span class="newbadge">NEW</span></span>
+  <h2>v0.5 之后新增的 18 条规则</h2>
+  <p class="mono-line">v0.5 定到 R25。以下 18 条是实现过程中被真实缺陷逼出来的——每条都对应一个曾经真实发生的问题。</p>
+  <table>
+    <tr><th>ID</th><th>规则</th><th>它拦住的真实问题</th></tr>
+    <tr><td>R26</td><td>L 层卡禁模板专名</td><td>跨 5 个模板复用时，「广播室」会让另外四个模板当场出戏</td></tr>
+    <tr><td>R27</td><td>进场日 ∈ [0,14]，局内天数 = 30 − 进场日</td><td>越晚进场越硬，这是难度旋钮而非星级</td></tr>
+    <tr><td>R28</td><td>噪声预算自洽</td><td>枪会把世界提前打崩而无人知晓</td></tr>
+    <tr><td>R29</td><td>每模板恰好一次安全屋失效，且卡真实存在</td><td>安全屋不能是暂停键；原来只念字段名不查卡</td></tr>
+    <tr><td>R30</td><td>房间不得旁路主轴</td><td>纵深房若连通两段主轴，走廊的恐怖白做</td></tr>
+    <tr><td>R31</td><td>归属标记 3×5、五档、Day3 褪尽</td><td>「枪口闪光是唯一暖色」与「常驻暖橙标记」自相矛盾</td></tr>
+    <tr><td>R32</td><td>音频只做定位，文件须单声道</td><td>双声道会让 <code>AudioStreamPlayer2D</code> 的 pan 失效，定位是假的</td></tr>
+    <tr><td>R33</td><td>卡间禁直接引用</td><td>依赖爆炸的第一信号</td></tr>
+    <tr><td>R34</td><td>trigger 嵌套 ≤3</td><td>同上</td></tr>
+    <tr><td>R35</td><td>只许碰六组变量</td><td>禁止 <code>world.*</code> / <code>global.*</code> 副作用</td></tr>
+    <tr><td>R36</td><td>记忆必须满格记录</td><td>模型把「降级后的残影」当原始记录，精确版永远渲染不出来</td></tr>
+    <tr><td>R37</td><td>噪声预算必须是整数</td><td><code>0.02</code> 被 int 截成 0 → 撬棍等于不发声</td></tr>
+    <tr><td>R38</td><td>每模板要有安静选项</td><td>军事基地只有步枪 = 逼玩家只会开火</td></tr>
+    <tr><td>R39</td><td><code>when</code> 必须逐字等于某个 slot option</td><td>5 条效果挂在描述句上，永远不会触发</td></tr>
+    <tr><td>R40</td><td>L2 渲染分档不许漏槽 + 反例自检</td><td>fid=1 仍写出具体物件；没有反例自检的规则会空转</td></tr>
+    <tr><td>R41</td><td>六教学节拍各一次，相邻 ≤3 跳</td><td>教学断了玩家会迷路</td></tr>
+    <tr><td>R42</td><td>宽窗口卡必须显式签核</td><td>12 张卡里 10 张的 trigger 完全不筛选</td></tr>
+    <tr><td>R43</td><td>NPC 卡的配件位必须与精灵逐位一致</td><td>数据和美术从来没接上，熟人丧尸化会认不出人</td></tr>
+  </table>
+  <div class="card warn"><div class="ct">R21 的教训（值得单列）</div>
+  <p>R21 原来写成「<code>source != generated</code> 就跳过」，而 32 条资产全是 <code>authoritative</code>——
+  <strong>这条人审门从建库到第 11 轮一次都没管过任何东西。</strong>
+  现在拆成两闸：人眼签核对所有资产成立，provenance 只对 generated 成立。</p>
+  <p class="mono-line">教训：一条因为前置条件永远不成立而从不触发的规则，和被删掉没有区别。</p></div>
+</section>
+
+<!-- ============ 16 像素规格 ============ -->
+<section id="s16">
+  <span class="no">16 / PIXEL SPEC <span class="newbadge">NEW</span></span>
+  <h2>像素规格（已冻结）</h2>
+  <table>
+    <tr><th>项</th><th>值</th></tr>
+    <tr><td>原生分辨率</td><td>384 × 216（×5 = 1920×1080，整数倍）</td></tr>
+    <tr><td>缩放</td><td>只允许 1–5 整数倍最近邻；永不抗锯齿</td></tr>
+    <tr><td>网格</td><td>16×16 tile；视觉与碰撞同栅格</td></tr>
+    <tr><td>调色板</td><td>32 色，<strong>按角色分配</strong>：冷色阶 8 / 冷光 3 / 冷光源 2 / 暖光 3 / 土锈血 5 / UI 2 / 布皮 3 / 皮肤 2 / 死亡 2 / 极值 2</td></tr>
+    <tr><td>每帧上限</td><td>tile / 角色 / 武器层 ≤16；背景 / 视差 / 表 ≤32</td></tr>
+    <tr><td>光</td><td>只来自上方；冷光源只用 c11/c12；暖光只用 c13–c15</td></tr>
+    <tr><td>归属标记</td><td>暖橙 3×5，Day 0–2 存在，Day 3 断电当夜五档褪尽</td></tr>
+    <tr><td>禁止</td><td>非整数缩放 / 抗锯齿 / 半透边缘 / 渐变 / 抖动 / 板外颜色</td></tr>
+  </table>
+  <div class="card key"><div class="ct">为什么是 32 色而不是 16</div>
+  <p>第一版按面积抽 16 色，结果是 <strong>15 个蓝 + 1 个灰，暖光全丢</strong>。
+  而全案唯一的光源语言是「手电一圈暖黄 + 枪口闪光」——按面积分配必然把它挤掉。
+  改成按角色给配额、总数放宽到 32、单帧仍限 16。</p></div>
+</section>
+
+<!-- ============ 17 资产流程 ============ -->
+<section id="s17">
+  <span class="no">17 / ASSET PIPELINE <span class="newbadge">NEW</span></span>
+  <h2>资产流程：七步，只有第三步要脚本，第四步要人</h2>
+  <pre><code>① 定参考   art/refs/style_anchors/        人
+② 产候选   art/generated_candidates/      模型 / 构造器 / 手画
+③ 过门禁   manifest status=draft          脚本  ← asset_intake.py，不过就写不进去
+④ 人眼签核 status=approved + reviewer     人    ← sign_assets.py，R21 会查
+⑤ provenance AI_LEDGER.json               脚本  ← 仅 source=generated
+⑥ 搬 approved/                            人
+⑦ 派生物   derived_from 指向母体          构造器 ← R25 + R43</code></pre>
+  <div class="card warn"><div class="ct">一条硬规矩</div>
+  <p><strong>门禁不过，物理上进不了 <code>asset-manifest.json</code>。</strong>
+  模型原图（18027 色 / 1024×1024）在实测中被自己的流程挡在门外——
+  「真像素 vs 伪像素」的分界线不是看起来像，是能不能自动证明。</p></div>
+</section>
+
+<!-- ============ 18 DEC ============ -->
+<section id="s18">
+  <span class="no">18 / DECISIONS <span class="newbadge">NEW</span></span>
+  <h2>v0.5 之后拍板的四件事</h2>
+  <table>
+    <tr><th>DEC</th><th>结论</th><th>落败方与理由</th></tr>
+    <tr><td>美术预算</td><td>美术 60% 压在三个宣传帧；像素规格首周冻结</td><td>全面提标超预算 52 人日；30 秒竖切片验不了系统集成</td></tr>
+    <tr><td>归属标记</td><td>暖橙 3×5，<strong>只在 Day 0–2</strong>，Day 3 断电当夜褪尽</td><td>常驻暖点污染「暖色 = 你在暴露自己」；脚下影与地面拖痕 overlay 语义撞车</td></tr>
+    <tr><td>音频</td><td>7 人日全押「声音定位」，无音乐、无环境循环层</td><td>砍到 2 人日会失去「不指路」的唯一替代品</td></tr>
+    <tr><td>NPC 池</td><td>8 共享（关系占位）+ 每模板 4 专属 = 28</td><td>100 个全专属美术炸 5 倍；12 共享承担跨模板回响会「伪在场」</td></tr>
+  </table>
+  <div class="card calm"><div class="ct">归属标记为什么不是妥协</div>
+  <p>褪掉的那一刻，正好是世界断电的那一刻。<strong>游戏先告诉你「哪个是你」，
+  然后在世界变黑的同时把这个答案收回去。</strong>之后你得靠影子、习惯、和刚才记住的方位认出自己。</p></div>
+</section>
+
+<!-- ============ 19 欠账 ============ -->
+<section id="s19">
+  <span class="no">19 / DEBT <span class="newbadge">NEW</span></span>
+  <h2>已知欠账（不粉饰）</h2>
+  <ul>
+    <li><code>card_engine.gd</code> 的 <code>returns_after_days</code> 与卡池轮转已补，但<strong>无头仿真仍显示卡覆盖 4/12</strong>——12 张卡里 8 张要求房间 tag，走廊上几乎不触发，需要查是 bot 太笨还是条件太窄</li>
+    <li>R40 只抓「该忘的没忘」，<strong>抓不住「补进去的新事实」</strong>（「戴眼镜」是黑名单兜的，不是白名单）</li>
+    <li>R42 被改过三次口径，最终只能「点名 + 要签核」，判不了对错</li>
+    <li>角色精灵是 blockout，配件只有 1–2 像素；tile 每格最深 6 色，spec 软目标是 ≤4</li>
+    <li>NPC 池 11/12（学校 4 专属 + 7 共享，DEC 目标 8 共享）</li>
+    <li><code>headless_30d.py</code> 是 Python 镜像，<strong>验的是数据语义，不是引擎</strong></li>
+    <li><strong>从未试玩过。</strong>上面所有结论没有一条来自真人手感</li>
+  </ul>
+</section>
+
+<!-- ============ 20 工具链 ============ -->
+<section id="s20">
+  <span class="no">20 / TOOLCHAIN <span class="newbadge">NEW</span></span>
+  <h2>工具链与验收命令</h2>
+  <table>
+    <tr><th>工具</th><th>用途</th><th>命令</th></tr>
+    <tr><td>validate.py</td><td>43 条规则</td><td><code>python tools/validate.py</code></td></tr>
+    <tr><td>selftest.py</td><td>规则能不能开火</td><td><code>python tools/selftest.py</code></td></tr>
+    <tr><td>Godot 4.7</td><td>真编译</td><td><code>.tools/Godot_v4.7-stable_win64_console.exe --headless --path game --check-only --script res://runtime/main.gd</code></td></tr>
+    <tr><td>headless_30d.py</td><td>数据语义 30 天回放</td><td><code>python tools/headless_30d.py --seeds 3</code></td></tr>
+    <tr><td>pixelpipe.py</td><td>像素门禁 / 转换 / tile 构造</td><td><code>... gate &lt;png&gt; --palette art/palettes/master.gpl</code></td></tr>
+    <tr><td>asset_intake.py</td><td>门禁 → manifest</td><td><code>... --spec &lt;candidates.json&gt;</code></td></tr>
+    <tr><td>sign_assets.py</td><td>人眼签核</td><td><code>... --reviewer YG --ids &lt;id...&gt;</code></td></tr>
+    <tr><td>build_gdd.py / merge_gdd.py</td><td>生成本文档</td><td><code>python tools/merge_gdd.py</code></td></tr>
+  </table>
+</section>
+
+<footer>
+  <p>《残余信号》设计纪要 v0.7 · 由多轮讨论整理，非最终 GDD。v0.1–v0.4 保留为历史快照。文中工具能力、定价与商用条款以各家官网当前说明为准，社区仓库许可证以仓库 LICENSE 为准，字体授权以各字体仓库 LICENSE / OFL 文本为准；标「未核实」者采购前须逐条核验。本纪要刻意不写 star 数、版本号与价格。</p>
+  <p class="mono-line">RESIDUAL SIGNAL — the world does not remember you. Someone does. For a while.</p>
+</footer>
+
+</div>
+
+<script>
+function saveHTML(){
+  var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '残余信号_游戏设计纪要_v0.5.html';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+</script>
+</body>
+</html>

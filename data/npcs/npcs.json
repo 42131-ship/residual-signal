@@ -1,0 +1,808 @@
+{
+  "schema": "npcs.v1",
+  "note": "NPC 状态卡。记忆必须满格记录（五槽齐全、fidelity=3）；降级是读取时算的，不是存储时抹的（R36）。",
+  "npcs": [
+    {
+      "npc_id": "npc_lin",
+      "display_role": "老师",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 2,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "affinity": 0.6,
+      "alive": true,
+      "infected": false,
+      "grief": 0.2,
+      "memories": [
+        {
+          "source_event": "evt_0142",
+          "day": 1,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "player",
+            "what": "给了绷带",
+            "where": "柜台底下",
+            "manner": "没说话，从底下扔过来",
+            "outcome": "伤口包上了"
+          },
+          "fidelity": 3,
+          "affect": 0.8,
+          "last_recalled_day": 9,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            },
+            {
+              "day": 9,
+              "fidelity": 3,
+              "recalled": true
+            },
+            {
+              "day": 16,
+              "fidelity": 2
+            },
+            {
+              "day": 20,
+              "fidelity": 1
+            },
+            {
+              "day": 24,
+              "fidelity": 0
+            }
+          ]
+        },
+        {
+          "source_event": "evt_0150",
+          "day": 3,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "player",
+            "what": "分了一壶剩水",
+            "where": "传达室门口",
+            "manner": "先推过来，自己只抿了一口",
+            "outcome": "还剩半壶"
+          },
+          "fidelity": 3,
+          "affect": 0.5,
+          "last_recalled_day": 5,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            },
+            {
+              "day": 12,
+              "fidelity": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_zhou",
+      "display_role": "学生",
+      "scope": "school",
+      "role_slot": "同行的第三个人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "badge"
+        },
+        {
+          "id": 1,
+          "semantic": "back_torso",
+          "name": "backpack"
+        },
+        {
+          "id": 2,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "affinity": 0.3,
+      "alive": true,
+      "infected": false,
+      "grief": 0.1,
+      "memories": [
+        {
+          "source_event": "evt_0150",
+          "day": 3,
+          "kind": "heard",
+          "via": "npc_lin",
+          "hops": 1,
+          "slots": {
+            "who": "player",
+            "what": "分了一壶水",
+            "where": "走廊那头",
+            "manner": "先推给别人",
+            "outcome": "听说还剩半壶"
+          },
+          "fidelity": 3,
+          "affect": 0.3,
+          "last_recalled_day": 6,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            },
+            {
+              "day": 11,
+              "fidelity": 2
+            }
+          ]
+        },
+        {
+          "source_event": "evt_0161",
+          "day": 5,
+          "kind": "heard",
+          "via": "npc_gu",
+          "hops": 1,
+          "slots": {
+            "who": "不认识的人",
+            "what": "钥匙不见了",
+            "where": "传达室",
+            "manner": "门从里面开，插销完好",
+            "outcome": "门还是能锁"
+          },
+          "fidelity": 3,
+          "affect": -0.2,
+          "last_recalled_day": 7,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            },
+            {
+              "day": 13,
+              "fidelity": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_gu",
+      "display_role": "传达室的人",
+      "scope": "school",
+      "role_slot": "陌生人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "keys"
+        }
+      ],
+      "affinity": -0.2,
+      "alive": true,
+      "infected": false,
+      "grief": 0.35,
+      "memories": [
+        {
+          "source_event": "evt_0161",
+          "day": 5,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "不清楚是谁",
+            "what": "少了一串铜钥匙",
+            "where": "传达室桌上",
+            "manner": "门从里面被打开，插销完好",
+            "outcome": "他从此不把钥匙留在桌上"
+          },
+          "fidelity": 3,
+          "affect": -0.6,
+          "last_recalled_day": 5,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            },
+            {
+              "day": 14,
+              "fidelity": 2
+            },
+            {
+              "day": 21,
+              "fidelity": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_wei",
+      "display_role": "教务处的干事",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "affinity": -0.4,
+      "grief": 0.1,
+      "accessories": [
+        {
+          "semantic": "head",
+          "item": "visor"
+        },
+        {
+          "semantic": "torso_front",
+          "item": "badge"
+        }
+      ],
+      "memories": [
+        {
+          "day": 3,
+          "source_event": "evt_w0004",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "教务处干事",
+            "what": "把一串铜钥匙和一页名单放在二楼窗台",
+            "where": "学校二楼走廊",
+            "manner": "把名单压在玻璃杯下",
+            "outcome": "钥匙留在窗台，名单没有带走"
+          }
+        },
+        {
+          "day": 5,
+          "source_event": "evt_w0005",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "教务处干事",
+            "what": "问上街的人有没有学生证",
+            "where": "学校传达室门口",
+            "manner": "隔着半开的门说话",
+            "outcome": "没有身份的人没拿到钥匙和名单"
+          }
+        }
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "head",
+          "name": "visor"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_tan",
+      "display_role": "食堂的厨工",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "affinity": -0.3,
+      "grief": 0.2,
+      "accessories": [
+        {
+          "semantic": "torso_front",
+          "item": "apron"
+        },
+        {
+          "semantic": "neck",
+          "item": "towel"
+        }
+      ],
+      "memories": [
+        {
+          "day": 5,
+          "source_event": "evt_w0005",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "食堂厨工",
+            "what": "把半袋米藏进灶台下面",
+            "where": "学校食堂后厨",
+            "manner": "用空面粉袋盖住米袋",
+            "outcome": "米袋留在灶台下面，没有告诉门外的人"
+          }
+        }
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_xu",
+      "display_role": "班长",
+      "scope": "school",
+      "role_slot": "同行的第三个人",
+      "affinity": 0.2,
+      "grief": 0.1,
+      "accessories": [
+        {
+          "semantic": "chest_diagonal",
+          "item": "strap"
+        },
+        {
+          "semantic": "torso_front",
+          "item": "badge"
+        }
+      ],
+      "memories": [
+        {
+          "day": 3,
+          "source_event": "evt_0150",
+          "kind": "heard",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "两个高年级学生",
+            "what": "分了一壶剩水",
+            "where": "学校楼梯转角",
+            "manner": "一个人把搪瓷壶递给另一个人",
+            "outcome": "两个人各喝了几口，壶里还剩一点水"
+          }
+        },
+        {
+          "day": 5,
+          "source_event": "evt_0161",
+          "kind": "heard",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 5,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "传达室里的老师",
+            "what": "从里面打开传达室门",
+            "where": "学校传达室",
+            "manner": "先把门开了一条缝，再把门闩拉开",
+            "outcome": "门口少了一串铜钥匙"
+          }
+        }
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "torso_front",
+          "name": "badge"
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_he",
+      "display_role": "修车铺的学徒",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "affinity": -0.2,
+      "grief": 0.3,
+      "accessories": [
+        {
+          "semantic": "back_torso",
+          "item": "toolbag"
+        },
+        {
+          "semantic": "neck",
+          "item": "goggles"
+        }
+      ],
+      "memories": [
+        {
+          "day": 1,
+          "source_event": "evt_w0002",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            }
+          ],
+          "slots": {
+            "who": "街上的行人",
+            "what": "推倒路边的自行车并撞翻一辆手推车",
+            "where": "修车铺外的十字路口",
+            "manner": "沿着街面向南跑",
+            "outcome": "十字路口被散落的车轮和货箱堵住"
+          }
+        }
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "goggles"
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_mo",
+      "display_role": "广播站的老师",
+      "scope": "school",
+      "role_slot": "熟人",
+      "affinity": 0.3,
+      "grief": 0.4,
+      "accessories": [
+        {
+          "semantic": "neck",
+          "item": "lanyard"
+        },
+        {
+          "semantic": "arm_front",
+          "item": "script"
+        }
+      ],
+      "memories": [
+        {
+          "day": 7,
+          "source_event": "evt_w0006",
+          "kind": "observed",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 7,
+              "fidelity": 3
+            },
+            {
+              "day": 9,
+              "fidelity": 2
+            },
+            {
+              "day": 14,
+              "fidelity": 1
+            }
+          ],
+          "slots": {
+            "who": "广播站老师",
+            "what": "在广播里说过最后一段官方通知",
+            "where": "学校广播室",
+            "manner": "对着桌上的麦克风念稿",
+            "outcome": "通知播完后广播停止"
+          }
+        },
+        {
+          "day": 7,
+          "source_event": "evt_0177",
+          "kind": "heard",
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 7,
+              "fidelity": 3
+            },
+            {
+              "day": 9,
+              "fidelity": 2
+            }
+          ],
+          "slots": {
+            "who": "广播室里的女声",
+            "what": "说过半句话后停下",
+            "where": "学校广播室",
+            "manner": "声音从广播喇叭里传出",
+            "outcome": "半句话没有说完"
+          }
+        }
+      ],
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "neck",
+          "name": "lanyard"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "script"
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_qi",
+      "display_role": "修自行车的",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "towel"
+        }
+      ],
+      "affinity": 0.1,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "day": 1,
+          "source_event": "evt_w0002",
+          "slots": {
+            "who": "街上一个推着自行车的人",
+            "what": "把自行车内胎塞进工具袋",
+            "where": "街角",
+            "manner": "推着车从外面走来",
+            "outcome": "街面失控时他拐进了路边的门廊"
+          },
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            }
+          ],
+          "kind": "direct",
+          "via": null,
+          "provenance_lock": true,
+          "affect": 0.0,
+          "last_recalled_day": 1
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_shen",
+      "display_role": "便利店店长",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "torso_front",
+          "name": "apron"
+        },
+        {
+          "id": 1,
+          "semantic": "head",
+          "name": "visor"
+        }
+      ],
+      "affinity": 0.2,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "day": 3,
+          "source_event": "evt_w0003",
+          "slots": {
+            "who": "便利店店长",
+            "what": "把半袋米放到柜台底下",
+            "where": "柜台",
+            "manner": "用围裙擦了手再搬米",
+            "outcome": "全城断电后店就没再开门"
+          },
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 3,
+              "fidelity": 3
+            }
+          ],
+          "kind": "direct",
+          "via": null,
+          "provenance_lock": true,
+          "affect": 0.0,
+          "last_recalled_day": 3
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_luo",
+      "display_role": "邮局的",
+      "scope": "shared",
+      "role_slot": "同行的第三个人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        },
+        {
+          "id": 1,
+          "semantic": "neck",
+          "name": "lanyard"
+        }
+      ],
+      "affinity": 0.0,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "day": 14,
+          "source_event": "evt_w0007",
+          "slots": {
+            "who": "跑过路的邮局职员",
+            "what": "记下一张没盖戳的邮单",
+            "where": "路口",
+            "manner": "沿街走了一遍再折回",
+            "outcome": "检查站撤走后那条路已经走不通"
+          },
+          "fidelity": 3,
+          "fidelity_trace": [
+            {
+              "day": 14,
+              "fidelity": 3
+            }
+          ],
+          "kind": "direct",
+          "via": null,
+          "provenance_lock": true,
+          "affect": 0.0,
+          "last_recalled_day": 14
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_fan",
+      "display_role": "退休的护士",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "affinity": 0.2,
+      "alive": true,
+      "infected": false,
+      "grief": 0.1,
+      "memories": [
+        {
+          "source_event": "evt_0142",
+          "day": 1,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "街角的护士",
+            "what": "接住一卷绷带并给伤口包扎",
+            "where": "柜台",
+            "manner": "把绷带撕成窄条后绕了三圈",
+            "outcome": "血止住了"
+          },
+          "fidelity": 3,
+          "affect": 0.6,
+          "last_recalled_day": 4,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            },
+            {
+              "day": 3,
+              "fidelity": 2
+            },
+            {
+              "day": 4,
+              "fidelity": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_ying",
+      "display_role": "送水的",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "affinity": 0.0,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "source_event": "evt_w0002",
+          "day": 2,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "送水的男人",
+            "what": "沿路找到了还能打到水的地方",
+            "where": "路口",
+            "manner": "先独自查看水源，再记下路线",
+            "outcome": "带回了水，但没有轻易带别人前往"
+          },
+          "fidelity": 3,
+          "affect": 0.2,
+          "last_recalled_day": 2,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 2,
+              "fidelity": 3
+            },
+            {
+              "day": 8,
+              "fidelity": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

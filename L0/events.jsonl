@@ -1,0 +1,12 @@
+{"event_id":"evt_w0001","day":0,"kind":"world","scope":"global","text":"爆发开始。供电正常，频段正常。","source":"world_calendar"}
+{"event_id":"evt_w0002","day":1,"kind":"world","scope":"global","text":"街面失控。打砸抢开始，感染扩散。","source":"world_calendar"}
+{"event_id":"evt_w0003","day":3,"kind":"world","scope":"global","text":"全城断电。夜间尸群活跃度上升。","source":"world_calendar"}
+{"event_id":"evt_w0004","day":3,"kind":"world","scope":"school","text":"学校应急灯转为电池供电，之后逐格失效。","source":"world_calendar"}
+{"event_id":"evt_w0005","day":5,"kind":"world","scope":"global","text":"幸存者开始因饥饿冒险上街。","source":"world_calendar"}
+{"event_id":"evt_w0006","day":7,"kind":"world","scope":"global","text":"最后一次官方广播。之后只剩半句循环。","source":"world_calendar"}
+{"event_id":"evt_w0007","day":14,"kind":"world","scope":"global","text":"撤离检查站撤走。线索链物理失效。","source":"world_calendar"}
+{"event_id":"evt_w0008","day":30,"kind":"world","scope":"global","text":"尸群迁移完成，占据稳定。收束日。","source":"world_calendar"}
+{"event_id":"evt_0142","day":1,"kind":"actor","scope":"node","text":"有人把一卷绷带从柜台底下扔过来，没说话，伤口包上了。","actor":"player","witness":["npc_lin"]}
+{"event_id":"evt_0150","day":3,"kind":"actor","scope":"node","text":"停水第二夜，两个人分了一壶剩水。","actor":"player","witness":["npc_lin","npc_zhou"]}
+{"event_id":"evt_0161","day":5,"kind":"actor","scope":"node","text":"传达室的门被从里面打开，插销完好，桌上少了一串铜钥匙。","actor":"unknown","witness":["npc_gu","npc_zhou"]}
+{"event_id":"evt_0177","day":7,"kind":"actor","scope":"node","text":"广播室里那半句女声停了，话筒旁压着一张纸。","actor":"player","witness":["npc_lin"]}

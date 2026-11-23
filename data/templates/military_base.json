@@ -1,0 +1,42 @@
+{
+  "template_id": "military_base",
+  "label": "军事基地",
+  "entry_days": [
+    3,
+    4,
+    5
+  ],
+  "identity": {
+    "key_permission": [
+      "军械库登记权限",
+      "基地内门禁权限"
+    ],
+    "how_recognized": "基地值勤名册登记的军人。",
+    "initial_knowledge": [
+      "军械库位于营房西侧，门禁记录可查到最后一次开启时间。",
+      "基地北门通往检查站道路，检查站已于世界日历日 14 撤走。",
+      "营房值班室内有基地通道图，标有发电机房位置。"
+    ]
+  },
+  "weapon_budget": {
+    "步枪": {
+      "rounds": 20,
+      "sediment_per_shot": 3
+    },
+    "军刺": {
+      "rounds": 10,
+      "sediment_per_shot": 1
+    }
+  },
+  "noise_budget": {
+    "cap": 117,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "military_base_supply_record_missing",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 5。",
+    "manifestation": "军械库出入登记簿缺失，柜门已锁，无法核对剩余弹药。"
+  },
+  "identity_note": "你有基地门禁和重火力，但每次开火都会迅速消耗噪声余量。"
+}

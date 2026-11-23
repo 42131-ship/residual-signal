@@ -1,0 +1,116 @@
+<<<FILE: data/cards/layer_s_fire_station.json >>>
+{
+  "cards": [
+    {
+      "card_id": "fire_station_safehouse_door_locked",
+      "layer": "S",
+      "template": "fire_station",
+      "title": "防火门",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["门缝里没有光", "插销在里侧", "门把是热的"]},
+        {"slot": "action", "options": ["推", "敲", "绕后"]},
+        {"slot": "outcome", "options": ["没开", "开了", "你没再试"]}
+      ],
+      "text": {"default": "后院防火门从里面锁死。推不开。"},
+      "effects": [
+        {"when": "绕后", "vars": {"knowledge": 0.1, "time": -0.05}, "evidence": "evt_fs_door_detour"}
+      ],
+      "noise": null,
+      "leftover": "门闩仍在里侧。",
+      "returns_after_days": 0
+    }
+  ]
+}
+<<<FILE: data/cards/layer_s_hospital.json >>>
+{
+  "cards": [
+    {
+      "card_id": "hospital_safehouse_elevator",
+      "layer": "S",
+      "template": "hospital",
+      "title": "停在半层",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["井道里有敲击声", "楼层灯灭了", "钢缆绷着"]},
+        {"slot": "action", "options": ["喊话", "掰门", "找配电箱"]},
+        {"slot": "outcome", "options": ["有人回应", "门没动", "灯亮了一瞬"]}
+      ],
+      "text": {"default": "停电后，电梯卡在两层之间。里面有人。"},
+      "effects": [
+        {"when": "喊话", "vars": {"knowledge": 0.1}, "evidence": "evt_hospital_elevator_voice"}
+      ],
+      "noise": null,
+      "leftover": "井道里仍有人敲击。",
+      "returns_after_days": 0
+    }
+  ]
+}
+<<<FILE: data/cards/layer_s_military_base.json >>>
+{
+  "cards": [
+    {
+      "card_id": "military_base_safehouse_armory",
+      "layer": "S",
+      "template": "military_base",
+      "title": "新口令",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["锁舌完好", "键盘换新", "门缝封严"]},
+        {"slot": "action", "options": ["试旧口令", "检查锁", "找值班记录"]},
+        {"slot": "outcome", "options": ["口令错误", "锁没坏", "记录缺页"]}
+      ],
+      "text": {"default": "军械库的锁完好。口令已经换了。"},
+      "effects": [
+        {"when": "找值班记录", "vars": {"knowledge": 0.1}, "evidence": "evt_base_armory_roster"}
+      ],
+      "noise": null,
+      "leftover": "键盘留下新指纹。",
+      "returns_after_days": 0
+    }
+  ]
+}
+<<<FILE: data/cards/layer_s_gas_station.json >>>
+{
+  "cards": [
+    {
+      "card_id": "gas_station_safehouse_pump_switch",
+      "layer": "S",
+      "template": "gas_station",
+      "title": "柜台后的开关",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["油泵指示灯亮着", "电缆仍在震动", "柜台抽屉半开"]},
+        {"slot": "action", "options": ["拉开抽屉", "翻柜台", "检查油泵"]},
+        {"slot": "outcome", "options": ["找到开关", "抽屉空了", "油泵没动"]}
+      ],
+      "text": {"default": "油泵仍通着电。开关在柜台后面。"},
+      "effects": [
+        {"when": "拉开抽屉", "vars": {"knowledge": 0.1}, "evidence": "evt_gas_pump_switch"}
+      ],
+      "noise": null,
+      "leftover": "柜台后开关仍在。",
+      "returns_after_days": 0
+    }
+  ]
+}

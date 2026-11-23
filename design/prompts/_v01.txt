@@ -1,0 +1,116 @@
+我先读取四个模板及现有 S 层卡，核对模板锁定表现与仓库字段约定，再按要求输出四份 JSON。<<<FILE: data/cards/layer_s_fire_station.json >>>
+{
+  "cards": [
+    {
+      "card_id": "fire_station_fire_door_locked",
+      "layer": "S",
+      "template": "fire_station",
+      "title": "防火门",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["门外插销完好", "门缝没有光", "里面传来轻响"]},
+        {"slot": "action", "options": ["推门", "敲门", "绕后"]},
+        {"slot": "outcome", "options": ["门没动", "里面没有回应", "你退开了"]}
+      ],
+      "text": {"default": "后院防火门从里面锁死。门外插销完好，门打不开。"},
+      "effects": [
+        {"when": "绕后", "vars": {"knowledge": 0.1, "time": -0.05}, "evidence": "evt_fs_door_detour"}
+      ],
+      "noise": null,
+      "leftover": "门外插销完好，门仍锁在里面。",
+      "returns_after_days": 0
+    }
+  ]
+}
+<<<FILE: data/cards/layer_s_hospital.json >>>
+{
+  "cards": [
+    {
+      "card_id": "hospital_ward_access_blocked",
+      "layer": "S",
+      "template": "hospital",
+      "title": "住院楼通道",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["床架横在通道", "门锁没有损坏", "墙边留着擦痕"]},
+        {"slot": "action", "options": ["推床", "检查门锁", "退回"]},
+        {"slot": "outcome", "options": ["通道仍被堵住", "门锁完好", "你退开了"]}
+      ],
+      "text": {"default": "住院楼职工通道被病床堵住。门锁完好，通道无法通过。"},
+      "effects": [
+        {"when": "检查门锁", "vars": {"knowledge": 0.1, "time": -0.05}, "evidence": "evt_hospital_ward_lock"}
+      ],
+      "noise": null,
+      "leftover": "病床横堵通道，门锁没有损坏。",
+      "returns_after_days": 0
+    }
+  ]
+}
+<<<FILE: data/cards/layer_s_military_base.json >>>
+{
+  "cards": [
+    {
+      "card_id": "military_base_supply_record_missing",
+      "layer": "S",
+      "template": "military_base",
+      "title": "军械库登记簿",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["登记簿不在柜中", "柜门锁着", "封条没有撕开"]},
+        {"slot": "action", "options": ["查找登记簿", "检查柜门", "离开"]},
+        {"slot": "outcome", "options": ["登记簿仍缺失", "柜门无法打开", "你停止核对"]}
+      ],
+      "text": {"default": "军械库出入登记簿缺失。柜门已锁，剩余弹药无法核对。"},
+      "effects": [
+        {"when": "检查柜门", "vars": {"knowledge": 0.1, "time": -0.05}, "evidence": "evt_military_supply_record"}
+      ],
+      "noise": null,
+      "leftover": "登记簿缺失，军械库柜门锁着。",
+      "returns_after_days": 0
+    }
+  ]
+}
+<<<FILE: data/cards/layer_s_gas_station.json >>>
+{
+  "cards": [
+    {
+      "card_id": "gas_station_back_door_open",
+      "layer": "S",
+      "template": "gas_station",
+      "title": "便利店后门",
+      "trigger": {
+        "day": {"min": 3, "max": 30},
+        "vars": [{"name": "supplies", "op": "<=", "value": 0.7}],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {"slot": "sign", "options": ["后门敞开", "门锁没有损坏", "水箱空了一格"]},
+        {"slot": "action", "options": ["检查门锁", "清点货架", "关上后门"]},
+        {"slot": "outcome", "options": ["门锁完好", "少了一箱瓶装水", "门关上了"]}
+      ],
+      "text": {"default": "便利店后门被从外面打开。门锁完好，货架少了一箱瓶装水。"},
+      "effects": [
+        {"when": "清点货架", "vars": {"knowledge": 0.1, "time": -0.05}, "evidence": "evt_gas_water_missing"}
+      ],
+      "noise": null,
+      "leftover": "后门锁完好，货架少了一箱瓶装水。",
+      "returns_after_days": 0
+    }
+  ]
+}

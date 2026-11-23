@@ -1,0 +1,7 @@
+16x16 pixel art style anchor, 2D side-scrolling view of a Chinese middle-school corridor at night, power out.
+
+Strict pixel art: visible pixel grid, hard edges, no anti-aliasing, no gradients, limited palette of about 14 desaturated colors — cold blue-grey walls, near-black shadows, one single small warm arc from a handheld flashlight at the left edge. Everything else is darkness.
+
+Composition: long horizontal corridor receding to the right, doors on both sides, one classroom door slightly ajar. Emergency light above the far end blinking weakly — the only cold light source. A vending machine and a wall-mounted broadcast speaker are readable by silhouette alone. No characters. No text. No UI.
+
+Mood: abandoned six days into collapse. Dust, a fallen chair, scuff marks on the floor. Not gory, not cartoonish, not cheerful.

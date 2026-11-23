@@ -1,0 +1,110 @@
+{
+  "npcs": [
+    {
+      "npc_id": "npc_fan",
+      "display_role": "退休的护士",
+      "scope": "shared",
+      "role_slot": "熟人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "face",
+          "name": "glasses"
+        },
+        {
+          "id": 1,
+          "semantic": "arm_front",
+          "name": "papers"
+        }
+      ],
+      "affinity": 0.2,
+      "alive": true,
+      "infected": false,
+      "grief": 0.1,
+      "memories": [
+        {
+          "source_event": "evt_0142",
+          "day": 1,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "街角的护士",
+            "what": "接住一卷绷带并给伤口包扎",
+            "where": "柜台",
+            "manner": "把绷带撕成窄条后绕了三圈",
+            "outcome": "血止住了"
+          },
+          "fidelity": 3,
+          "affect": 0.6,
+          "last_recalled_day": 4,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 1,
+              "fidelity": 3
+            },
+            {
+              "day": 3,
+              "fidelity": 2
+            },
+            {
+              "day": 4,
+              "fidelity": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "npc_id": "npc_ying",
+      "display_role": "送水的",
+      "scope": "shared",
+      "role_slot": "陌生人",
+      "accessory_slots": [
+        {
+          "id": 0,
+          "semantic": "back_torso",
+          "name": "toolbag"
+        },
+        {
+          "id": 1,
+          "semantic": "chest_diagonal",
+          "name": "strap"
+        }
+      ],
+      "affinity": 0.0,
+      "alive": true,
+      "infected": false,
+      "grief": 0.0,
+      "memories": [
+        {
+          "source_event": "evt_w0002",
+          "day": 2,
+          "kind": "direct",
+          "via": null,
+          "slots": {
+            "who": "送水的男人",
+            "what": "沿路找到了还能打到水的地方",
+            "where": "路口",
+            "manner": "先独自查看水源，再记下路线",
+            "outcome": "带回了水，但没有轻易带别人前往"
+          },
+          "fidelity": 3,
+          "affect": 0.2,
+          "last_recalled_day": 2,
+          "provenance_lock": true,
+          "fidelity_trace": [
+            {
+              "day": 2,
+              "fidelity": 3
+            },
+            {
+              "day": 8,
+              "fidelity": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

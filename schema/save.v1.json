@@ -1,0 +1,22 @@
+{
+  "schema": "save.v1",
+  "note": "世界状态快照的最小形态（world_state.snapshot() 的直接产物）。存档迁移从 v1 起就要有真样本，否则上线后旧档全废。",
+  "required": ["day", "hour", "variables", "sediment"],
+  "variables_pool": ["trust", "reputation", "supplies", "control", "knowledge", "time"],
+  "sample": {
+    "day": 9,
+    "hour": 14,
+    "variables": {
+      "trust": 0.4,
+      "reputation": 0.2,
+      "supplies": 0.35,
+      "control": 0.0,
+      "knowledge": 0.5,
+      "time": 0.3
+    },
+    "sediment": {
+      "school_corridor_b": 6,
+      "school_f1_lab": 2
+    }
+  }
+}

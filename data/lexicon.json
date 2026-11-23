@@ -1,0 +1,45 @@
+{
+  "schema": "lexicon.v1",
+  "note": "允许出现的专名词表。AI 产出必须命中这里，否则 R01/R08/R12/R26 拒收。",
+  "node_names": [
+    "school_corridor_a",
+    "school_corridor_b",
+    "school_corridor_c",
+    "school_corridor_d",
+    "school_corridor_e",
+    "school_f2_roof",
+    "school_f2_broadcast",
+    "school_f2_office",
+    "school_f2_class3",
+    "school_f1_class1",
+    "school_f1_lab",
+    "school_f1_guard",
+    "school_f1_class2",
+    "school_b1_coldstorage",
+    "school_b1_garage",
+    "school_b1_power",
+    "school_b1_storage"
+  ],
+  "template_exclusive_names": [
+    "广播室", "食堂冷库", "传达室", "实验室", "配电间",
+    "地下车库", "天台", "器材室", "教室1", "教室2", "教室3",
+    "办公室", "课表", "校牌", "值日表", "疏散铃", "消防通道"
+  ],
+  "tags": [
+    "spawn", "shelter", "clue_possible", "power_node",
+    "audio_source", "noise_sink", "clue_endpoint",
+    "teaching_1", "teaching_2", "teaching_3", "teaching_4", "teaching_5", "teaching_6"
+  ],
+  "loot_tables": [
+    "office_med", "food", "chem", "keys", "roster", "gear", "ammo_scarce", "empty"
+  ],
+  "noise_events": [
+    "door_creak_02", "glass_break_01", "chair_scrape_01", "footsteps_hall_01",
+    "gunshot_loud_01", "crowbar_hit_01", "vending_hum_01", "broadcast_hum_01",
+    "locker_slam_01", "drip_01"
+  ],
+  "proper_nouns": [
+    "Day 0", "Day 3", "Day 7", "Day 14", "Day 30"
+  ],
+  "template_exclusive_note": "L 层（地点无关）卡的正文不得出现 template_exclusive_names 里的任何词"
+}

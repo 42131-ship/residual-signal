@@ -1,0 +1,25 @@
+; 残余信号 · Godot 工程
+; 规格见 design/PIXEL_SPEC.md：原生 384×216（×5 = 1920×1080），最近邻，整数倍缩放
+config_version=5
+
+[application]
+
+config/name="残余信号 Residual Signal"
+run/main_scene="res://game/scenes/corridor.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=384
+window/size/viewport_height=216
+window/size/window_width_override=1152
+window/size/window_height_override=648
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+environment/defaults/default_clear_color=Color(0.0117, 0.0196, 0.0392, 1)

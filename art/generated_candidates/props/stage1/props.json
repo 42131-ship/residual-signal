@@ -1,0 +1,542 @@
+{
+  "schema": "school-props-stage1.v1",
+  "assets": [
+    {
+      "index": 0,
+      "name": "locker_bank",
+      "filename": "PROP-02_01_locker_bank.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_01_locker_bank.png",
+      "asset_id": "prop_school_locker_bank",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "floor_wall",
+      "tile_position": [
+        4,
+        6
+      ],
+      "colors": 9,
+      "palette_roles": [
+        "dark",
+        "floor",
+        "grey",
+        "grey_lit",
+        "lit",
+        "outline",
+        "shadow",
+        "top",
+        "wall"
+      ],
+      "c31_contour_pixels": 120,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 1,
+      "name": "door_broken",
+      "filename": "PROP-02_02_door_broken.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_02_door_broken.png",
+      "asset_id": "prop_school_door_broken",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall_floor",
+      "tile_position": [
+        14,
+        6
+      ],
+      "colors": 9,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "outline",
+        "rust",
+        "rust_lit",
+        "top",
+        "wall"
+      ],
+      "c31_contour_pixels": 211,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 2,
+      "name": "desk_flipped",
+      "filename": "PROP-02_03_desk_flipped.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_03_desk_flipped.png",
+      "asset_id": "prop_school_desk_flipped",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "floor",
+      "tile_position": [
+        11,
+        9
+      ],
+      "colors": 11,
+      "palette_roles": [
+        "cloth_lit",
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "leather",
+        "outline",
+        "rust",
+        "rust_lit",
+        "shadow",
+        "top"
+      ],
+      "c31_contour_pixels": 157,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 3,
+      "name": "window_night",
+      "filename": "PROP-02_04_window_night.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_04_window_night.png",
+      "asset_id": "prop_school_window_night",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        17,
+        4
+      ],
+      "colors": 7,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "lit",
+        "outline",
+        "shadow",
+        "top",
+        "wall"
+      ],
+      "c31_contour_pixels": 110,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 4,
+      "name": "light_dead",
+      "filename": "PROP-02_05_light_dead.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_05_light_dead.png",
+      "asset_id": "prop_school_light_dead",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "ceiling",
+      "tile_position": [
+        20,
+        3
+      ],
+      "colors": 7,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "outline",
+        "rust_lit",
+        "top"
+      ],
+      "c31_contour_pixels": 146,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 5,
+      "name": "wall_clock_stopped",
+      "filename": "PROP-02_06_wall_clock_stopped.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_06_wall_clock_stopped.png",
+      "asset_id": "prop_school_wall_clock_stopped",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        4,
+        3
+      ],
+      "colors": 6,
+      "palette_roles": [
+        "dark",
+        "floor",
+        "grey",
+        "grey_lit",
+        "outline",
+        "wall"
+      ],
+      "c31_contour_pixels": 116,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 6,
+      "name": "fire_extinguisher",
+      "filename": "PROP-02_07_fire_extinguisher.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_07_fire_extinguisher.png",
+      "asset_id": "prop_school_fire_extinguisher",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        22,
+        6
+      ],
+      "colors": 8,
+      "palette_roles": [
+        "cloth_lit",
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "outline",
+        "rust",
+        "rust_lit"
+      ],
+      "c31_contour_pixels": 178,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 7,
+      "name": "first_aid_cabinet",
+      "filename": "PROP-02_08_first_aid_cabinet.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_08_first_aid_cabinet.png",
+      "asset_id": "prop_school_first_aid_cabinet",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        25,
+        4
+      ],
+      "colors": 6,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "outline",
+        "wall"
+      ],
+      "c31_contour_pixels": 110,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 8,
+      "name": "trash_bin",
+      "filename": "PROP-02_09_trash_bin.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_09_trash_bin.png",
+      "asset_id": "prop_school_trash_bin",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "floor",
+      "tile_position": [
+        23,
+        9
+      ],
+      "colors": 8,
+      "palette_roles": [
+        "cloth_lit",
+        "dark",
+        "edge",
+        "grey",
+        "outline",
+        "shadow",
+        "top",
+        "wall"
+      ],
+      "c31_contour_pixels": 112,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 9,
+      "name": "mop_bucket",
+      "filename": "PROP-02_10_mop_bucket.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_10_mop_bucket.png",
+      "asset_id": "prop_school_mop_bucket",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "floor",
+      "tile_position": [
+        29,
+        9
+      ],
+      "colors": 7,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "grey_lit",
+        "outline",
+        "rust_lit",
+        "shadow",
+        "wall"
+      ],
+      "c31_contour_pixels": 118,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 10,
+      "name": "drinking_fountain",
+      "filename": "PROP-02_11_drinking_fountain.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_11_drinking_fountain.png",
+      "asset_id": "prop_school_drinking_fountain",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        32,
+        5
+      ],
+      "colors": 8,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "outline",
+        "shadow",
+        "top",
+        "wall"
+      ],
+      "c31_contour_pixels": 142,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 11,
+      "name": "chair_toppled",
+      "filename": "PROP-02_12_chair_toppled.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_12_chair_toppled.png",
+      "asset_id": "prop_school_chair_toppled",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "floor",
+      "tile_position": [
+        17,
+        9
+      ],
+      "colors": 5,
+      "palette_roles": [
+        "cloth_lit",
+        "dark",
+        "edge",
+        "outline",
+        "top"
+      ],
+      "c31_contour_pixels": 174,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 12,
+      "name": "intercom_broken",
+      "filename": "PROP-02_13_intercom_broken.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_13_intercom_broken.png",
+      "asset_id": "prop_school_intercom_broken",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        31,
+        3
+      ],
+      "colors": 9,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "grey",
+        "grey_lit",
+        "outline",
+        "rust_lit",
+        "shadow",
+        "top",
+        "wall"
+      ],
+      "c31_contour_pixels": 114,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 13,
+      "name": "classroom_plaque",
+      "filename": "PROP-02_14_classroom_plaque.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_14_classroom_plaque.png",
+      "asset_id": "prop_school_classroom_plaque",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        12,
+        4
+      ],
+      "colors": 7,
+      "palette_roles": [
+        "dark",
+        "edge",
+        "floor",
+        "grey",
+        "grey_lit",
+        "outline",
+        "shadow"
+      ],
+      "c31_contour_pixels": 94,
+      "day3_warm_pixels": 0
+    },
+    {
+      "index": 14,
+      "name": "notice_board_torn",
+      "filename": "PROP-02_15_notice_board_torn.png",
+      "output_path": "art/generated_candidates/props/stage1/PROP-02_15_notice_board_torn.png",
+      "asset_id": "prop_school_notice_board_torn",
+      "category": "prop_icon",
+      "source": "authoritative",
+      "status": "draft",
+      "size": [
+        32,
+        32
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "mount": "wall",
+      "tile_position": [
+        33,
+        3
+      ],
+      "colors": 10,
+      "palette_roles": [
+        "cloth_lit",
+        "dark",
+        "edge",
+        "floor",
+        "grey",
+        "grey_lit",
+        "leather",
+        "outline",
+        "rust",
+        "shadow"
+      ],
+      "c31_contour_pixels": 122,
+      "day3_warm_pixels": 0
+    }
+  ]
+}

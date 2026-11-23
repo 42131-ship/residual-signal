@@ -1,0 +1,67 @@
+{
+  "cards": [
+    {
+      "card_id": "military_base_supply_record_missing",
+      "layer": "S",
+      "template": "military_base",
+      "title": "军械库登记簿",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "sign",
+          "options": [
+            "登记簿不在柜中",
+            "柜门锁着",
+            "封条没有撕开"
+          ]
+        },
+        {
+          "slot": "action",
+          "options": [
+            "查找登记簿",
+            "检查柜门",
+            "离开"
+          ]
+        },
+        {
+          "slot": "outcome",
+          "options": [
+            "登记簿仍缺失",
+            "柜门无法打开",
+            "你停止核对"
+          ]
+        }
+      ],
+      "text": {
+        "default": "军械库出入登记簿缺失。柜门已锁，剩余弹药无法核对。"
+      },
+      "effects": [
+        {
+          "when": "检查柜门",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.05
+          },
+          "evidence": "evt_military_supply_record"
+        }
+      ],
+      "noise": null,
+      "leftover": "登记簿缺失，军械库柜门锁着。",
+      "returns_after_days": 0
+    }
+  ]
+}

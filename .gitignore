@@ -1,0 +1,31 @@
+# ── 密钥 / 本机模型配置（绝不入库）─────────────────────────────
+config/agents.json
+config/*.local.json
+.env
+
+# ── 日志 ────────────────────────────────────────────────────
+logs/
+
+# ── 缓存 ────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.pytest_cache/
+.godot/
+game/.godot/
+
+# ── 引擎本体（约 170MB，按 design/TEAM.md 的路径本地放置）──────
+.tools/
+
+# ── 本机视觉分析临时目录（可重建的探针脚本与裁切图）──────────
+.gdskills/
+.tmp_vision/
+_crops/
+
+# ── 系统文件 ────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 说明：art/generated_candidates/ 虽然名字里带 generated，
+# 但它是 Godot 运行时直接引用的资源（tiles / props / characters / fonts），
+# 必须入库，否则工程 clone 下来跑不起来。重建命令见 README。

@@ -1,0 +1,17 @@
+{
+  "day": 9,
+  "hour": 14,
+  "variables": {
+    "trust": 0.4,
+    "reputation": 0.2,
+    "supplies": 0.35,
+    "control": 0.0,
+    "knowledge": 0.5,
+    "time": 0.3
+  },
+  "sediment": {
+    "school_corridor_b": 6,
+    "school_f1_lab": 2
+  },
+  "_migration_note": "v1 快照。v2 起 sediment 改为 node_id -> {amount, last_noise_day}，迁移时把 int 展开成对象，语义等价断言：key 集合相同、amount 相等。"
+}

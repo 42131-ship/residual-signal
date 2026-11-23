@@ -1,0 +1,67 @@
+{
+  "cards": [
+    {
+      "card_id": "fire_station_fire_door_locked",
+      "layer": "S",
+      "template": "fire_station",
+      "title": "防火门",
+      "trigger": {
+        "day": {
+          "min": 3,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": "<=",
+            "value": 0.7
+          }
+        ],
+        "node_ids": [],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "sign",
+          "options": [
+            "门外插销完好",
+            "门缝没有光",
+            "里面传来轻响"
+          ]
+        },
+        {
+          "slot": "action",
+          "options": [
+            "推门",
+            "敲门",
+            "绕后"
+          ]
+        },
+        {
+          "slot": "outcome",
+          "options": [
+            "门没动",
+            "里面没有回应",
+            "你退开了"
+          ]
+        }
+      ],
+      "text": {
+        "default": "后院防火门从里面锁死。门外插销完好，门打不开。"
+      },
+      "effects": [
+        {
+          "when": "绕后",
+          "vars": {
+            "knowledge": 0.1,
+            "time": -0.05
+          },
+          "evidence": "evt_fs_door_detour"
+        }
+      ],
+      "noise": null,
+      "leftover": "门外插销完好，门仍锁在里面。",
+      "returns_after_days": 0
+    }
+  ]
+}

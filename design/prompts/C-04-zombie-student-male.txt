@@ -1,0 +1,19 @@
+STYLE CONSTANTS:
+Pixel art with visible pixel grid, hard edges, NO anti-aliasing, NO gradients, flat shading. Cold desaturated palette: blue-grey uniform, pallid grey-green skin, near-black shadows. Plain flat near-black background. Single full-body figure, front three-quarter view, standing, feet at bottom edge, centered. No text, no UI, no frame, no gore, no blood, no wounds.
+
+SUBJECT: the infected version of a **male** Chinese middle-school student, 15 years old. He is the SAME PERSON as a living student who wears a navy track jacket with light sleeve stripes, navy track trousers (NOT a skirt), worn sneakers, and carries an oversize backpack whose strap crosses his chest diagonally, with a rectangular school ID badge pinned on the chest.
+
+CRITICAL — this is a correction of a previous attempt that wrongly drew a girl in a skirt:
+- MALE. Short messy hair. Track trousers. Flat chest. NO skirt, NO knee socks, NO long hair.
+- Same navy track jacket with light stripes on the sleeves.
+- The oversize backpack and its diagonal chest strap MUST be present and on the same side.
+- The rectangular school ID badge MUST still be pinned on the chest.
+
+Only these change from the living version:
+- skin pallid grey-green
+- two solid black eye dots, no white
+- head tilted slightly, jaw slack
+- arms hanging low and loose
+- one knee bent, one foot dragging
+
+The accessories (backpack, strap, badge, jacket stripes) are how the player recognizes who this used to be. Do not remove or simplify them.

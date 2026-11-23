@@ -1,0 +1,86 @@
+{
+  "schema": "corridor-inspections.v1",
+  "interaction_range_x": 28,
+  "ui": {"inspect": "查看", "close": "关闭"},
+  "records": [
+    {
+      "id": "locker_bank",
+      "focus_offset_x": 8,
+      "title": "寄存柜",
+      "lines": ["左边的柜门锁着。", "右边夹着半张点名表。"]
+    },
+    {
+      "id": "door_broken",
+      "title": "教室门",
+      "lines": ["门被撞开了一条缝。", "地上有一道向外的刮痕。"]
+    },
+    {
+      "id": "desk_flipped",
+      "title": "翻倒课桌",
+      "lines": ["抽屉还扣着半截粉笔。", "桌牌朝下，名字看不清。"]
+    },
+    {
+      "id": "window_night",
+      "focus_offset_x": -8,
+      "title": "走廊窗",
+      "lines": ["玻璃裂在外侧。", "操场上没有亮着的灯。"]
+    },
+    {
+      "id": "light_dead",
+      "title": "坏掉的灯",
+      "lines": ["灯管垂下来一截。", "碎玻璃还卡在灯罩里。"]
+    },
+    {
+      "id": "wall_clock_stopped",
+      "focus_offset_x": -8,
+      "title": "停摆时钟",
+      "lines": ["指针停在八点十七分。", "秒针还偏着一点。"]
+    },
+    {
+      "id": "fire_extinguisher",
+      "title": "灭火器",
+      "lines": ["铅封完好，压力表见底。", "有人拿走了喷嘴。"]
+    },
+    {
+      "id": "first_aid_cabinet",
+      "title": "急救柜",
+      "lines": ["柜门没有锁。", "只剩几卷空包装。"]
+    },
+    {
+      "id": "trash_bin",
+      "title": "垃圾桶",
+      "lines": ["一张纸被揉成团塞在边上。", "上面写着一半的值日表。"]
+    },
+    {
+      "id": "mop_bucket",
+      "title": "拖把桶",
+      "lines": ["水已经干了。", "桶沿留着一道灰白印子。"]
+    },
+    {
+      "id": "drinking_fountain",
+      "title": "饮水机",
+      "lines": ["出水口干裂。", "接水槽里有一道新划痕。"]
+    },
+    {
+      "id": "chair_toppled",
+      "focus_offset_x": 8,
+      "title": "倒下的椅子",
+      "lines": ["椅背断了一根。", "椅脚朝着教室门口。"]
+    },
+    {
+      "id": "intercom_broken",
+      "title": "坏掉的对讲机",
+      "lines": ["按钮卡在呼叫位置。", "听筒里只剩电流底噪。"]
+    },
+    {
+      "id": "classroom_plaque",
+      "title": "教室牌",
+      "lines": ["牌子上是三年二班。", "边缘被人抠掉了一角。"]
+    },
+    {
+      "id": "notice_board_torn",
+      "title": "通知栏",
+      "lines": ["最后一张通知被撕走。", "图钉还留在软木板上。"]
+    }
+  ]
+}

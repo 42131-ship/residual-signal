@@ -1,0 +1,41 @@
+{
+  "template_id": "gas_station",
+  "label": "加油站 / 便利店",
+  "entry_days": [
+    5,
+    7
+  ],
+  "identity": {
+    "key_permission": [
+      "便利店后门钥匙",
+      "加油机紧急断电开关权限"
+    ],
+    "how_recognized": "便利店排班表登记的店员，或在站内停留的过路人。",
+    "initial_knowledge": [
+      "便利店后门通向站点北侧公路。",
+      "站点南侧排水沟可步行通到公路涵洞。",
+      "收银台抽屉内有一张标出最近检查站位置的纸质地图。"
+    ]
+  },
+  "weapon_budget": {
+    "手枪": {
+      "rounds": 2,
+      "sediment_per_shot": 3
+    },
+    "撬棍": {
+      "rounds": 6,
+      "sediment_per_shot": 1
+    }
+  },
+  "noise_budget": {
+    "cap": 20,
+    "night_multiplier": 1.5
+  },
+  "safehouse_failure": {
+    "card_id": "gas_station_back_door_open",
+    "trigger_once": true,
+    "condition": "当前节点 tag 包含 safehouse，且世界日历日大于等于 7。",
+    "manifestation": "便利店后门被人从外面打开，门锁没有损坏，货架上少了一箱瓶装水。"
+  },
+  "identity_note": "你几乎没有补给，但公路、涵洞和检查站线索都在附近。"
+}

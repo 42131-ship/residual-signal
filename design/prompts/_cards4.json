@@ -1,0 +1,333 @@
+{
+  "cards": [
+    {
+      "card_id": "l_stranger_trade",
+      "layer": "L",
+      "title": "换东西",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "supplies",
+            "op": ">=",
+            "value": 0.15
+          }
+        ],
+        "node_tags_any": [
+          "clue_possible"
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "陌生人",
+            "路边等着的人"
+          ]
+        },
+        {
+          "slot": "offer",
+          "options": [
+            "一条还能走的路",
+            "一处没被搜过的地方",
+            "一个收留过人的地址"
+          ]
+        },
+        {
+          "slot": "ask",
+          "options": [
+            "一小袋干粮",
+            "一卷绷带",
+            "一瓶水"
+          ]
+        },
+        {
+          "slot": "gesture",
+          "options": [
+            "伸出手",
+            "指了指你的包"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "交出物资，听他说",
+            "把物资留着"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}{gesture}。他要{ask}，说能告诉你{offer}。",
+        "heard": "有人拿消息换东西。价钱先说，消息后说。"
+      },
+      "effects": [
+        {
+          "when": "交出物资，听他说",
+          "vars": {
+            "supplies": -0.1,
+            "knowledge": 0.12
+          },
+          "evidence": "evt_l_stranger_trade_swap"
+        },
+        {
+          "when": "把物资留着",
+          "vars": {
+            "supplies": 0
+          },
+          "evidence": "evt_l_stranger_trade_keep"
+        }
+      ],
+      "noise": null,
+      "leftover": "他走前把价钱又说了一遍。",
+      "returns_after_days": 4
+    },
+    {
+      "card_id": "l_wounded_companion",
+      "layer": "L",
+      "title": "走不动了",
+      "trigger": {
+        "day": {
+          "min": 2,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "trust",
+            "op": ">",
+            "value": 0
+          }
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "走在后面的同伴",
+            "替你拿包的人"
+          ]
+        },
+        {
+          "slot": "injury",
+          "options": [
+            "膝盖一弯就跪下去",
+            "脚一沾地就站不住"
+          ]
+        },
+        {
+          "slot": "route",
+          "options": [
+            "前面是一段空路",
+            "前面没有遮挡"
+          ]
+        },
+        {
+          "slot": "request",
+          "options": [
+            "他让你先走",
+            "他叫了你一声"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "背着他走",
+            "把他留下"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{actor}{injury}。{route}。{request}。背上他，过这段路得多花些时间。",
+        "heard": "有人掉在后面。他手里还攥着自己的包。"
+      },
+      "effects": [
+        {
+          "when": "背着他走",
+          "vars": {
+            "time": -0.15,
+            "control": -0.1,
+            "trust": 0.12
+          },
+          "evidence": "evt_l_wounded_companion_carry"
+        },
+        {
+          "when": "把他留下",
+          "vars": {
+            "time": 0.1,
+            "trust": -0.15
+          },
+          "evidence": "evt_l_wounded_companion_leave"
+        }
+      ],
+      "noise": null,
+      "leftover": "下一次点人，你还是报了他的名字。",
+      "returns_after_days": 6
+    },
+    {
+      "card_id": "l_lock_them_out",
+      "layer": "L",
+      "title": "门外有人",
+      "trigger": {
+        "day": {
+          "min": 1,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "control",
+            "op": ">",
+            "value": 0
+          }
+        ],
+        "sediment_min": 0
+      },
+      "slots": [
+        {
+          "slot": "knock",
+          "options": [
+            "一下比一下轻",
+            "停了片刻，又响起来"
+          ]
+        },
+        {
+          "slot": "plea",
+          "options": [
+            "让我进去。",
+            "就我一个。",
+            "门后有人吗？"
+          ]
+        },
+        {
+          "slot": "trace",
+          "options": [
+            "门缝里有影子",
+            "门把往下沉了一点"
+          ]
+        },
+        {
+          "slot": "latch",
+          "options": [
+            "插销还没合上",
+            "你的手搭在插销上"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "开门",
+            "推上插销"
+          ]
+        }
+      ],
+      "text": {
+        "default": "拍门声{knock}。外面的人说：“{plea}”{trace}。{latch}。",
+        "heard": "隔着门听不清是谁。那人拍了一阵。"
+      },
+      "effects": [
+        {
+          "when": "开门",
+          "vars": {
+            "control": -0.12,
+            "reputation": 0.1
+          },
+          "evidence": "evt_l_lock_them_out_open"
+        },
+        {
+          "when": "推上插销",
+          "vars": {
+            "control": 0.12,
+            "reputation": -0.1
+          },
+          "evidence": "evt_l_lock_them_out_bolt"
+        }
+      ],
+      "noise": null,
+      "leftover": "门外留了半个湿手印。",
+      "returns_after_days": 5
+    },
+    {
+      "card_id": "l_memory_slip",
+      "layer": "L",
+      "title": "记岔了",
+      "trigger": {
+        "day": {
+          "min": 2,
+          "max": 30
+        },
+        "vars": [
+          {
+            "name": "trust",
+            "op": ">",
+            "value": 0
+          }
+        ],
+        "sediment_min": 1
+      },
+      "slots": [
+        {
+          "slot": "actor",
+          "options": [
+            "坐在你旁边的人",
+            "跟你一起值过夜的人"
+          ]
+        },
+        {
+          "slot": "occasion",
+          "options": [
+            "翻旧记录时",
+            "收起旧记录前"
+          ]
+        },
+        {
+          "slot": "slip",
+          "options": [
+            "往前记了一天",
+            "往后记了一天"
+          ]
+        },
+        {
+          "slot": "pause",
+          "options": [
+            "他停下来等你接话",
+            "他把那天又说了一遍"
+          ]
+        },
+        {
+          "slot": "choice",
+          "options": [
+            "说出原来的日期",
+            "照他说的日期接话"
+          ]
+        }
+      ],
+      "text": {
+        "default": "{occasion}，{actor}提起记录里那件你亲眼见过的事。日期{slip}。{pause}。",
+        "heard": "他提起那件旧事。话说到日期就停了。"
+      },
+      "effects": [
+        {
+          "when": "说出原来的日期",
+          "vars": {
+            "knowledge": 0.1,
+            "trust": -0.1
+          },
+          "evidence": "evt_l_memory_slip_correct"
+        },
+        {
+          "when": "照他说的日期接话",
+          "vars": {
+            "trust": 0.1
+          },
+          "evidence": "evt_l_memory_slip_agree"
+        }
+      ],
+      "noise": null,
+      "leftover": "旧记录的日期旁多了一道铅笔印。",
+      "returns_after_days": 0
+    }
+  ]
+}

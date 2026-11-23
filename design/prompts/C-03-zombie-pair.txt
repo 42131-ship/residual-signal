@@ -1,0 +1,9 @@
+STYLE CONSTANTS:
+Chinese middle school, weeks into collapse. Pixel art with a visible pixel grid, hard edges, NO anti-aliasing, NO gradients, flat shading only. Limited cold palette: desaturated blue-grey, pallid grey-green skin, near-black shadows. Background: plain flat near-black. No text, no UI, no frame, no watermark. No gore, no blood, no wounds.
+
+SUBJECT: TWO full-body figures standing side by side on one canvas, both facing the viewer, feet at the bottom edge, equal scale.
+LEFT: the infected version of a 15-year-old student. Same silhouette as the living student: same shoulder line, SAME oversize backpack with the strap hanging at the same angle across the chest, SAME rectangular school ID badge still pinned at the chest. Only changed: skin pallid grey-green, two solid black eye dots with no white, head tilted slightly, arms hanging low and loose, one knee bent as if dragging.
+RIGHT: the infected version of a late-30s teacher. Same silhouette as the living teacher: one head taller, stooped shoulders, SAME staff lanyard hanging low, SAME thin glasses as a single light horizontal line, SAME stack of papers still held against the chest by one arm. Only changed: skin pallid grey-green, solid black eye dots, jaw slack.
+
+CRITICAL: the backpack, the ID badge, the lanyard, the glasses and the papers MUST remain clearly present and in the same positions as on the living versions. They are how the player recognizes who this used to be. Do not remove, replace, or simplify any accessory.
+The two figures must be distinguishable from each other at a glance by height and by accessory, not by damage.
