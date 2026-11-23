@@ -244,12 +244,23 @@ func _verify_character() -> bool:
 	var sprite := _actor.get_node_or_null("BodySprite") as Sprite2D
 	if sprite == null or sprite.texture == null:
 		return _fail("player sprite is missing")
-	# 2026-11-23：主角放大为 32×48 原生帧（可见 41px）。清单同步见 tools/player_build.py。
-	if sprite.texture.resource_path != "res://art/generated_candidates/characters/SPR-player_32x48.png":
+	# 2026-11-23：主角放大为 32×48；深夜接入动作表后 BodySprite 用 AtlasTexture 播帧。
+	# 仍然要求「第 0 帧 == 原来的静态帧」，否则等于偷偷换了角色轮廓。
+	var sheet := "res://art/generated_candidates/characters/SPR-player_32x48.png"
+	if sprite.texture is AtlasTexture:
+		var atlas := sprite.texture as AtlasTexture
+		if atlas.atlas == null:
+			return _fail("player atlas has no base texture")
+		if not str(atlas.atlas.resource_path).ends_with("characters/anim/player.png"):
+			return _fail("player atlas is not the animation sheet: %s" % atlas.atlas.resource_path)
+		if atlas.region.size != Vector2(32, 48):
+			return _fail("player atlas frame must be 32x48, got %s" % str(atlas.region.size))
+	elif str(sprite.texture.resource_path) != sheet:
 		return _fail("player is not using the Stage 2 player asset")
 	if sprite.texture.get_size() != Vector2(32, 48) or sprite.centered or sprite.scale != Vector2.ONE:
 		return _fail("player sprite canvas, centered mode or scale is off-spec")
-	var image := sprite.texture.get_image()
+	# 轮廓以「第 0 帧」为准（动作表第 0 列必须与原静态帧逐像素一致）。
+	var image := CharAnim.frame_texture("player", 0).get_image()
 	if image == null or image.get_size() != Vector2i(32, 48):
 		return _fail("could not inspect player sprite alpha bounds")
 	var silhouette := image.get_used_rect()

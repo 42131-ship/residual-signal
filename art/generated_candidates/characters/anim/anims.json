@@ -1,0 +1,2117 @@
+{
+  "schema": "char-anim.v1",
+  "frame_count": 10,
+  "anims": [
+    {
+      "id": "idle",
+      "label": "待机",
+      "start": 0,
+      "count": 2,
+      "fps": 4,
+      "loop": true
+    },
+    {
+      "id": "walk",
+      "label": "行走",
+      "start": 2,
+      "count": 4,
+      "fps": 10,
+      "loop": true
+    },
+    {
+      "id": "hurt",
+      "label": "受击",
+      "start": 6,
+      "count": 1,
+      "fps": 12,
+      "loop": false
+    },
+    {
+      "id": "death",
+      "label": "倒地",
+      "start": 7,
+      "count": 3,
+      "fps": 8,
+      "loop": false
+    }
+  ],
+  "characters": [
+    {
+      "id": "npc_he",
+      "source": "art/generated_candidates/characters/SPR-npc_he_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_he.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            7,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            15,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            7,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            15,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            7,
+            14,
+            11,
+            22
+          ],
+          "pivot": [
+            9,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            7,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            15,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_he_infected",
+      "source": "art/generated_candidates/characters/SPR-npc_he_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_he_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            7,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            15,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            7,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            15,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            7,
+            14,
+            11,
+            22
+          ],
+          "pivot": [
+            9,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            7,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            15,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_he_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-npc_he_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_he_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            7,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            15,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            7,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            15,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            7,
+            14,
+            11,
+            22
+          ],
+          "pivot": [
+            9,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            7,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            15,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_he_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-npc_he_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_he_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            7,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            15,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            7,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            15,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            7,
+            14,
+            11,
+            22
+          ],
+          "pivot": [
+            9,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            7,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            15,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_mo",
+      "source": "art/generated_candidates/characters/SPR-npc_mo_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_mo.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_mo_infected",
+      "source": "art/generated_candidates/characters/SPR-npc_mo_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_mo_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_mo_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-npc_mo_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_mo_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_mo_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-npc_mo_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_mo_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_tan",
+      "source": "art/generated_candidates/characters/SPR-npc_tan_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_tan.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_tan_infected",
+      "source": "art/generated_candidates/characters/SPR-npc_tan_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_tan_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_tan_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-npc_tan_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_tan_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_tan_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-npc_tan_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_tan_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_wei",
+      "source": "art/generated_candidates/characters/SPR-npc_wei_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_wei.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            0,
+            23,
+            9
+          ],
+          "pivot": [
+            16,
+            9
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            9,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            9,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_wei_infected",
+      "source": "art/generated_candidates/characters/SPR-npc_wei_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_wei_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            0,
+            23,
+            9
+          ],
+          "pivot": [
+            16,
+            9
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            9,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            9,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_wei_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-npc_wei_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_wei_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            0,
+            23,
+            9
+          ],
+          "pivot": [
+            16,
+            9
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            9,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            9,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_wei_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-npc_wei_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_wei_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            0,
+            23,
+            9
+          ],
+          "pivot": [
+            16,
+            9
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            9,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            9,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_xu",
+      "source": "art/generated_candidates/characters/SPR-npc_xu_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_xu.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_xu_infected",
+      "source": "art/generated_candidates/characters/SPR-npc_xu_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_xu_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_xu_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-npc_xu_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_xu_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npc_xu_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-npc_xu_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/npc_xu_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "player",
+      "source": "art/generated_candidates/characters/SPR-player_32x48.png",
+      "sheet": "art/generated_candidates/characters/anim/player.png",
+      "frame_size": [
+        32,
+        48
+      ],
+      "anchor": [
+        16,
+        48
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            5,
+            6,
+            24,
+            18
+          ],
+          "pivot": [
+            14,
+            18
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            5,
+            18,
+            24,
+            32
+          ],
+          "pivot": [
+            14,
+            32
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            5,
+            18,
+            9,
+            32
+          ],
+          "pivot": [
+            7,
+            32
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            5,
+            32,
+            24,
+            47
+          ],
+          "pivot": [
+            14,
+            47
+          ]
+        }
+      ]
+    },
+    {
+      "id": "student",
+      "source": "art/generated_candidates/characters/SPR-student_32.png",
+      "sheet": "art/generated_candidates/characters/anim/student.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            8,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            8,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            8,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            8,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "student_infected",
+      "source": "art/generated_candidates/characters/SPR-student_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/student_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            8,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            8,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            8,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            8,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "student_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-student_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/student_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            8,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            8,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            8,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            8,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "student_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-student_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/student_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            8,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            8,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            8,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            8,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "student_infected_p3",
+      "source": "art/generated_candidates/characters/SPR-student_infected_p3_32.png",
+      "sheet": "art/generated_candidates/characters/anim/student_infected_p3.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            8,
+            7,
+            24,
+            14
+          ],
+          "pivot": [
+            16,
+            14
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            8,
+            14,
+            24,
+            22
+          ],
+          "pivot": [
+            16,
+            22
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            8,
+            14,
+            12,
+            22
+          ],
+          "pivot": [
+            10,
+            22
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            8,
+            22,
+            24,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teacher",
+      "source": "art/generated_candidates/characters/SPR-teacher_32.png",
+      "sheet": "art/generated_candidates/characters/anim/teacher.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teacher_infected",
+      "source": "art/generated_candidates/characters/SPR-teacher_infected_32.png",
+      "sheet": "art/generated_candidates/characters/anim/teacher_infected.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teacher_infected_p1",
+      "source": "art/generated_candidates/characters/SPR-teacher_infected_p1_32.png",
+      "sheet": "art/generated_candidates/characters/anim/teacher_infected_p1.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teacher_infected_p2",
+      "source": "art/generated_candidates/characters/SPR-teacher_infected_p2_32.png",
+      "sheet": "art/generated_candidates/characters/anim/teacher_infected_p2.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "id": "teacher_infected_p3",
+      "source": "art/generated_candidates/characters/SPR-teacher_infected_p3_32.png",
+      "sheet": "art/generated_candidates/characters/anim/teacher_infected_p3.png",
+      "frame_size": [
+        32,
+        32
+      ],
+      "anchor": [
+        16,
+        32
+      ],
+      "parts": [
+        {
+          "id": "head",
+          "rect": [
+            9,
+            1,
+            23,
+            10
+          ],
+          "pivot": [
+            16,
+            10
+          ]
+        },
+        {
+          "id": "torso",
+          "rect": [
+            9,
+            10,
+            23,
+            20
+          ],
+          "pivot": [
+            16,
+            20
+          ]
+        },
+        {
+          "id": "arm",
+          "rect": [
+            9,
+            10,
+            12,
+            20
+          ],
+          "pivot": [
+            10,
+            20
+          ]
+        },
+        {
+          "id": "legs",
+          "rect": [
+            9,
+            20,
+            23,
+            31
+          ],
+          "pivot": [
+            16,
+            31
+          ]
+        }
+      ]
+    }
+  ]
+}

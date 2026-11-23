@@ -379,6 +379,57 @@ DISPLAY_OK actual=3x
 4. 玩家体力归零的后果（现在只是数值到 0）。
 5. 原定 Stage 3（地面接缝/磨损/散落物）仍排队——是否插队由你定。
 
+---
+
+## 十七、Stage 2.13 · 全人物动作 + 部件拆解（2026-11-23 深夜）
+
+> 反馈原文：「现在接入 see-through，这是个帧动画图像拆解工具，也是做 2D 骨骼动画的开源项目，开始给我们游戏所有人物添加相应动作」。
+
+**关于 `see-through`**：按这个名字没搜到对应项目（搜到的是 Stretchy Studio / FrameBaker /
+PuppetLoom / Pixelbolt 一类）。所以这轮先交付**动作本身 + 部件拆解数据**，任何 2D 骨骼工具都能直接吃；
+拿到仓库链接后再补它的格式导出/导入。
+
+### 做法
+
+`tools/char_anim_build.py` 对 `art/generated_candidates/characters/SPR-*.png` 的**每个角色**出 10 帧：
+
+| 动作 | 帧数 | fps | 循环 | 生成方式 |
+|---|---|---|---|---|
+| idle 待机 | 2 | 4 | 是 | 上半身 1px 呼吸起伏，脚不动 |
+| walk 行走 | 4 | 10 | 是 | 下半身左右两半反相错步 + 轻微上下 |
+| hurt 受击 | 1 | 12 | 否 | 整帧后仰 1px |
+| death 倒地 | 3 | 8 | 否 | 逐帧下沉（1/3/6px）贴地 |
+
+只做整数像素平移、不换色，所以调色板与二值 alpha 天然保持；每个角色一张横排精灵表
+（32×32×10 或 32×48×10），外加 `anims.json`：
+
+- 帧表（起列/帧数/fps/循环）
+- **部件拆解**（head / torso / arm / legs 的矩形 + 底边中点枢轴）← 骨骼工具直接可切件
+
+### 接入
+
+- `game/runtime/char_anim.gd`：读清单，按 (角色, 列) 缓存 `AtlasTexture`，按 fps 取帧
+- 主角：`BodySprite` 改用动作表第 0 帧起播；受击 0.22 秒锁 hurt 帧；走动 walk、静止 idle；按朝向翻转
+- 感染体：追人播 walk、站着播 idle；被打死停在**倒地帧**（此前是直接隐藏）
+
+### 验收
+
+```text
+ANIMATION_OK characters=31 anims=4 frames=10      # 310 帧逐帧检查尺寸/二值 alpha/≤16 色/非空
+ANIM_FRAMES checked=310
+```
+
+另加了三条硬断言：清单必须覆盖全部角色 PNG；**第 0 帧必须与原静态帧逐像素一致**（防止顺手改美术）；
+运行时主角与感染体都必须真的切到 ≥2 个不同帧；死亡必须停在 death 段。
+
+证据：`design/previews/ANIM-<角色>_x4.png`（精灵表审阅）、`design/previews/ANIMATION_walk.png`（实机走动）。
+
+### 下一步
+
+1. 拿到 `see-through` 仓库链接后，加它的骨骼/JSON 导入导出适配（现有 parts 数据可直接映射）。
+2. 攻击动作（挥击/开枪）需要单独出帧，目前左键只有挥击条，没有角色动作。
+3. NPC 目前没有 AI，帧已备好，接入要等 NPC 行为。
+
 
 
 

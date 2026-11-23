@@ -117,6 +117,10 @@ const STATUS_FX_COLORS := {
 }
 ## 搜索时敌人靠到多近算被打断。
 const SEARCH_THREAT_RANGE := 40.0
+## 主角动作状态（walk/idle/hurt）与计时；受击后 0.22 秒锁在 hurt 帧。
+var _player_anim_time := 0.0
+var _player_anim_id := "idle"
+var _player_hurt_t := 0.0
 var _panel_lines: Array = []
 ## 走廊 demo 的世界日（HUD 写死 DAY 3，等接入 WorldState 后替换）。
 var _world_day := 3
@@ -516,7 +520,9 @@ func _build_actor() -> void:
 	_player.name = "Player"
 	_player.position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
 	_player.walk_bounds = Rect2(WALK_LEFT, WALK_TOP, WALK_RIGHT - WALK_LEFT, WALK_BOTTOM - WALK_TOP)
-	var texture := load(CHAR_PATH) as Texture2D
+	var texture: Texture2D = CharAnim.frame_texture("player", 0)
+	if texture == null:
+		texture = load(CHAR_PATH) as Texture2D
 	if texture == null:
 		push_error("Could not load player character texture: %s" % CHAR_PATH)
 	else:
@@ -1345,6 +1351,7 @@ func _spawn_enemies() -> void:
 func _on_enemy_attacked(damage: int) -> void:
 	_health = clampf(_health - 0.15 * float(damage), 0.0, 1.0)
 	var stage := _status.apply("wound")
+	_player_hurt_t = 0.22
 	_toast_combat("你被感染体抓伤了（伤口 %d）" % stage)
 	_refresh_hud_stats()
 
@@ -1352,10 +1359,28 @@ func _on_enemy_attacked(damage: int) -> void:
 func _on_enemy_died(enemy: Enemy) -> void:
 	_enemies_killed += 1
 	_toast_combat("感染体倒下了")
-	# 不立刻 queue_free：保留节点（已隐藏、已停物理），门禁和调试仍能读到 dead 状态。
-	if enemy != null:
-		enemy.visible = false
+	# 不立刻 queue_free：保留节点（已停物理、停在倒地帧），门禁与调试仍能读到 dead。
 	_refresh_hud_stats()
+
+
+## 主角动作：受击优先 → 走动播 walk → 静止播 idle。帧由精灵表按 fps 推进。
+func _update_player_anim(delta: float) -> void:
+	if _player == null or not CharAnim.has("player"):
+		return
+	var sprite := _player.get_node_or_null("BodySprite") as Sprite2D
+	if sprite == null:
+		return
+	_player_anim_time += delta
+	_player_hurt_t = maxf(0.0, _player_hurt_t - delta)
+	var anim_id := "idle"
+	if _player_hurt_t > 0.0:
+		anim_id = "hurt"
+	elif _player_hurt_t <= 0.0 and sprite != null and absf(_player.velocity.x) + absf(_player.velocity.y) > 1.0:
+		anim_id = "walk"
+	_player_anim_id = anim_id
+	var frame := CharAnim.frame_at("player", anim_id, _player_anim_time)
+	sprite.texture = CharAnim.frame_texture("player", frame)
+	sprite.flip_h = _player.facing_x < 0.0
 
 
 func _update_attack_visual() -> void:
@@ -1414,6 +1439,7 @@ func _process(delta: float) -> void:
 	_update_depth_order()
 	_update_doors()
 	_update_search(delta)
+	_update_player_anim(delta)
 	if _combat_message_frames > 0:
 		_combat_message_frames -= 1
 		if _combat_message_frames == 0:
