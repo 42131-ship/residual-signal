@@ -20,7 +20,8 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 .tools/Godot_v4.7-stable_win64.exe --path .
 ```
 
-主场景是 `game/scenes/corridor.tscn`。走廊里 `A/D` 或方向键移动，`Shift` 慢走，靠近道具按 `E` 查看，`Esc` / `E` 关闭。
+主场景是 `game/scenes/corridor.tscn`。走廊里 `A/D` 左右走、`W/S` 纵深走进下方房间（384×216 里 y=128..216 是可走地面），
+`Shift` 慢走，靠近道具按 `E` 查看，`Esc` / `E` 关闭。
 
 ---
 
@@ -82,7 +83,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 |---|---|---|
 | — | 数据层 / 43 条规则 / 资产管线 | 已通过 |
 | Stage 1 | 15 件学校环境物件、走廊几何、相机与手电 | 已签核 |
-| Stage 2 | 道具细节、24px 角色可读、检查文本框、移动速度 | 已实现并通过门禁（待视觉签核） |
+| Stage 2 | 道具细节、24px 角色可读、检查文本框、移动速度 | 已实现并通过门禁（角色已放大到 32×48 / W/S 纵深） |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |

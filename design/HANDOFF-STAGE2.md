@@ -123,3 +123,29 @@ python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd
 3. `R21` 仍未在真实数据上开火：`art/asset-manifest.json` 32 条全是 `draft`，`approved/` 仍为空。
 4. 角色精灵仍是 blockout；Stage 3（地面接缝/磨损/散落物）与 Stage 4/5 未动。
 
+---
+
+## 八、Stage 2.5 · 主角放大 + 纵深轴（2026-11-23 傍晚，已提交）
+
+> 反馈原文：「人物模型有点太小了……如果要这样做，最好 WASD 都能移动，形成房间区块，
+> 这样才不显得下面玩家下面些只是展示。」
+
+### 改了什么
+
+| # | 项 | 做法 | 验收 |
+|---|---|---|---|
+| 1 | 主角放大 | 新增 `tools/player_build.py`：32×48 原生帧（可见 41px，原 24px），不做任何非整数缩放；`pixelpipe gate` 三帧均 11 色 PASS | 门禁输出 + `design/previews/PLAYER-02_x6.png` |
+| 2 | 纵深轴 WASD | `player.gd` 增加 `move_up/down`；脚底限制在 `Rect2(14, 128, 588, 88)`；A/D 水平、W/S 纵深（纵深速度 ×0.8） | `CORRIDOR_OK ... slow_walk=29.5` + 新增深度移动断言 |
+| 3 | 下方区域可走 | 取消 y=128 的薄地板碰撞，改为矩形夹取；相机 y 最多下移 8px | `CORRIDOR-QA_depth.png` |
+| 4 | 纵深遮挡 | 道具与玩家 `z_index = 脚底 y`；贴图按 `facing_x` 翻转 | 门禁断言 z_index 跟随 y |
+| 5 | 检查交互适配纵深 | 交互锚点：墙面道具落到房间内缘 y=136，地面道具用自身 y；水平 28px 主判据 + 24px 纵深容差 | `CORRIDOR_INSPECT_OK records=15 ties=8 boundary=28px` |
+| 6 | 测试同步 | preview 去掉 camera y=0 假设；inspect 的 `_place` 带 y；新增深度移动/边界/遮挡断言 | 两个图形门禁全绿 |
+
+### 还没做（下一轮）
+
+1. **房间区块分隔还没有实体墙与门洞**：下方现在是一整条可走地面带，视觉上还没有「一间间房」。
+   下一步：把 3 个区块做出分隔墙 + 门洞 + 地面分区，并让 W/S 只在本区块内活动。
+2. 走路帧（`SPR-player_walk1/2_32x48.png`）已生成但**还没接动画**，玩家目前是静态帧；NPC 仍是 32×32。
+3. 手电光点已按 41px 身高调到 `-24`，但走路时没有摆动。
+
+
