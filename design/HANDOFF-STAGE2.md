@@ -430,6 +430,52 @@ ANIM_FRAMES checked=310
 2. 攻击动作（挥击/开枪）需要单独出帧，目前左键只有挥击条，没有角色动作。
 3. NPC 目前没有 AI，帧已备好，接入要等 NPC 行为。
 
+---
+
+## 十八、Stage 2.14 · 接入 see-through 的层结构（2026-11-23 深夜）
+
+> 上游：**shitagaki-lab/see-through** —《Single-image Layer Decomposition for Anime Characters》
+> （ACM SIGGRAPH 2026 Conference Papers，Apache-2.0，PyTorch）。
+
+### 它是什么 / 我们能接什么
+
+它是**研究管线**：LayerDiff3D 生成透明层 + Marigold 估深度 + SAM 分割 + LaMa 补洞，
+把一张动漫立绘拆成**最多 23 个语义层**，导出**分层 PSD**；下游 Stretchy Studio / Anime2.5DRig 按层名认。
+官方运行门槛是 Python 3.12 + torch 2.8 + 8–16GB 显存 —— 本机 GTX 1060 **跑不动它的模型**。
+
+所以接的是**契约层**（这也是生态真正消费的部分），不是复现模型：
+
+| 接入点 | 做法 |
+|---|---|
+| 层名表 | `tools/see_through_sync.py` 从上游 `common/assets/bodytags_v3.json` 同步 **23 个层名**到 `data/see_through/bodytags_v3.json`，不凭记忆写 |
+| 分层导出 | `tools/see_through_export.py`：每个角色按这套层名拆层，出分层 PNG + 层表 JSON + **ORA**（OpenRaster，Krita/GIMP 可开） |
+| 无损门禁 | 导出时把层按顺序合回去，必须与原图**逐像素一致**，否则构建失败 |
+
+23 个层名（顺序即绘制顺序，自下而上）：
+`front hair, back hair, headwear, face, irides, eyebrow, eyewhite, eyelash, eyewear, ears, earwear, nose, mouth, neck, neckwear, topwear, handwear, bottomwear, legwear, footwear, tail, wings, objects`
+
+**诚实标注**：我们的角色是 32×32 blockout，用的是**几何分带**（行带 → 层名，`decomposition: "band"`），
+不是 ML 语义分割。分带是行的严格划分，所以「合回无损」是像素级成立的——门禁查的就是这条。
+将来用真模型跑出 PSD，层名结构一致，同一个导出/消费链路可以直接替换。
+
+### 结果
+
+```text
+python tools/see_through_sync.py     # layers=23 -> data/see_through/bodytags_v3.json
+python tools/see_through_export.py   # characters=31 layers_written=217
+                                     # verify=lossless (every sprite reassembles pixel-perfect)
+```
+
+产物：`art/generated_candidates/characters/layers/<角色>/<NN>_<层名>.png`、`<角色>.json`、`<角色>.ora`。
+两份工具已进 `pipeline.json`（`char-anim`、`see-through-layers`，都是 hard gate）。
+
+### 仍未做
+
+1. **反向导入**：读 see-through 导出的 PSD → 回填我们的层表与精灵表。需要 `psd-tools`/`pytoshop`（本机未装），
+   装好后可加 `tools/see_through_import.py`。
+2. **PSD 直出**：目前导 ORA；直接写 PSD 需要上面的 PSD 库。
+3. **真模型跑图**：需要 8GB+ 显存的机器；跑完把 PSD 丢进同一条链路即可。
+
 
 
 

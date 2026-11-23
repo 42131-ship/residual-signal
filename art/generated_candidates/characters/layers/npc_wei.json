@@ -1,0 +1,122 @@
+{
+  "schema": "see-through-layers.v1",
+  "character": "npc_wei",
+  "source": "art/generated_candidates/characters/SPR-npc_wei_32.png",
+  "size": [
+    32,
+    32
+  ],
+  "anchor": [
+    16,
+    32
+  ],
+  "decomposition": "band",
+  "taxonomy": "shitagaki-lab/see-through bodytags_v3",
+  "layers": [
+    {
+      "order": 0,
+      "layer": "front hair",
+      "file": "npc_wei/00_front_hair.png",
+      "rect": [
+        12,
+        0,
+        7,
+        6
+      ],
+      "pivot": [
+        15,
+        6
+      ]
+    },
+    {
+      "order": 1,
+      "layer": "face",
+      "file": "npc_wei/01_face.png",
+      "rect": [
+        13,
+        6,
+        6,
+        3
+      ],
+      "pivot": [
+        16,
+        9
+      ]
+    },
+    {
+      "order": 2,
+      "layer": "neck",
+      "file": "npc_wei/02_neck.png",
+      "rect": [
+        9,
+        9,
+        14,
+        2
+      ],
+      "pivot": [
+        16,
+        11
+      ]
+    },
+    {
+      "order": 3,
+      "layer": "topwear",
+      "file": "npc_wei/03_topwear.png",
+      "rect": [
+        9,
+        11,
+        14,
+        5
+      ],
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "order": 4,
+      "layer": "bottomwear",
+      "file": "npc_wei/04_bottomwear.png",
+      "rect": [
+        9,
+        16,
+        14,
+        5
+      ],
+      "pivot": [
+        16,
+        21
+      ]
+    },
+    {
+      "order": 5,
+      "layer": "legwear",
+      "file": "npc_wei/05_legwear.png",
+      "rect": [
+        9,
+        21,
+        14,
+        6
+      ],
+      "pivot": [
+        16,
+        27
+      ]
+    },
+    {
+      "order": 6,
+      "layer": "footwear",
+      "file": "npc_wei/06_footwear.png",
+      "rect": [
+        11,
+        27,
+        10,
+        4
+      ],
+      "pivot": [
+        16,
+        31
+      ]
+    }
+  ]
+}

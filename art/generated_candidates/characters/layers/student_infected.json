@@ -1,0 +1,122 @@
+{
+  "schema": "see-through-layers.v1",
+  "character": "student_infected",
+  "source": "art/generated_candidates/characters/SPR-student_infected_32.png",
+  "size": [
+    32,
+    32
+  ],
+  "anchor": [
+    16,
+    32
+  ],
+  "decomposition": "band",
+  "taxonomy": "shitagaki-lab/see-through bodytags_v3",
+  "layers": [
+    {
+      "order": 0,
+      "layer": "front hair",
+      "file": "student_infected/00_front_hair.png",
+      "rect": [
+        12,
+        7,
+        9,
+        4
+      ],
+      "pivot": [
+        16,
+        11
+      ]
+    },
+    {
+      "order": 1,
+      "layer": "face",
+      "file": "student_infected/01_face.png",
+      "rect": [
+        12,
+        11,
+        8,
+        3
+      ],
+      "pivot": [
+        16,
+        14
+      ]
+    },
+    {
+      "order": 2,
+      "layer": "neck",
+      "file": "student_infected/02_neck.png",
+      "rect": [
+        12,
+        14,
+        8,
+        1
+      ],
+      "pivot": [
+        16,
+        15
+      ]
+    },
+    {
+      "order": 3,
+      "layer": "topwear",
+      "file": "student_infected/03_topwear.png",
+      "rect": [
+        8,
+        15,
+        16,
+        4
+      ],
+      "pivot": [
+        16,
+        19
+      ]
+    },
+    {
+      "order": 4,
+      "layer": "bottomwear",
+      "file": "student_infected/04_bottomwear.png",
+      "rect": [
+        8,
+        19,
+        16,
+        4
+      ],
+      "pivot": [
+        16,
+        23
+      ]
+    },
+    {
+      "order": 5,
+      "layer": "legwear",
+      "file": "student_infected/05_legwear.png",
+      "rect": [
+        8,
+        23,
+        13,
+        5
+      ],
+      "pivot": [
+        14,
+        28
+      ]
+    },
+    {
+      "order": 6,
+      "layer": "footwear",
+      "file": "student_infected/06_footwear.png",
+      "rect": [
+        10,
+        28,
+        13,
+        3
+      ],
+      "pivot": [
+        16,
+        31
+      ]
+    }
+  ]
+}

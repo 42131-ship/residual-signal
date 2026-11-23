@@ -1,0 +1,122 @@
+{
+  "schema": "see-through-layers.v1",
+  "character": "teacher_infected_p3",
+  "source": "art/generated_candidates/characters/SPR-teacher_infected_p3_32.png",
+  "size": [
+    32,
+    32
+  ],
+  "anchor": [
+    16,
+    32
+  ],
+  "decomposition": "band",
+  "taxonomy": "shitagaki-lab/see-through bodytags_v3",
+  "layers": [
+    {
+      "order": 0,
+      "layer": "front hair",
+      "file": "teacher_infected_p3/00_front_hair.png",
+      "rect": [
+        16,
+        1,
+        7,
+        5
+      ],
+      "pivot": [
+        19,
+        6
+      ]
+    },
+    {
+      "order": 1,
+      "layer": "face",
+      "file": "teacher_infected_p3/01_face.png",
+      "rect": [
+        11,
+        6,
+        12,
+        4
+      ],
+      "pivot": [
+        17,
+        10
+      ]
+    },
+    {
+      "order": 2,
+      "layer": "neck",
+      "file": "teacher_infected_p3/02_neck.png",
+      "rect": [
+        9,
+        10,
+        14,
+        1
+      ],
+      "pivot": [
+        16,
+        11
+      ]
+    },
+    {
+      "order": 3,
+      "layer": "topwear",
+      "file": "teacher_infected_p3/03_topwear.png",
+      "rect": [
+        9,
+        11,
+        14,
+        5
+      ],
+      "pivot": [
+        16,
+        16
+      ]
+    },
+    {
+      "order": 4,
+      "layer": "bottomwear",
+      "file": "teacher_infected_p3/04_bottomwear.png",
+      "rect": [
+        9,
+        16,
+        14,
+        5
+      ],
+      "pivot": [
+        16,
+        21
+      ]
+    },
+    {
+      "order": 5,
+      "layer": "legwear",
+      "file": "teacher_infected_p3/05_legwear.png",
+      "rect": [
+        9,
+        21,
+        14,
+        6
+      ],
+      "pivot": [
+        16,
+        27
+      ]
+    },
+    {
+      "order": 6,
+      "layer": "footwear",
+      "file": "teacher_infected_p3/06_footwear.png",
+      "rect": [
+        11,
+        27,
+        10,
+        4
+      ],
+      "pivot": [
+        16,
+        31
+      ]
+    }
+  ]
+}

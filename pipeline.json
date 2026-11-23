@@ -12,7 +12,9 @@
     {"name": "gd-compile-check", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --check-only --script res://game/runtime/main.gd", "gate": "hard", "status": "ready", "note": "五个类逐个跑；2026-11-23 5/5 通过"},
     {"name": "smoke-30d", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/smoke.gd", "gate": "hard", "status": "ready", "note": "真引擎跑 30 天；SMOKE_OK 为通过"},
     {"name": "headless-replay-30d", "cmd": "python tools/headless_30d.py --seeds 3", "gate": "warn", "status": "ready", "note": "Python 镜像，验数据语义，不是 GDScript"},
-    {"name": "nodes-map", "cmd": "python tools/nodes_map.py", "gate": "warn", "status": "ready", "note": "DEC-D1 附加条件：只读拓扑预览"}
+    {"name": "nodes-map", "cmd": "python tools/nodes_map.py", "gate": "warn", "status": "ready", "note": "DEC-D1 附加条件：只读拓扑预览"},
+    {"name": "char-anim", "cmd": "python tools/char_anim_build.py", "gate": "hard", "status": "ready", "note": "全人物 idle/walk/hurt/death 精灵表 + 部件拆解；逐帧过 ≤16 色 / 二值 alpha"},
+    {"name": "see-through-layers", "cmd": "python tools/see_through_export.py", "gate": "hard", "status": "ready", "note": "按 see-through bodytags_v3 的 23 个语义层名拆层；内置「所有层合回 == 原图」无损校验"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",
