@@ -89,6 +89,20 @@ func is_unlocked(template: String, ending_id: String) -> bool:
 	return bool((_unlocked.get(template, {}) as Dictionary).has(ending_id))
 
 
+## 把存档里的解锁记录并进来（RunState.unlocked 的结构：{template: {ending_id: true}}）。
+## 只认已知 id，脏数据直接丢掉，避免界面显示一个不存在的结局。
+func adopt(unlocked: Dictionary) -> int:
+	var applied := 0
+	for template: String in unlocked:
+		var rows: Variant = unlocked[template]
+		if not rows is Dictionary:
+			continue
+		for ending_id: String in (rows as Dictionary):
+			if unlock(template, ending_id):
+				applied += 1
+	return applied
+
+
 func unlocked_count(template: String) -> int:
 	return (_unlocked.get(template, {}) as Dictionary).size()
 

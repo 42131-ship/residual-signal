@@ -18,7 +18,8 @@
     {"name": "travel", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/travel.gd", "gate": "hard", "status": "ready", "note": "五楼路线、一天一次外出、燃料门槛、夜间风险翻倍"},
     {"name": "endings", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/endings.gd", "gate": "hard", "status": "ready", "note": "每模板 4 槽、未解锁不剧透、四结局判定与优先级"},
     {"name": "day-cycle", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/day_cycle.gd", "gate": "hard", "status": "ready", "note": "离场 +1 沉积 / 未离场 +2、体力恢复、30 天收束"},
-    {"name": "corridor-exit", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_exit.gd -- CORRIDOR-EXIT", "gate": "hard", "status": "ready", "note": "走到尽头按 E 离场，结算面板与翻页（需渲染，不能加 --headless）"}
+    {"name": "corridor-exit", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_exit.gd -- CORRIDOR-EXIT", "gate": "hard", "status": "ready", "note": "走到尽头按 E 离场，结算面板与翻页（需渲染，不能加 --headless）"},
+    {"name": "main-menu", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/main_menu.gd -- MENU", "gate": "hard", "status": "ready", "note": "主界面三项 + 结局栏四槽遮罩 + 新游戏保留解锁档案（需渲染）"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",

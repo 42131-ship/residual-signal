@@ -586,6 +586,45 @@ M1 的 `TravelMap` 负责「今天去哪一栋」。
 
 下一步顺序：**TravelMap 场景（选楼 + 去程/回程）→ M2 状态合并 → M3 广播/手机/空投**。
 
+---
+
+## 二十三、Stage 3.2 · 主界面壳 + 结局栏（2026-11-24 凌晨）
+
+> 拍板：先做 B（主界面壳），地图美术允许用生图模型，玩家在出口自由选楼。
+
+### 一、本轮做了什么
+
+| 件 | 落点 | 验收 |
+|---|---|---|
+| 一局状态 | `game/runtime/run_state.gd`：day/sediment/building/actions/supplies/health + 解锁档案，`to_dict/from_dict` 可存档 | 被 `main_menu` 与门禁复用 |
+| 主界面 | `game/scenes/main_menu.tscn` + `.gd`：新游戏 / 继续 / 结局栏，W/S 循环、E 确认、Esc 返回；全部程序画（ColorRect + 像素字） | `MENU_OK entries=3 wrap=yes endings_slots=4 masked=3 unlock=kept_on_new_game` |
+| 结局栏 | 复用 `EndingBook`：4 槽全预置，未解锁只显示「？？？」，已解锁才给标题与回忆 | 同上；截图 `MENU_root.png` / `MENU_endings.png` |
+| 主场景 | `project.godot` 的 `run/main_scene` 改为 `main_menu.tscn` | 启动进菜单 |
+
+**修掉一个真实断层**：`EndingBook` 与 `RunState` 各自记解锁，谁也没合并 → 结局栏永远全灰。
+补了 `EndingBook.adopt(unlocked)`，菜单在渲染前并一次；并加了“新游戏**不清**结局档案”的断言。
+
+### 二、关于「地图用生图模型」
+
+**当前会话没有可用的生图工具**（`scenario-*` 那套要挂 MCP 服务 + API Key，现在没接）。
+而且生图产出直接进游戏会过不了 R14：`PIXEL_SPEC` 冻结了 32 色板、16px 栅格、二值 alpha。
+
+所以补了一条**量化通道**（本轮已可用）：
+
+```bash
+python tools/quantize_map.py --in raw.png --out art/.../maps/school_d1.png --size 384x216 --max-colors 32
+# → 最近邻缩放 → 映射到 master.gpl → alpha 二值化 → 跑 pixelpipe 门禁
+```
+
+实测：517×301 / 65536 色的模拟生图 → 384×216 / 32 色 / 二值 alpha。
+原生视口 384×216 不是 16 的倍数，`R14d` 必然报红——已按 `PIXEL_SPEC` 的例外放行，其余项仍必须过。
+
+### 三、下一步
+
+1. **出口选楼**：`_leave_building()` 改成弹出可去建筑列表（读 `TravelService.neighbors`，显示燃料/风险），选完才结算翻页。
+2. **TravelMap 场景**：五楼节点图 + 去程/回程判定（天黑未归 ×2）。
+3. **生图接入**（等你挂上生成工具）：先出图 → `quantize_map.py` → 过门禁 → 放进 `art/generated_candidates/maps/` → 菜单/旅行图引用。
+
 
 
 

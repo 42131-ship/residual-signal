@@ -6,7 +6,7 @@ config_version=5
 [application]
 
 config/name="残余信号 Residual Signal"
-run/main_scene="res://game/scenes/corridor.tscn"
+run/main_scene="res://game/scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [display]
