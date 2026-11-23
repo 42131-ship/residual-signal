@@ -20,6 +20,7 @@ func _initialize() -> void:
 
 	var total_fired := 0
 	var max_oneshot := 0
+	var total_changed := 0
 	for seed_value: int in SEEDS:
 		var r := _run_seed(seed_value, data)
 		if r.has("fail"):
@@ -27,8 +28,16 @@ func _initialize() -> void:
 			return
 		total_fired += int(r["fired"])
 		max_oneshot = maxi(max_oneshot, int(r["oneshot_max"]))
+		total_changed += int(r["changed"])
 
-	print("REPLAY_OK seeds=%d fired=%d oneshot_max=%d" % [SEEDS.size(), total_fired, max_oneshot])
+	# ⑤ 效果必须落地：effects[].vars 被读错键时，30 天里一个变量都不会变（旧版读 add_vars）。
+	if total_changed == 0:
+		_fail(-1, "⑤", "30 天回放里 24 个效果没有改动任何世界变量")
+		return
+
+	print("REPLAY_OK seeds=%d fired=%d oneshot_max=%d changed=%d" % [
+		SEEDS.size(), total_fired, max_oneshot, total_changed
+	])
 	quit(0)
 
 
@@ -46,6 +55,7 @@ func _run_seed(seed_value: int, data: DataLayer) -> Dictionary:
 
 	var fired := 0
 	var counts: Dictionary = {}
+	var changed_total := 0
 	var ai := 0
 	var guard := 0
 
@@ -69,6 +79,12 @@ func _run_seed(seed_value: int, data: DataLayer) -> Dictionary:
 		var after_vars: Dictionary = {}
 		for v: String in VARS:
 			after_vars[v] = world.var_of(v)
+		# ⑤ 累计真实变量变化数（time 是派生量，不计）。
+		for v: String in VARS:
+			if v == "time":
+				continue
+			if not is_equal_approx(float(after_vars[v]), float(before_vars[v])):
+				changed_total += 1
 		world.spend_time(8)
 
 		var after_total := world.day * 24 + world.hour
@@ -117,7 +133,7 @@ func _run_seed(seed_value: int, data: DataLayer) -> Dictionary:
 		var card: Dictionary = _by_id.get(cid, {})
 		oneshot_max = maxi(oneshot_max, int(counts[cid]))
 
-	return {"fired": fired, "oneshot_max": oneshot_max}
+	return {"fired": fired, "oneshot_max": oneshot_max, "changed": changed_total}
 
 
 func _fail(seed_value: int, invariant: String, detail: String) -> void:

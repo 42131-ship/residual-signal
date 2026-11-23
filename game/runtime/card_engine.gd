@@ -128,9 +128,14 @@ func fire(card: Dictionary, bind: Dictionary) -> Array[Dictionary]:
 		if not matched:
 			continue
 
-		var changes: Dictionary = effect.get("add_vars", {})
+		# 数据契约是 effects[].vars（见 data/cards/*.json）；旧代码读 add_vars，导致 24 个效果全部空转。
+		var changes: Dictionary = effect.get("vars", {})
 		for key: Variant in changes.keys():
-			world.add_var(str(key), float(changes[key]))
+			var name: String = str(key)
+			# time 是派生变量（day/30）。v0.6 开工盘点定「事件卡 +0h」，卡不直接写时间。
+			if name == "time":
+				continue
+			world.add_var(name, float(changes[key]))
 
 		entries.append({
 			"event_id": effect.get("evidence", ""),

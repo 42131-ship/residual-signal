@@ -14,8 +14,8 @@ var _last_fidelity: Dictionary = {}
 func init_from(d: DataLayer, w: WorldState) -> bool:
 	if d == null or w == null:
 		return false
-	var rows: Variant = d.get("npcs")
-	if not _replace_npcs(rows) and not load_npcs():
+	# DataLayer 没有 npcs 属性（NPC 池在 data/npcs/npcs.json）；旧代码 d.get("npcs") 恒为 null。
+	if not load_npcs():
 		return false
 	data = d
 	world = w
@@ -165,25 +165,17 @@ func _replace_npcs(rows: Variant) -> bool:
 
 
 func _data_npc(npc_id: String) -> Dictionary:
-	if data.has_method("get_npc"):
+	if data != null and data.has_method("get_npc"):
 		var record: Variant = data.call("get_npc", npc_id)
 		if record is Dictionary and not record.is_empty():
 			return record
-
-	var rows: Variant = data.get("npcs")
-	if rows is Dictionary:
-		var record: Variant = rows.get(npc_id)
-		if record is Dictionary:
-			return record
-		rows = rows.values()
-
-	if rows is Array:
-		var index: int = 0
-		while index < rows.size():
-			var record: Variant = rows[index]
-			if record is Dictionary and _npc_id(record) == npc_id:
-				return record
-			index += 1
+	# DataLayer 没有 npcs 属性；NPC 池由 load_npcs() 读入 self.npcs。
+	var index: int = 0
+	while index < npcs.size():
+		var npc: Dictionary = npcs[index]
+		if _npc_id(npc) == npc_id:
+			return npc
+		index += 1
 	return {}
 
 

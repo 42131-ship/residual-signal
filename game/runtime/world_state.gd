@@ -112,17 +112,11 @@ func add_noise(node_id: String, base: int, night: bool = false) -> Dictionary:
 
 	var multiplier: float = 1.0
 	if night and data != null:
-		var profile: Variant = data.get("mode_profile")
-		if profile is Dictionary:
-			var story: Variant = profile.get("story", {})
-			if story is Dictionary:
-				multiplier = float(story.get("night_multiplier", 1.0))
-		elif profile != null:
-			var story_object: Variant = profile.get("story")
-			if story_object is Dictionary:
-				multiplier = float(story_object.get("night_multiplier", 1.0))
-			elif story_object != null:
-				multiplier = float(story_object.get("night_multiplier"))
+		# DataLayer 只有 profile(mode) 方法；旧代码读 data.get("mode_profile") 恒为 null，
+		# 夜晚噪声倍率从未生效。
+		var story: Dictionary = data.profile("story")
+		if not story.is_empty():
+			multiplier = float(story.get("night_multiplier", 1.0))
 
 	var self_delta: int = _scaled_noise(base, sensitivity * multiplier)
 	_add_sediment(node_id, self_delta)
@@ -231,23 +225,18 @@ func _refresh_locks() -> void:
 	if data == null:
 		return
 
-	var nodes: Variant = data.get("nodes")
-	if nodes is Dictionary:
-		for node_id: Variant in nodes:
-			var record: Variant = nodes[node_id]
-			var lock_day: Variant = null
-			if record is Dictionary:
-				lock_day = record.get("day_locked_after")
-			elif record != null:
-				lock_day = record.get("day_locked_after")
-			if lock_day is int or lock_day is float:
-				locked_until[str(node_id)] = int(lock_day)
+	# DataLayer 暴露 nodes() / node(id)；旧代码读 data.get("nodes") 恒为 null，
+	# day_locked_after 从未生效。
+	for record: Dictionary in data.nodes():
+		var node_id: String = str(record.get("node_id", ""))
+		if node_id.is_empty():
+			continue
+		var lock_day: Variant = record.get("day_locked_after")
+		if lock_day is int or lock_day is float:
+			locked_until[node_id] = int(lock_day)
 
 
 func _node_record(node_id: String) -> Variant:
 	if data == null:
 		return null
-	var nodes: Variant = data.get("nodes")
-	if nodes is Dictionary:
-		return nodes.get(node_id)
-	return null
+	return data.node(node_id)
