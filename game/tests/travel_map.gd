@@ -170,8 +170,14 @@ func _run() -> void:
 		var width := PixelFont.width_of(label)
 		var spec: Dictionary = _map.BLOCKS[id]
 		var at: Vector2 = spec["at"]
+		var height: float = spec["height"]
+		var depth: float = (spec["size"] as Vector2).y
 		var x := clampf(at.x - width * 0.5, 4.0, 384.0 - width - 4.0)
 		_check(x >= 4.0 and x + width <= 380.0, "%s label overflows: x=%.1f w=%d" % [id, x, width])
+		var y := at.y + 6.0
+		if y + 14.0 > 214.0:
+			y = clampf(at.y - height - depth - 16.0, 2.0, 200.0)
+		_check(y >= 2.0 and y + 14.0 <= 216.0, "%s label vertical overflow: y=%.1f" % [id, y])
 		_check(width > 0, "%s has no label" % id)
 
 	_map.setup("school", 0)

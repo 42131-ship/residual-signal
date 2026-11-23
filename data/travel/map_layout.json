@@ -1,52 +1,52 @@
 {
   "schema": "map-layout.v1",
-  "note": "旅行图上五栋楼的锚点。at = 楼体正面底边中点（2.5D 里最容易对齐地面），size = 宽×进深，height = 高度。坐标对着 art/generated_candidates/maps/map_topdown.png 的楼位摆；调位置只改这个文件，不用碰代码。label_align = 楼名相对锚点的对齐（center 会按文字宽度居中并夹进视口）。",
+  "note": "旅行图上五栋楼的锚点。at = 楼体正面底边中点（2.5D 里最容易对齐地面），size = 宽×进深，height = 高度。坐标按 art/generated_candidates/maps/map_topdown.png 的窗户热点实测（2026-11-24）：左上高层 x60-140/y30-100、右上宽体 x236-334/y30-84、中部 x120-196/y96-128、左下 x72-136/y152-192、右下 x278-330/y170-200。调位置只改这个文件。",
   "view": [384, 216],
   "buildings": [
     {
       "id": "school",
-      "at": [86, 96],
+      "at": [100, 96],
       "size": [44, 16],
       "height": 34,
       "detail": "school",
       "label_align": "center",
-      "note": "左侧最高的那栋：水塔 + 天线 + 三排教室窗"
+      "note": "左上最高：水塔 + 天线 + 三排教室窗 + 校牌"
     },
     {
       "id": "hospital",
-      "at": [282, 98],
-      "size": [46, 16],
-      "height": 28,
+      "at": [285, 88],
+      "size": [48, 16],
+      "height": 26,
       "detail": "hospital",
       "label_align": "center",
-      "note": "右上方宽体：红十字牌 + 四排窗"
+      "note": "右上宽体：红十字 + 四排窗 + 急诊灯箱"
     },
     {
       "id": "gas_station",
-      "at": [232, 138],
-      "size": [30, 13],
+      "at": [158, 128],
+      "size": [34, 13],
       "height": 10,
       "detail": "gas_station",
       "label_align": "center",
-      "note": "中间低矮雨棚 + 两个加油岛"
+      "note": "中部低矮：雨棚 + 两个加油岛 + 价格牌"
     },
     {
       "id": "fire_station",
-      "at": [78, 196],
+      "at": [104, 192],
       "size": [40, 15],
-      "height": 20,
+      "height": 18,
       "detail": "fire_station",
       "label_align": "center",
-      "note": "左下方：宽卷帘门 + 晾水塔"
+      "note": "左下：宽卷帘门 + 晾水塔 + 门号 01"
     },
     {
       "id": "military_base",
-      "at": [300, 190],
-      "size": [44, 15],
-      "height": 18,
+      "at": [304, 200],
+      "size": [36, 14],
+      "height": 16,
       "detail": "military_base",
       "label_align": "center",
-      "note": "右下方：围栏 + 天线杆 + 窄窗"
+      "note": "右下：围栏 + 天线杆 + 窄窗 + 旗杆"
     }
   ]
 }

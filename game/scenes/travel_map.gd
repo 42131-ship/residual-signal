@@ -180,6 +180,14 @@ func _build_blocks() -> void:
 		node.position = at
 		add_child(node)
 
+		# 接地阴影：先加 = 画在最底下，让楼「坐」在街上而不是浮着。
+		var shadow := ColorRect.new()
+		shadow.name = "Shadow"
+		shadow.position = Vector2(-1, 0)
+		shadow.size = Vector2(size.x + size.y * 0.6 + 2, 3)
+		shadow.color = Color(0.02, 0.03, 0.05, 1.0)
+		node.add_child(shadow)
+
 		var front := Polygon2D.new()
 		front.name = "Front"
 		front.polygon = PackedVector2Array([
@@ -215,7 +223,7 @@ func _build_details(id: String, node: Node2D, spec: Dictionary) -> int:
 	var made := 0
 	match detail:
 		"school":
-			# 三排教室窗 + 大门 + 屋顶水塔 + 天线
+			# 三排教室窗 + 大门 + 屋顶水塔 + 天线 + 校牌
 			for row in range(3):
 				var y := -height + 6.0 + row * 7.0
 				_rect(node, "Windows%d" % row, Vector2(4, y), Vector2(size.x - 8, 3), WINDOW if row == 1 else WINDOW_DIM)
@@ -223,9 +231,10 @@ func _build_details(id: String, node: Node2D, spec: Dictionary) -> int:
 			_rect(node, "Door", Vector2(size.x * 0.5 - 4, -8), Vector2(8, 8), OPENING)
 			_rect(node, "Tank", Vector2(size.x * 0.18, -height - size.y * 0.7), Vector2(8, 7), METAL)
 			_rect(node, "Antenna", Vector2(size.x * 0.72, -height - size.y * 0.7 - 10), Vector2(1, 12), METAL)
-			made += 3
+			_rect(node, "Plaque", Vector2(size.x * 0.5 + 6, -9), Vector2(12, 4), METAL)
+			made += 4
 		"hospital":
-			# 四排窗 + 红十字牌 + 大门
+			# 四排窗 + 红十字 + 大门 + 急诊灯箱
 			for row in range(4):
 				var y := -height + 5.0 + row * 6.0
 				_rect(node, "Windows%d" % row, Vector2(3, y), Vector2(size.x - 6, 2), WINDOW_DIM if row % 2 else WINDOW)
@@ -233,24 +242,28 @@ func _build_details(id: String, node: Node2D, spec: Dictionary) -> int:
 			_rect(node, "CrossV", Vector2(size.x * 0.5 - 1, -height + 8), Vector2(2, 7), SIGN)
 			_rect(node, "CrossH", Vector2(size.x * 0.5 - 3, -height + 10), Vector2(6, 2), SIGN)
 			_rect(node, "Door", Vector2(size.x * 0.5 - 5, -9), Vector2(10, 9), OPENING)
-			made += 3
+			_rect(node, "EmergencyLight", Vector2(3, -height + 2), Vector2(4, 3), WINDOW)
+			made += 4
 		"gas_station":
-			# 低矮雨棚 + 两个加油岛 + 顶灯
+			# 低矮雨棚 + 两个加油岛 + 顶灯 + 价格牌
 			_rect(node, "Canopy", Vector2(2, -height - 1), Vector2(size.x - 4, 4), METAL)
 			_rect(node, "Pump0", Vector2(6, -height + 2), Vector2(3, 5), SIGN)
 			_rect(node, "Pump1", Vector2(size.x - 10, -height + 2), Vector2(3, 5), SIGN)
 			_rect(node, "RoofLight", Vector2(size.x * 0.5 - 1, -height - size.y * 0.5), Vector2(2, 2), WINDOW)
-			made += 4
+			_rect(node, "PriceBoard", Vector2(size.x - 6, -height - 8), Vector2(8, 5), SIGN)
+			made += 5
 		"fire_station":
-			# 宽卷帘门 + 晾水塔
+			# 宽卷帘门 + 晾水塔 + 门号 01
 			_rect(node, "Garage", Vector2(4, -11), Vector2(size.x - 8, 11), OPENING)
 			for bar in range(3):
 				_rect(node, "GarageBar%d" % bar, Vector2(6, -10 + bar * 3), Vector2(size.x - 12, 1), SIDE_FACE)
 				made += 1
 			_rect(node, "HoseTower", Vector2(size.x * 0.72, -height - size.y * 0.6 - 8), Vector2(5, 9), METAL)
-			made += 2
+			_rect(node, "Number0", Vector2(size.x * 0.5 - 3, -height + 5), Vector2(2, 4), WINDOW)
+			_rect(node, "Number1", Vector2(size.x * 0.5 + 1, -height + 5), Vector2(1, 4), WINDOW)
+			made += 4
 		"military_base":
-			# 围栏 + 天线杆 + 两排窄窗
+			# 围栏 + 天线杆 + 两排窄窗 + 旗杆
 			for post in range(4):
 				_rect(node, "Fence%d" % post, Vector2(2 + post * 10, -5), Vector2(1, 6), METAL)
 				made += 1
@@ -258,6 +271,9 @@ func _build_details(id: String, node: Node2D, spec: Dictionary) -> int:
 			for row in range(2):
 				_rect(node, "Windows%d" % row, Vector2(6, -height + 6 + row * 5), Vector2(size.x - 14, 2), WINDOW_DIM)
 				made += 1
+			_rect(node, "FlagPole", Vector2(4, -height - 8), Vector2(1, 10), METAL)
+			_rect(node, "Flag", Vector2(5, -height - 8), Vector2(4, 3), SIGN)
+			made += 2
 		_:
 			return 0
 	return made
@@ -272,16 +288,21 @@ func _rect(parent: Node2D, node_name: String, at: Vector2, size: Vector2, color:
 	parent.add_child(rect)
 
 
-## 楼名：居中并按文字宽度夹进视口，绝不被裁断。
+## 楼名：水平居中并按文字宽度夹进视口；垂直方向若放不下就翻到楼顶上，绝不被裁断。
 func _build_labels() -> void:
 	for id: String in BLOCKS:
 		var spec: Dictionary = BLOCKS[id]
 		var at: Vector2 = spec["at"]
+		var height: float = spec["height"]
+		var depth: float = (spec["size"] as Vector2).y
 		var text := _travel.label_of(id)
 		var width := PixelFont.width_of(text)
-		var x := at.x - width * 0.5
-		x = clampf(x, 4.0, float(VIEW.x) - width - 4.0)
-		PixelFont.draw(self, text, Vector2(x, at.y + 6), LABEL)
+		var x := clampf(at.x - width * 0.5, 4.0, float(VIEW.x) - width - 4.0)
+		var y := at.y + 6.0
+		if y + 14.0 > float(VIEW.y) - 2.0:
+			# 底下放不下就翻到楼顶上方（这一段永远在视口上半部，不会再溢出）
+			y = clampf(at.y - height - depth - 16.0, 2.0, float(VIEW.y) - 16.0)
+		PixelFont.draw(self, text, Vector2(x, y), LABEL)
 
 
 ## 走廊把「现在在哪栋、还有多少燃料、今天去过哪」告诉地图；地图自己算可去哪几栋。
