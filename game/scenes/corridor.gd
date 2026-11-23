@@ -16,6 +16,10 @@ const WALK_RIGHT := 602.0
 const INTERACT_DEPTH_TOLERANCE := 24.0
 ## 手电开灯时的光锥半径（关灯 = 归零，画面整体压暗）。
 const FLASHLIGHT_RADIUS := 240.0
+## 背包容量（拾取上限）。
+const INVENTORY_CAPACITY := 10
+## 挥击视觉持续帧数。
+const ATTACK_FRAMES := 4
 const TILE_INDEX := {
 	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
 	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
@@ -39,6 +43,21 @@ var _inspection_prompt_root: Node2D
 var _inspection_prompt_layer: CanvasLayer
 var _inspection_panel_root: Node2D
 var _loot: LootService
+var _inventory: InventoryService
+var _inventory_open := false
+var _inventory_index := 0
+var _inventory_layer: CanvasLayer
+var _inventory_panel_root: Node2D
+var _hud_stats_root: Node2D
+var _attack_visual: Polygon2D
+## 玩家状态：物资/体力/噪声/已装备武器/挥击次数（背包与使用系统的落地数据）。
+var _supplies := 0.8
+var _health := 1.0
+var _noise := 0
+var _equipped := ""
+var _attacks := 0
+var _attack_frames := 0
+var _inventory_toast := ""
 ## 面板当前内容（测试与调试用，不参与渲染）。
 var _panel_title := ""
 var _panel_lines: Array = []
@@ -54,9 +73,13 @@ func _ready() -> void:
 	_apply_depth_sort()
 	_load_inspections()
 	_load_loot()
+	_inventory = InventoryService.new(INVENTORY_CAPACITY)
 	_build_camera()
 	_build_hud()
+	_build_inventory_ui()
+	_build_attack_visual()
 	_build_flashlight()
+	_refresh_hud_stats()
 
 
 func _place_tile(tile_name: String, tile_x: int, tile_y: int, from_x := 0, width := TILE_SIZE) -> void:
@@ -253,6 +276,7 @@ func _ensure_actions() -> void:
 	_add_action("view", [KEY_V])
 	_add_action("cancel_inspect", [KEY_ESCAPE])
 	_add_action("toggle_light", [KEY_F])
+	_add_action("drop", [KEY_Q])
 	# 战斗与背包键位已按 v0.2 定下，系统未实现，先注册 InputMap。
 	_add_mouse_action("attack", MOUSE_BUTTON_LEFT)
 	_add_action("inventory", [KEY_TAB])
@@ -448,26 +472,28 @@ func _search_container(id: String) -> void:
 	if items.is_empty():
 		_show_panel(_loot.label_of(id), ["里面是空的", "连灰都没有"], id)
 		return
-	_show_panel(_loot.label_of(id), _loot_lines(items), id)
-
-
-func _loot_lines(items: Array) -> Array[String]:
-	var names := PackedStringArray()
+	var ids: Array = []
 	for item: Dictionary in items:
-		names.append(str(item.get("name", "")))
+		ids.append(str(item.get("id", "")))
+	var bulk: Dictionary = _inventory.add_many(ids)
+	var added: Array = bulk.get("added", [])
+	var rejected: Array = bulk.get("rejected", [])
+	var lines := _loot_lines(added)
+	if rejected.is_empty():
+		lines[1] = "已放入背包（%d/%d）" % [_inventory.total(), _inventory.capacity]
+	else:
+		lines[1] = "背包满了，剩 %d 件没拿" % rejected.size()
+	_show_panel(_loot.label_of(id), lines, id)
+	_refresh_hud_stats()
+
+
+func _loot_lines(item_ids: Array) -> Array[String]:
+	var names := PackedStringArray()
+	for value: Variant in item_ids:
+		names.append(_loot.item_name(str(value)))
 	var joined := "、".join(names)
 	var first := "找到：" + joined.substr(0, 16)
-	var rest := joined.substr(16)
-	var lines: Array[String] = [first]
-	if rest.is_empty():
-		lines.append("共 %d 件" % items.size())
-	else:
-		var second := rest.substr(0, 22)
-		if rest.length() > 22:
-			second += "…"
-		second += "（共%d件）" % items.size()
-		lines.append(second)
-	return lines
+	return [first, "共 %d 件" % item_ids.size()]
 
 
 func _load_loot() -> void:
@@ -556,6 +582,7 @@ func _build_hud() -> void:
 	var day3_mark := Color("#0b1119")
 	var frame_color := Color("#635e57")
 	PixelFont.draw(layer, "DAY 3", Vector2(8, 8), ink)
+	_build_hud_stats_root(layer)
 
 	var widths := [44, 36, 28, 44, 24, 40]
 	for index in range(widths.size()):
@@ -582,6 +609,181 @@ func _build_hud() -> void:
 	notification.size = Vector2(2, 2)
 	notification.color = day3_mark
 	layer.add_child(notification)
+
+
+func _build_inventory_ui() -> void:
+	_inventory_layer = CanvasLayer.new()
+	_inventory_layer.name = "InventoryUI"
+	_inventory_layer.layer = 40
+	_inventory_layer.visible = false
+	add_child(_inventory_layer)
+	_inventory_panel_root = Node2D.new()
+	_inventory_panel_root.name = "InventoryPanel"
+	_inventory_layer.add_child(_inventory_panel_root)
+
+
+func _build_attack_visual() -> void:
+	_attack_visual = Polygon2D.new()
+	_attack_visual.name = "AttackArc"
+	_attack_visual.polygon = PackedVector2Array([
+		Vector2.ZERO, Vector2(16, 2), Vector2(12, 28), Vector2(4, 26),
+	])
+	_attack_visual.color = Color("#f6f6f0")
+	_attack_visual.visible = false
+	add_child(_attack_visual)
+
+
+func _build_hud_stats_root(parent: Node) -> void:
+	_hud_stats_root = Node2D.new()
+	_hud_stats_root.name = "HudStats"
+	parent.add_child(_hud_stats_root)
+
+
+func _refresh_hud_stats() -> void:
+	if _hud_stats_root == null:
+		return
+	for child: Node in _hud_stats_root.get_children():
+		child.queue_free()
+	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_supplies * 100.0)), Vector2(8, 20), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 30), Color("#9fb2bd"))
+
+
+func _open_inventory() -> void:
+	if _inspection_open:
+		return
+	_inventory_open = true
+	_inventory_index = 0
+	_inventory_toast = ""
+	_player._movement_locked = true
+	_inventory_layer.visible = true
+	_render_inventory()
+
+
+func _close_inventory() -> void:
+	_inventory_open = false
+	_inventory_layer.visible = false
+	_player._movement_locked = false
+	_player._previous_global_position = _player.global_position
+
+
+func _render_inventory() -> void:
+	if _inventory_panel_root == null or not _inventory_open:
+		return
+	for child: Node in _inventory_panel_root.get_children():
+		child.queue_free()
+	var panel_x := 8.0
+	var panel_y := 24.0
+	var panel_w := 368.0
+	var panel_h := 190.0
+	_add_rect_polygon(_inventory_panel_root, "InvBg", Vector2(panel_x, panel_y), Vector2(panel_w, panel_h), Color("#0b1119"))
+	_add_ui_frame(_inventory_panel_root, Vector2(panel_x, panel_y), Vector2(panel_w, panel_h), Color("#635e57"))
+	var ids := _inventory.ids()
+	var title := "背包 %d/%d" % [_inventory.total(), _inventory.capacity]
+	if not _equipped.is_empty():
+		title += "  装备 " + _loot.item_name(_equipped)
+	PixelFont.draw(_inventory_panel_root, title, Vector2(16, panel_y + 4), Color("#f6f6f0"))
+	if ids.is_empty():
+		PixelFont.draw(_inventory_panel_root, "背包是空的", Vector2(16, panel_y + 26), Color("#9fb2bd"))
+		PixelFont.draw(_inventory_panel_root, "搜柜子会拿到东西", Vector2(16, panel_y + 42), Color("#9fb2bd"))
+	else:
+		_inventory_index = clampi(_inventory_index, 0, ids.size() - 1)
+		for row: int in mini(9, ids.size()):
+			var item_id: String = ids[row]
+			var row_y := panel_y + 22 + row * 13
+			if row == _inventory_index:
+				_add_rect_polygon(_inventory_panel_root, "Sel%d" % row,
+					Vector2(panel_x + 4, row_y - 2), Vector2(panel_w - 8, 13), Color("#354b60"))
+			var text := "%d %s" % [row + 1, _loot.item_name(item_id)]
+			var count := _inventory.count_of(item_id)
+			if count > 1:
+				text += "×%d" % count
+			PixelFont.draw(_inventory_panel_root, text, Vector2(panel_x + 10, row_y),
+				Color("#f6f6f0" if row == _inventory_index else "#9fb2bd"))
+	PixelFont.draw(_inventory_panel_root, "E 使用 Q 丢弃 TAB 关闭", Vector2(16, panel_y + 160), Color("#9fb2bd"))
+	if not _inventory_toast.is_empty():
+		PixelFont.draw(_inventory_panel_root, _inventory_toast, Vector2(16, panel_y + 174), Color("#f6f6f0"))
+
+
+func _selected_inventory_item() -> String:
+	var ids := _inventory.ids()
+	if ids.is_empty():
+		return ""
+	_inventory_index = clampi(_inventory_index, 0, ids.size() - 1)
+	return ids[_inventory_index]
+
+
+func _move_inventory(delta: int) -> void:
+	var ids := _inventory.ids()
+	if ids.is_empty():
+		return
+	_inventory_index = posmod(_inventory_index + delta, ids.size())
+	_render_inventory()
+
+
+func _use_selected_item() -> void:
+	var item_id := _selected_inventory_item()
+	if item_id.is_empty():
+		return
+	var effect := _loot.item_effect(item_id)
+	var item_name := _loot.item_name(item_id)
+	if effect.has("equip"):
+		_equipped = item_id
+		_inventory_toast = "已装备 " + item_name
+		_refresh_hud_stats()
+		_render_inventory()
+		return
+	var consumed := false
+	if effect.has("supplies"):
+		_supplies = clampf(_supplies + float(effect["supplies"]), 0.0, 1.0)
+		consumed = true
+	if effect.has("health"):
+		_health = clampf(_health + float(effect["health"]), 0.0, 1.0)
+		consumed = true
+	if effect.has("noise"):
+		_noise += int(effect["noise"])
+		consumed = true
+	if consumed:
+		_inventory.remove(item_id, 1)
+		_inventory_toast = "用了 " + item_name
+		_inventory_index = clampi(_inventory_index, 0, maxi(0, _inventory.ids().size() - 1))
+	else:
+		_inventory_toast = "这件东西现在用不上"
+	_refresh_hud_stats()
+	_render_inventory()
+
+
+func _drop_selected_item() -> void:
+	var item_id := _selected_inventory_item()
+	if item_id.is_empty():
+		return
+	_inventory.remove(item_id, 1)
+	_inventory_toast = "丢掉 " + _loot.item_name(item_id)
+	_inventory_index = clampi(_inventory_index, 0, maxi(0, _inventory.ids().size() - 1))
+	_render_inventory()
+
+
+func _perform_attack() -> void:
+	_attacks += 1
+	_attack_frames = ATTACK_FRAMES
+	var noise := 0
+	if not _equipped.is_empty():
+		var effect := _loot.item_effect(_equipped)
+		noise = 1 if str(effect.get("equip", "")) == "melee" else 3
+	_noise += noise
+	_attack_visual.visible = true
+	_update_attack_visual()
+	_refresh_hud_stats()
+
+
+func _update_attack_visual() -> void:
+	if _attack_visual == null or _player == null:
+		return
+	_attack_visual.position = Vector2(
+		_player.global_position.x + _player.facing_x * 12.0 - 6.0,
+		_player.global_position.y - 36.0,
+	)
+	_attack_visual.scale = Vector2(_player.facing_x, 1.0)
+	_attack_visual.z_index = int(_player.global_position.y) + 1
 
 
 func _frame(parent: Node, x: int, y: int, width: int, height: int, color: Color) -> void:
@@ -627,6 +829,12 @@ func _process(_delta: float) -> void:
 	_follow_player()
 	_update_flashlight()
 	_update_depth_order()
+	if _attack_frames > 0:
+		_attack_frames -= 1
+		if _attack_frames <= 0:
+			_attack_visual.visible = false
+		else:
+			_update_attack_visual()
 	# 只有提示条需要每帧刷新；开/关面板全部走 _unhandled_input。
 	# 之前这里也处理 inspect，导致真键盘同一帧先开后关（面板只闪一帧）。
 	if not _inspection_ui_enabled:
@@ -648,12 +856,38 @@ func _update_depth_order() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# 唯一的按键入口：echo（按住重复）与松开都不算一次按下。
-	if not _inspection_ui_enabled or not event is InputEventKey or event.is_echo() or not event.is_pressed():
+	if not _inspection_ui_enabled:
+		return
+	# 左键攻击：背包/检查面板打开时不响应。
+	if event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if mouse.button_index == MOUSE_BUTTON_LEFT and mouse.pressed and not _inventory_open and not _inspection_open:
+			_perform_attack()
+			get_viewport().set_input_as_handled()
+		return
+	if not event is InputEventKey or event.is_echo() or not event.is_pressed():
+		return
+	# 背包打开时：W/S 选、E 使用、Q 丢弃、Tab/Esc/V 关闭。
+	if _inventory_open:
+		if event.is_action_pressed("move_up"):
+			_move_inventory(-1)
+		elif event.is_action_pressed("move_down"):
+			_move_inventory(1)
+		elif event.is_action_pressed("pickup"):
+			_use_selected_item()
+		elif event.is_action_pressed("drop"):
+			_drop_selected_item()
+		elif event.is_action_pressed("inventory") or event.is_action_pressed("cancel_inspect") or event.is_action_pressed("view"):
+			_close_inventory()
+		get_viewport().set_input_as_handled()
 		return
 	# 手电开关（F）：面板打开时不响应，避免和交互抢键。
 	if event.is_action_pressed("toggle_light") and not _inspection_open:
 		_set_flashlight(not _flashlight_on)
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("inventory") and not _inspection_open:
+		_open_inventory()
 		get_viewport().set_input_as_handled()
 		return
 	if _inspection_open:
@@ -664,7 +898,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action("cancel_inspect"):
 		return
-	# E = 上下文交互：只有可搜索容器 + 背包/拾取系统落地后才有效果；当前先接搜索。
+	# E = 上下文拾取/搜索：只有可搜索容器有效果。
 	if event.is_action_pressed("pickup"):
 		var pickup_target := _nearest_inspection_id()
 		if pickup_target.is_empty() or _loot == null or not _loot.has_container(pickup_target):

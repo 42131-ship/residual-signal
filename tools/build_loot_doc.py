@@ -72,13 +72,46 @@ FOOTER = """
 - 门禁：`game/tests/loot.gd` 验证剧情模式不刷新、容量随机、枪械只在高珍惜容器、确定性；
   `game/tests/corridor_loot.gd` 验证面板流程与「已经搜过一次 / 剧情模式不会刷新」文案。
 
-## 七、还没接的东西（下一轮）
+## 七、使用效果（背包已接）
 
-1. **背包**：搜到的物品目前只显示文本，没有进入 inventory；使用方式在 `items.json.usage` 里已写好，等背包/使用系统落地。
-2. **消耗与状态**：食物/医疗的具体数值效果（supplies、伤口、感染）还没接到角色状态。
-3. **战斗**：枪械/近战物品已经出现在战利品表里，但左键战斗系统未实现。
-4. **容器开启时间**：`search_seconds` 目前只是数据字段，还没有「按住 E 搜索 N 秒」的交互。
+物品的 `effect` 字段是机器可读效果（`tools/apply_item_effects.py` 写入）：
+
+| 字段 | 含义 |
+|---|---|
+| `supplies` | 使用后物资变化（0..1） |
+| `health` | 使用后体力/伤势变化（0..1） |
+| `noise` | 使用后产生的噪声等级 |
+| `equip` | `melee` / `firearm`，装备武器（不消耗） |
+| `contaminate` | 使用有风险（当前只记录，等状态系统） |
+
+- 背包容量 10；`Tab` 打开，`W/S` 选择，`E` 使用，`Q` 丢弃，`Tab/Esc/V` 关闭。
+- 没有 `effect` 的物品就是「现在用不上」：使用只提示、不消耗。
+- 武器目前只做「装备 + 左键挥击（占位，无敌人）」，耐久/弹匣/命中判定还没接。
+
+## 八、还没接的东西（下一轮）
+
+1. **角色状态细化**：伤口/流血/感染/中毒/成瘾等状态还没有，effect 里的 `contaminate` 先只记录。
+2. **搜索耗时**：`search_seconds` 目前只是数据，还没有「按住 E 搜索 N 秒」的交互。
+3. **战斗**：左键只是挥击占位，没有敌人、命中、耐久、弹匣。
+4. **`data/loot/items.json` / `containers.json` 还没进 validate.py 的规则与输入台账**。
 """
+
+
+def _effect_text(effect: dict) -> str:
+    if not effect:
+        return "—"
+    parts: list[str] = []
+    if "supplies" in effect:
+        parts.append(f"物资 {float(effect['supplies']) * 100:+.0f}%")
+    if "health" in effect:
+        parts.append(f"体力 {float(effect['health']) * 100:+.0f}%")
+    if "noise" in effect:
+        parts.append(f"噪声 +{int(effect['noise'])}")
+    if "equip" in effect:
+        parts.append("装备·" + ("近战" if effect["equip"] == "melee" else "枪械"))
+    if effect.get("contaminate"):
+        parts.append("有风险")
+    return "、".join(parts) if parts else "—"
 
 
 def load() -> tuple[dict, dict]:
@@ -133,11 +166,12 @@ def build() -> str:
         if not entries:
             continue
         lines.append(f"### {CATEGORY_LABELS.get(category, category)}（{len(entries)} 件）\n")
-        lines.append("| 物品 | 作用 | 使用方式 |")
-        lines.append("|---|---|---|")
+        lines.append("| 物品 | 作用 | 使用方式 | 效果 |")
+        lines.append("|---|---|---|---|")
         for entry in entries:
             lines.append(
-                f"| {entry.get('name', '')} | {entry.get('description', '')} | {entry.get('usage', '')} |"
+                f"| {entry.get('name', '')} | {entry.get('description', '')} | "
+                f"{entry.get('usage', '')} | {_effect_text(entry.get('effect', {}))} |"
             )
         lines.append("")
 

@@ -48,8 +48,8 @@ func _run() -> void:
 		var lines: Array = _corridor._panel_lines
 		_check(lines.size() == 2, "%s panel needs two lines, got %s" % [id, str(lines)])
 		_check(str(lines[0]).begins_with("找到："), "%s panel missing 找到 prefix: %s" % [id, str(lines)])
-		_check(str(lines[1]).contains("共") and str(lines[1]).contains("件"),
-			"%s panel missing item count: %s" % [id, str(lines)])
+		_check(str(lines[1]).contains("背包"),
+			"%s panel should mention the backpack: %s" % [id, str(lines)])
 		await _capture("%s_%s" % [_prefix, id])
 		await _press(KEY_ESCAPE)
 		_check(not _corridor._inspection_open, "%s panel did not close on Esc" % id)

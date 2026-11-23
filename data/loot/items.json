@@ -11,117 +11,862 @@
     "junk": "垃圾与恶趣味：多数不能正经使用，但都能在某一刻有点用（或纯恶心人）"
   },
   "items": [
-    { "id": "bottled_water", "name": "瓶装水", "category": "food", "description": "干净饮用水，能直接喝，空瓶还能装水。", "usage": "在背包里使用：+0.08 物资；空瓶留下可二次装水。" },
-    { "id": "canned_food", "name": "罐装食品", "category": "food", "description": "铁皮罐头，密封完好。", "usage": "使用：+0.10 物资；没有开罐器时用螺丝刀撬，50% 概率浪费一半。" },
-    { "id": "biscuits", "name": "压缩饼干", "category": "food", "description": "干燥、耐放、难吃。", "usage": "使用：+0.06 物资；潮湿环境存放超过 3 天会霉变。" },
-    { "id": "instant_noodles", "name": "泡面", "category": "food", "description": "需要热水；干啃也能填肚子。", "usage": "使用：有热水 +0.09 物资，干啃 +0.03 并发出脆响（噪声 +1）。" },
-    { "id": "chocolate", "name": "巧克力", "category": "food", "description": "高热量，化过又硬回去。", "usage": "使用：+0.04 物资，短暂提神（后续接状态系统）。" },
-    { "id": "expired_milk", "name": "过期牛奶", "category": "junk", "description": "不知道放了多久，没开盖也闻得到酸味。", "usage": "使用：喝下 +0.03 物资，但 30% 概率呕吐并发出噪声；也可用来恶心 NPC。" },
-    { "id": "dog_food", "name": "狗粮", "category": "food", "description": "其实能吃，只是需要理由。", "usage": "使用：+0.05 物资；带在包里会引来流浪狗。" },
-    { "id": "beer", "name": "啤酒", "category": "food", "description": "罐装，温的。", "usage": "使用：缓解紧张（后续状态系统），但降低准度；空罐可当噪声源。" },
-    { "id": "liquor", "name": "白酒", "category": "utility", "description": "高度数，可燃可消毒。", "usage": "饮用可镇痛但降低操控；也可当消毒剂（医疗 -1 效果）或引火物。" },
-    { "id": "cigarettes", "name": "香烟", "category": "utility", "description": "半包，受潮了一点。", "usage": "使用：缓解焦虑；点烟会暴露位置（吸引 1 格内敌人）。" },
-    { "id": "energy_drink", "name": "功能饮料", "category": "food", "description": "过期的能量饮料，糖分还在。", "usage": "使用：+0.05 物资，60 秒内疾跑不消耗额外体力（后续接体力）。" },
-    { "id": "coffee", "name": "速溶咖啡", "category": "food", "description": "粉末结块了，需要热水。", "usage": "使用：提神 2 小时（后续状态）；干吃会呛到（噪声 +1）。" },
-
-    { "id": "bandage", "name": "绷带", "category": "medical", "description": "一卷还干净的绷带。", "usage": "使用：止血，回复 1 格擦伤；不能治内出血。" },
-    { "id": "painkillers", "name": "止痛药", "category": "medical", "description": "对乙酰氨基酚，瓶子快空了。", "usage": "使用：压制疼痛 2 小时，掩盖伤势但不停血；连续使用 3 次成瘾（后续惩罚）。" },
-    { "id": "antibiotics", "name": "抗生素", "category": "medical", "description": "需要冷藏的针剂，常温下会快速失效。", "usage": "使用：治疗感染，必须从冷藏柜取出后 6 小时内使用。" },
-    { "id": "alcohol_wipes", "name": "酒精棉", "category": "medical", "description": "独立包装，还有酒精味。", "usage": "使用：消毒伤口，降低感染概率；可引火（极小）。" },
-    { "id": "disinfectant", "name": "消毒液", "category": "medical", "description": "大半瓶，标签被撕了一半。", "usage": "使用：清洁伤口与血迹；稀释后可拖地掩盖气味。" },
-    { "id": "iodine", "name": "碘酒", "category": "medical", "description": "棕色小瓶，棉签还封着。", "usage": "使用：伤口消毒；进眼睛会短暂失明。" },
-    { "id": "burn_cream", "name": "烫伤膏", "category": "medical", "description": "管状，挤出来一半。", "usage": "使用：处理烫伤；也可临时润滑卡住的抽屉。" },
-    { "id": "cold_pack", "name": "冰袋", "category": "medical", "description": "捏破内袋就会变冷。", "usage": "使用：一次性降温（发烧/扭伤）；捏破时发出脆响。" },
-    { "id": "hot_pack", "name": "暖宝宝", "category": "medical", "description": "贴在内衣上能暖 8 小时。", "usage": "使用：保暖（冬季地图）；贴上后 8 小时内不怕冷。" },
-    { "id": "vitamins", "name": "维生素", "category": "medical", "description": "一瓶普通的复合维生素。", "usage": "使用：长期少量恢复体力（后续状态）；一次吃太多反而伤胃。" },
-    { "id": "splint", "name": "夹板", "category": "medical", "description": "两块木板加几圈绷带。", "usage": "使用：固定骨折，移动速度临时 -30%；无骨折时使用会浪费。" },
-    { "id": "tourniquet", "name": "止血带", "category": "medical", "description": "橡胶带加一根木棍。", "usage": "使用：大出血时保命；使用超过 2 小时会坏死（后续惩罚）。" },
-    { "id": "sleeping_pills", "name": "安眠药", "category": "medical", "description": "白色小片，标着「睡前一片」。", "usage": "使用：强制入睡 6 小时（时间跳格）；给 NPC 吃可让对方睡死。过量会出人命。" },
-    { "id": "thermometer", "name": "体温计", "category": "medical", "description": "水银体温计，甩一甩还能用。", "usage": "使用：测体温，识别是否感染（早期唯一办法）；摔碎有毒。" },
-
-    { "id": "lighter", "name": "打火机", "category": "tool", "description": "一次性打火机，气还剩一半。", "usage": "使用：点火；每次照明/引火消耗 1 格气，共 3 次。潮湿时失效。" },
-    { "id": "matches", "name": "火柴", "category": "tool", "description": "半盒受潮过的火柴。", "usage": "使用：点火一次，受潮后成功率 50%；可烧掉纸类证据。" },
-    { "id": "candle", "name": "蜡烛", "category": "tool", "description": "半截生日蜡烛，插在碟子上。", "usage": "使用：无噪声照明 90 分钟；会留下可被追踪的蜡滴。" },
-    { "id": "duct_tape", "name": "电工胶带", "category": "tool", "description": "黑色绝缘胶带，剩大半卷。", "usage": "使用：修手电/封门缝/固定物品；每用一次粘性下降。" },
-    { "id": "screwdriver", "name": "螺丝刀", "category": "tool", "description": "十字螺丝刀，手柄开裂。", "usage": "使用：撬柜/拆电器/当近战（伤害低、无噪声）；可作开罐器。" },
-    { "id": "hammer", "name": "锤子", "category": "tool", "description": "羊角锤，木柄有血渍。", "usage": "使用：近战（伤害中、噪声大）；可钉门/砸锁。" },
-    { "id": "box_cutter", "name": "美工刀", "category": "tool", "description": "刀片还剩两节，很锋利。", "usage": "使用：裁纸/割绳；近战伤害低但安静，耐久 4。" },
-    { "id": "wire", "name": "电线", "category": "tool", "description": "三米长的铜芯电线，绝缘皮完好。", "usage": "使用：接电/做绊索/固定；可当临时绳。" },
-    { "id": "fuse", "name": "保险丝", "category": "tool", "description": "文具盒里翻出的玻璃管保险丝。", "usage": "使用：修复配电箱（恢复某个房间照明）；规格不对会再烧一次。" },
-    { "id": "light_bulb", "name": "灯泡", "category": "tool", "description": "40W 白炽灯泡，玻璃完好。", "usage": "使用：换进灯座获取照明；也可打碎做响声陷阱。" },
-    { "id": "rope", "name": "绳子", "category": "tool", "description": "十米尼龙绳，打着结。", "usage": "使用：攀爬/捆绑/做陷阱；可拖拽重物。" },
-    { "id": "zip_ties", "name": "扎带", "category": "tool", "description": "一整把黑色扎带。", "usage": "使用：捆手/固定门把；一次性，越挣扎越紧。" },
-    { "id": "padlock", "name": "挂锁", "category": "tool", "description": "黄铜挂锁，钥匙还插着。", "usage": "使用：从外面锁门，制造安全屋；钥匙要自己收好。" },
-    { "id": "mirror", "name": "小镜子", "category": "tool", "description": "化妆镜，边缘有缺口。", "usage": "使用：观察拐角/反光；月光下暴露自己位置。" },
-    { "id": "whistle", "name": "哨子", "category": "tool", "description": "体育老师那种金属哨。", "usage": "使用：远距离发出高频声，吸引/驱散；可当求救信号。" },
-    { "id": "fishing_line", "name": "鱼线", "category": "tool", "description": "透明尼龙线，很细但很韧。", "usage": "使用：做绊索/钓鱼；几乎看不见，适合阴人。" },
-    { "id": "nail_clippers", "name": "指甲刀", "category": "tool", "description": "指甲刀，附带小锉刀。", "usage": "使用：剪线/修拉链；可当镊子夹小东西。" },
-    { "id": "flashlight_bulb", "name": "手电灯泡", "category": "tool", "description": "手电专用小灯泡，还带包装。", "usage": "使用：替换烧掉的灯泡（需要电工胶带固定），恢复手电。" },
-
-    { "id": "crowbar", "name": "撬棍", "category": "weapon", "description": "一米长的铁撬棍，缠着防滑布。", "usage": "左键挥击：近战武器，耐久 8；也可撬门/撬柜，发出大噪声。" },
-    { "id": "kitchen_knife", "name": "菜刀", "category": "weapon", "description": "刀柄松动但刀刃锋利。", "usage": "左键挥击：近战武器，伤害高、耐久 4；挥舞时几乎无声。" },
-    { "id": "scissors", "name": "剪刀", "category": "tool", "description": "食堂用长柄剪刀，锈了一点。", "usage": "使用：剪布/剪线/包扎辅助；近战只算轻击（伤害低）。" },
-    { "id": "pistol", "name": "手枪", "category": "weapon", "description": "一把陌生的手枪，弹匣是空的。", "usage": "左键：有弹时射击（巨大噪声，吸引整层）；无弹时只能当钝器砸。" },
-    { "id": "ammo_9mm", "name": "9mm 子弹", "category": "weapon", "description": "六发子弹，用纸包着。", "usage": "在背包里与手枪组合：装填 6 发；射击一次消耗 1 发。" },
-    { "id": "rifle", "name": "步枪", "category": "weapon", "description": "旧步枪，枪管有锈，但还能打响。", "usage": "左键：远程射击（射程远、噪声极大）；需要对应步枪弹。" },
-    { "id": "flare", "name": "信号棒", "category": "weapon", "description": "红色信号棒，拉动即燃。", "usage": "使用：照明 2 分钟并制造强烈红烟；不能熄灭，会引爆附近燃气。" },
-    { "id": "firecracker", "name": "鞭炮", "category": "weapon", "description": "过年剩下的摔炮和一挂小鞭。", "usage": "使用：扔出去制造巨大噪声，吸引所有附近的人，5 秒后炸响。" },
-
-    { "id": "student_id", "name": "学生证", "category": "intel", "description": "半张塑封学生证，照片被水泡过。", "usage": "使用：打开需要身份的门禁/证明身份；被 NPC 看到可能被识破。" },
-    { "id": "keys", "name": "钥匙串", "category": "intel", "description": "一串贴着标签的钥匙，标签快看不清了。", "usage": "使用：打开对应编号的门；强行试锁会发出噪声。" },
-    { "id": "map_school", "name": "校园地图", "category": "intel", "description": "手绘的逃生路线图，标着几个安全屋。", "usage": "使用：在地图上标注房间与安全屋（解锁探索信息）。" },
-    { "id": "notebook", "name": "笔记本", "category": "intel", "description": "写满字迹的棕色笔记本。", "usage": "使用：记录线索（写入 L0 记忆），可作为证据给 NPC 看。" },
-    { "id": "exam_papers", "name": "试卷", "category": "intel", "description": "一沓没人认领的试卷，姓名栏被涂掉了。", "usage": "使用：包东西/引火/查线索；正面写着某个班级的名字。" },
-    { "id": "radio", "name": "收音机", "category": "intel", "description": "老式手摇收音机，天线断了半截。", "usage": "使用：消耗 4 节电池接收广播情报；声音会暴露位置。" },
-    { "id": "walkie_talkie", "name": "对讲机", "category": "intel", "description": "两个对讲机，其中一只是坏的。", "usage": "使用：与同频队友通信；按发射键会暴露位置。" },
-    { "id": "newspaper", "name": "旧报纸", "category": "intel", "description": "日期是爆发前一周的地方报纸。", "usage": "使用：阅读获取背景线索；可引火/包东西。" },
-    { "id": "coins", "name": "硬币", "category": "utility", "description": "几个一元硬币，还沾着泥。", "usage": "使用：投币/撬螺丝/扔出去引开注意（噪声 +1）。" },
-
-    { "id": "uniform", "name": "校服", "category": "utility", "description": "一套干净的旧校服，尺码偏大。", "usage": "使用：伪装成学生，降低被丧尸识破的概率；穿脏了会暴露。" },
-    { "id": "towel", "name": "毛巾", "category": "utility", "description": "洗得发白的毛巾。", "usage": "使用：堵门缝/擦干身体/止血辅助；潮湿可过滤部分烟尘。" },
-    { "id": "soap", "name": "肥皂", "category": "utility", "description": "旅馆那种小块香皂，还没拆封。", "usage": "使用：清洗气味（降低被追踪）；湿水后地面会变滑。" },
-    { "id": "toothbrush", "name": "牙刷", "category": "utility", "description": "一次性牙刷，包装破了。", "usage": "使用：清洁牙齿（长期不刷会掉卫生状态）；可当小撬棍。" },
-    { "id": "toilet_paper", "name": "厕纸", "category": "utility", "description": "半卷受潮又晒干的厕纸。", "usage": "使用：止血/引火/写纸条；极度短缺时它就是硬通货。" },
-    { "id": "rubber_gloves", "name": "橡胶手套", "category": "medical", "description": "医用手套，一盒只剩两只。", "usage": "使用：处理伤口/翻找脏物不脏手（降低感染概率）。" },
-    { "id": "surgical_mask", "name": "口罩", "category": "medical", "description": "三层医用口罩，鼻夹还在。", "usage": "使用：阻挡部分飞沫与粉尘，降低感染概率；说话声音会闷。" },
-    { "id": "earplugs", "name": "耳塞", "category": "utility", "description": "隔音耳塞，还剩一对。", "usage": "使用：降低噪声干扰/睡眠不受打扰；听不见身后的脚步。" },
-    { "id": "gum", "name": "口香糖", "category": "food", "description": "硬成石头的口香糖。", "usage": "使用：短暂提神；嚼软后可以粘住小机关（一次性胶）。" },
-    { "id": "candy", "name": "水果糖", "category": "food", "description": "一大把散装水果糖，糖纸粘在一起。", "usage": "使用：+0.02 物资；可以哄小孩/收买 NPC。" },
-    { "id": "chalk", "name": "粉笔", "category": "utility", "description": "几支彩色粉笔，断成一截一截。", "usage": "使用：在墙面标记路线（地图上留下记号）；粉末会留脚印。" },
-    { "id": "pencil", "name": "铅笔", "category": "utility", "description": "削得只剩一半的铅笔。", "usage": "使用：记录/标记；可以当小木棍卡住门缝。" },
-
-    { "id": "first_aid_kit", "name": "急救包", "category": "medical", "description": "完整的急救包，里面什么都有。", "usage": "使用：一次性治疗多处伤口（后续接生命系统），并消耗包内所有耗材。" },
-    { "id": "iv_bag", "name": "输液袋", "category": "medical", "description": "生理盐水袋，还没拆。", "usage": "使用：补充水分与体力；需要针头与一点时间。" },
-    { "id": "syringe", "name": "注射器", "category": "medical", "description": "一次性注射器，针头还封着。", "usage": "使用：注射药剂；空针可抽血（给感染者用会传播）。" },
-    { "id": "bleach", "name": "漂白剂", "category": "utility", "description": "大瓶漂白水，盖子拧不开。", "usage": "使用：掩盖血迹/消毒（刺激气味会暴露）；绝不能喝。" },
-    { "id": "rat_poison", "name": "老鼠药", "category": "junk", "description": "粉红色颗粒，装在饼干盒里，看起来像糖。", "usage": "使用：投毒（NPC/动物）；误食会中毒。倒进食物里几乎尝不出来。" },
-
-    { "id": "adult_magazine", "name": "成人杂志", "category": "junk", "description": "封面卷边的旧杂志，用塑料袋包着防水。", "usage": "使用：引火/垫桌脚/当伪装（塞进衣服假装胖）；也能当硬通货跟人换东西。" },
-    { "id": "condom", "name": "避孕套", "category": "junk", "description": "还没过期的避孕套，独立包装。", "usage": "使用：套在枪口防尘/装小物件防水（一个能装火柴和盐）；当气球吹也能引开注意。" },
-    { "id": "underwear", "name": "蕾丝内衣", "category": "junk", "description": "尺码不合的旧内衣，叠得很整齐。", "usage": "使用：塞住门缝/过滤水/引火；扔在显眼处可以羞辱或激怒某人。" },
-    { "id": "dildo_bat", "name": "橡胶棒", "category": "weapon", "description": "软质橡胶制品，手感沉重，来历不明。", "usage": "左键挥击：侮辱性极强的钝器，伤害低但会让对手短暂僵直；挥动时会发出沉闷的啪啪声。" },
-    { "id": "dog_collar", "name": "狗项圈", "category": "junk", "description": "带铃铛的皮革项圈，铃铛还在响。", "usage": "使用：套在 NPC 脖子上可以牵着走（羞辱/控制）；铃铛会持续发出声音。" },
-    { "id": "handcuffs", "name": "手铐", "category": "tool", "description": "一副真手铐，钥匙挂在旁边。", "usage": "使用：铐住 NPC/固定门把；被铐住的人会挣扎并发出噪声。" },
-    { "id": "wig", "name": "假发", "category": "junk", "description": "一顶偏亮色的假发，还有定型发胶味。", "usage": "使用：伪装（改变轮廓，降低被认出概率）；被扯掉时很滑稽。" },
-    { "id": "clown_mask", "name": "小丑面具", "category": "junk", "description": "橡胶小丑面具，笑容画得歪了。", "usage": "使用：遮脸伪装；在黑暗里会把正常人吓跑，也可能引来更坏的东西。" },
-    { "id": "wedding_photo", "name": "婚纱照", "category": "junk", "description": "相框裂了，照片上的两个人笑得很开心。", "usage": "使用：作为线索/情感道具（给 NPC 看可能触发剧情）；也可以砸碎吓人。" },
-    { "id": "urn", "name": "骨灰盒", "category": "junk", "description": "铜制骨灰盒，比想象中重。", "usage": "使用：可以当重物砸/压门；打开会撒一地，NPC 看见会崩溃。" },
-    { "id": "love_letter", "name": "情书", "category": "junk", "description": "折成心形的信，字迹被泪水晕开。", "usage": "使用：线索/情感道具；可以换情报，也可以念给同伴听（士气）。" },
-    { "id": "suicide_note", "name": "遗书", "category": "junk", "description": "一张对折的纸，开头是「对不起」。", "usage": "使用：线索（指向某个人/某个房间）；读它会短暂降低士气。" },
-    { "id": "bloody_shirt", "name": "血衣", "category": "junk", "description": "一件没洗过的衬衫，血已经变黑。", "usage": "使用：伪装（让丧尸以为你是同类，但活人会报警）；可以拆成布条。" },
-    { "id": "human_tooth", "name": "人牙", "category": "junk", "description": "一颗带金冠的后槽牙，牙根还带着一点东西。", "usage": "使用：可以做小刀/撬小东西；是硬通货；别在别人面前数。" },
-
-    { "id": "car_battery", "name": "汽车电瓶", "category": "tool", "description": "从报废车拆下来的电瓶，还有电。", "usage": "使用：给配电箱/电动门供电（需要电线）；很重，移动速度 -20%。" },
-    { "id": "fuel_can", "name": "汽油桶", "category": "tool", "description": "半桶汽油，盖子用布塞着。", "usage": "使用：给发电机/汽车加油；可以纵火（大幅提升沉积/吸引尸群）。" },
-    { "id": "camping_stove", "name": "露营炉", "category": "tool", "description": "折叠气炉，气罐还剩一点。", "usage": "使用：烧水/加热食物（泡面/咖啡）；火焰会吸引远处注意。" },
-    { "id": "gas_canister", "name": "便携气罐", "category": "tool", "description": "打火机用的补充气罐。", "usage": "使用：补打火机气/当小型爆炸物（扔进火里）；受热会爆炸。" },
-    { "id": "battery_aa", "name": "电池", "category": "tool", "description": "四节五号电池，两节还能用。", "usage": "使用：给手电/收音机/对讲机供电；装反会短路并发出噪声。" },
-    { "id": "power_bank", "name": "充电宝", "category": "tool", "description": "满电的充电宝，线断了。", "usage": "使用：给收音机/手机充电（需要线）；还能当一次性电击器。" },
-    { "id": "phone", "name": "手机", "category": "intel", "description": "屏幕碎了但还能开机，锁屏是一张合影。", "usage": "使用：查看聊天记录/当手电（耗电快）/拨打紧急号码（信号极差）。" },
-    { "id": "screw_nail_bag", "name": "五金袋", "category": "tool", "description": "一袋螺丝、钉子和膨胀螺栓。", "usage": "使用：钉门/修家具/做陷阱；散在地上会扎脚并发出响声。" },
-    { "id": "crowbar_small", "name": "小撬棍", "category": "tool", "description": "二十厘米的迷你撬棍，钥匙扣大小。", "usage": "使用：撬小抽屉/开锁辅助；近战太短，只能吓人。" },
-    { "id": "saw", "name": "手锯", "category": "tool", "description": "生锈的短手锯，锯齿还利。", "usage": "使用：锯木条/锯断挂锁（很慢、很响）；可以当钝器。" },
-    { "id": "fire_extinguisher", "name": "灭火器", "category": "tool", "description": "走廊里拎来的干粉灭火器，压力表在绿区。", "usage": "使用：扑小火/砸人（重型钝器）/制造粉尘掩护；喷完就废。" },
-    { "id": "flashlight_spare", "name": "备用小手电", "category": "tool", "description": "笔式手电，电池还有一点。", "usage": "使用：副光源，续航 20 分钟；只能照到很近的地方。" }
+    {
+      "id": "bottled_water",
+      "name": "瓶装水",
+      "category": "food",
+      "description": "干净饮用水，能直接喝，空瓶还能装水。",
+      "usage": "在背包里使用：+0.08 物资；空瓶留下可二次装水。",
+      "effect": {
+        "supplies": 0.08
+      }
+    },
+    {
+      "id": "canned_food",
+      "name": "罐装食品",
+      "category": "food",
+      "description": "铁皮罐头，密封完好。",
+      "usage": "使用：+0.10 物资；没有开罐器时用螺丝刀撬，50% 概率浪费一半。",
+      "effect": {
+        "supplies": 0.1
+      }
+    },
+    {
+      "id": "biscuits",
+      "name": "压缩饼干",
+      "category": "food",
+      "description": "干燥、耐放、难吃。",
+      "usage": "使用：+0.06 物资；潮湿环境存放超过 3 天会霉变。",
+      "effect": {
+        "supplies": 0.06
+      }
+    },
+    {
+      "id": "instant_noodles",
+      "name": "泡面",
+      "category": "food",
+      "description": "需要热水；干啃也能填肚子。",
+      "usage": "使用：有热水 +0.09 物资，干啃 +0.03 并发出脆响（噪声 +1）。",
+      "effect": {
+        "supplies": 0.09
+      }
+    },
+    {
+      "id": "chocolate",
+      "name": "巧克力",
+      "category": "food",
+      "description": "高热量，化过又硬回去。",
+      "usage": "使用：+0.04 物资，短暂提神（后续接状态系统）。",
+      "effect": {
+        "supplies": 0.04
+      }
+    },
+    {
+      "id": "expired_milk",
+      "name": "过期牛奶",
+      "category": "junk",
+      "description": "不知道放了多久，没开盖也闻得到酸味。",
+      "usage": "使用：喝下 +0.03 物资，但 30% 概率呕吐并发出噪声；也可用来恶心 NPC。",
+      "effect": {
+        "supplies": 0.03,
+        "contaminate": true
+      }
+    },
+    {
+      "id": "dog_food",
+      "name": "狗粮",
+      "category": "food",
+      "description": "其实能吃，只是需要理由。",
+      "usage": "使用：+0.05 物资；带在包里会引来流浪狗。",
+      "effect": {
+        "supplies": 0.05
+      }
+    },
+    {
+      "id": "beer",
+      "name": "啤酒",
+      "category": "food",
+      "description": "罐装，温的。",
+      "usage": "使用：缓解紧张（后续状态系统），但降低准度；空罐可当噪声源。",
+      "effect": {
+        "supplies": 0.02
+      }
+    },
+    {
+      "id": "liquor",
+      "name": "白酒",
+      "category": "utility",
+      "description": "高度数，可燃可消毒。",
+      "usage": "饮用可镇痛但降低操控；也可当消毒剂（医疗 -1 效果）或引火物。",
+      "effect": {
+        "supplies": 0.01,
+        "contaminate": true
+      }
+    },
+    {
+      "id": "cigarettes",
+      "name": "香烟",
+      "category": "utility",
+      "description": "半包，受潮了一点。",
+      "usage": "使用：缓解焦虑；点烟会暴露位置（吸引 1 格内敌人）。"
+    },
+    {
+      "id": "energy_drink",
+      "name": "功能饮料",
+      "category": "food",
+      "description": "过期的能量饮料，糖分还在。",
+      "usage": "使用：+0.05 物资，60 秒内疾跑不消耗额外体力（后续接体力）。",
+      "effect": {
+        "supplies": 0.05
+      }
+    },
+    {
+      "id": "coffee",
+      "name": "速溶咖啡",
+      "category": "food",
+      "description": "粉末结块了，需要热水。",
+      "usage": "使用：提神 2 小时（后续状态）；干吃会呛到（噪声 +1）。",
+      "effect": {
+        "supplies": 0.02
+      }
+    },
+    {
+      "id": "bandage",
+      "name": "绷带",
+      "category": "medical",
+      "description": "一卷还干净的绷带。",
+      "usage": "使用：止血，回复 1 格擦伤；不能治内出血。",
+      "effect": {
+        "health": 0.1
+      }
+    },
+    {
+      "id": "painkillers",
+      "name": "止痛药",
+      "category": "medical",
+      "description": "对乙酰氨基酚，瓶子快空了。",
+      "usage": "使用：压制疼痛 2 小时，掩盖伤势但不停血；连续使用 3 次成瘾（后续惩罚）。",
+      "effect": {
+        "health": 0.05,
+        "contaminate": true
+      }
+    },
+    {
+      "id": "antibiotics",
+      "name": "抗生素",
+      "category": "medical",
+      "description": "需要冷藏的针剂，常温下会快速失效。",
+      "usage": "使用：治疗感染，必须从冷藏柜取出后 6 小时内使用。",
+      "effect": {
+        "health": 0.2
+      }
+    },
+    {
+      "id": "alcohol_wipes",
+      "name": "酒精棉",
+      "category": "medical",
+      "description": "独立包装，还有酒精味。",
+      "usage": "使用：消毒伤口，降低感染概率；可引火（极小）。",
+      "effect": {
+        "health": 0.05
+      }
+    },
+    {
+      "id": "disinfectant",
+      "name": "消毒液",
+      "category": "medical",
+      "description": "大半瓶，标签被撕了一半。",
+      "usage": "使用：清洁伤口与血迹；稀释后可拖地掩盖气味。",
+      "effect": {
+        "health": 0.05
+      }
+    },
+    {
+      "id": "iodine",
+      "name": "碘酒",
+      "category": "medical",
+      "description": "棕色小瓶，棉签还封着。",
+      "usage": "使用：伤口消毒；进眼睛会短暂失明。",
+      "effect": {
+        "health": 0.08
+      }
+    },
+    {
+      "id": "burn_cream",
+      "name": "烫伤膏",
+      "category": "medical",
+      "description": "管状，挤出来一半。",
+      "usage": "使用：处理烫伤；也可临时润滑卡住的抽屉。",
+      "effect": {
+        "health": 0.06
+      }
+    },
+    {
+      "id": "cold_pack",
+      "name": "冰袋",
+      "category": "medical",
+      "description": "捏破内袋就会变冷。",
+      "usage": "使用：一次性降温（发烧/扭伤）；捏破时发出脆响。",
+      "effect": {
+        "health": 0.04
+      }
+    },
+    {
+      "id": "hot_pack",
+      "name": "暖宝宝",
+      "category": "medical",
+      "description": "贴在内衣上能暖 8 小时。",
+      "usage": "使用：保暖（冬季地图）；贴上后 8 小时内不怕冷。",
+      "effect": {
+        "health": 0.02
+      }
+    },
+    {
+      "id": "vitamins",
+      "name": "维生素",
+      "category": "medical",
+      "description": "一瓶普通的复合维生素。",
+      "usage": "使用：长期少量恢复体力（后续状态）；一次吃太多反而伤胃。",
+      "effect": {
+        "health": 0.03
+      }
+    },
+    {
+      "id": "splint",
+      "name": "夹板",
+      "category": "medical",
+      "description": "两块木板加几圈绷带。",
+      "usage": "使用：固定骨折，移动速度临时 -30%；无骨折时使用会浪费。",
+      "effect": {
+        "health": 0.1
+      }
+    },
+    {
+      "id": "tourniquet",
+      "name": "止血带",
+      "category": "medical",
+      "description": "橡胶带加一根木棍。",
+      "usage": "使用：大出血时保命；使用超过 2 小时会坏死（后续惩罚）。",
+      "effect": {
+        "health": 0.15,
+        "contaminate": true
+      }
+    },
+    {
+      "id": "sleeping_pills",
+      "name": "安眠药",
+      "category": "medical",
+      "description": "白色小片，标着「睡前一片」。",
+      "usage": "使用：强制入睡 6 小时（时间跳格）；给 NPC 吃可让对方睡死。过量会出人命。",
+      "effect": {
+        "health": 0.02,
+        "contaminate": true
+      }
+    },
+    {
+      "id": "thermometer",
+      "name": "体温计",
+      "category": "medical",
+      "description": "水银体温计，甩一甩还能用。",
+      "usage": "使用：测体温，识别是否感染（早期唯一办法）；摔碎有毒。"
+    },
+    {
+      "id": "lighter",
+      "name": "打火机",
+      "category": "tool",
+      "description": "一次性打火机，气还剩一半。",
+      "usage": "使用：点火；每次照明/引火消耗 1 格气，共 3 次。潮湿时失效。"
+    },
+    {
+      "id": "matches",
+      "name": "火柴",
+      "category": "tool",
+      "description": "半盒受潮过的火柴。",
+      "usage": "使用：点火一次，受潮后成功率 50%；可烧掉纸类证据。"
+    },
+    {
+      "id": "candle",
+      "name": "蜡烛",
+      "category": "tool",
+      "description": "半截生日蜡烛，插在碟子上。",
+      "usage": "使用：无噪声照明 90 分钟；会留下可被追踪的蜡滴。"
+    },
+    {
+      "id": "duct_tape",
+      "name": "电工胶带",
+      "category": "tool",
+      "description": "黑色绝缘胶带，剩大半卷。",
+      "usage": "使用：修手电/封门缝/固定物品；每用一次粘性下降。"
+    },
+    {
+      "id": "screwdriver",
+      "name": "螺丝刀",
+      "category": "tool",
+      "description": "十字螺丝刀，手柄开裂。",
+      "usage": "使用：撬柜/拆电器/当近战（伤害低、无噪声）；可作开罐器。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "hammer",
+      "name": "锤子",
+      "category": "tool",
+      "description": "羊角锤，木柄有血渍。",
+      "usage": "使用：近战（伤害中、噪声大）；可钉门/砸锁。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "box_cutter",
+      "name": "美工刀",
+      "category": "tool",
+      "description": "刀片还剩两节，很锋利。",
+      "usage": "使用：裁纸/割绳；近战伤害低但安静，耐久 4。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "wire",
+      "name": "电线",
+      "category": "tool",
+      "description": "三米长的铜芯电线，绝缘皮完好。",
+      "usage": "使用：接电/做绊索/固定；可当临时绳。"
+    },
+    {
+      "id": "fuse",
+      "name": "保险丝",
+      "category": "tool",
+      "description": "文具盒里翻出的玻璃管保险丝。",
+      "usage": "使用：修复配电箱（恢复某个房间照明）；规格不对会再烧一次。"
+    },
+    {
+      "id": "light_bulb",
+      "name": "灯泡",
+      "category": "tool",
+      "description": "40W 白炽灯泡，玻璃完好。",
+      "usage": "使用：换进灯座获取照明；也可打碎做响声陷阱。"
+    },
+    {
+      "id": "rope",
+      "name": "绳子",
+      "category": "tool",
+      "description": "十米尼龙绳，打着结。",
+      "usage": "使用：攀爬/捆绑/做陷阱；可拖拽重物。"
+    },
+    {
+      "id": "zip_ties",
+      "name": "扎带",
+      "category": "tool",
+      "description": "一整把黑色扎带。",
+      "usage": "使用：捆手/固定门把；一次性，越挣扎越紧。"
+    },
+    {
+      "id": "padlock",
+      "name": "挂锁",
+      "category": "tool",
+      "description": "黄铜挂锁，钥匙还插着。",
+      "usage": "使用：从外面锁门，制造安全屋；钥匙要自己收好。"
+    },
+    {
+      "id": "mirror",
+      "name": "小镜子",
+      "category": "tool",
+      "description": "化妆镜，边缘有缺口。",
+      "usage": "使用：观察拐角/反光；月光下暴露自己位置。"
+    },
+    {
+      "id": "whistle",
+      "name": "哨子",
+      "category": "tool",
+      "description": "体育老师那种金属哨。",
+      "usage": "使用：远距离发出高频声，吸引/驱散；可当求救信号。",
+      "effect": {
+        "noise": 2
+      }
+    },
+    {
+      "id": "fishing_line",
+      "name": "鱼线",
+      "category": "tool",
+      "description": "透明尼龙线，很细但很韧。",
+      "usage": "使用：做绊索/钓鱼；几乎看不见，适合阴人。"
+    },
+    {
+      "id": "nail_clippers",
+      "name": "指甲刀",
+      "category": "tool",
+      "description": "指甲刀，附带小锉刀。",
+      "usage": "使用：剪线/修拉链；可当镊子夹小东西。"
+    },
+    {
+      "id": "flashlight_bulb",
+      "name": "手电灯泡",
+      "category": "tool",
+      "description": "手电专用小灯泡，还带包装。",
+      "usage": "使用：替换烧掉的灯泡（需要电工胶带固定），恢复手电。"
+    },
+    {
+      "id": "crowbar",
+      "name": "撬棍",
+      "category": "weapon",
+      "description": "一米长的铁撬棍，缠着防滑布。",
+      "usage": "左键挥击：近战武器，耐久 8；也可撬门/撬柜，发出大噪声。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "kitchen_knife",
+      "name": "菜刀",
+      "category": "weapon",
+      "description": "刀柄松动但刀刃锋利。",
+      "usage": "左键挥击：近战武器，伤害高、耐久 4；挥舞时几乎无声。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "scissors",
+      "name": "剪刀",
+      "category": "tool",
+      "description": "食堂用长柄剪刀，锈了一点。",
+      "usage": "使用：剪布/剪线/包扎辅助；近战只算轻击（伤害低）。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "pistol",
+      "name": "手枪",
+      "category": "weapon",
+      "description": "一把陌生的手枪，弹匣是空的。",
+      "usage": "左键：有弹时射击（巨大噪声，吸引整层）；无弹时只能当钝器砸。",
+      "effect": {
+        "equip": "firearm"
+      }
+    },
+    {
+      "id": "ammo_9mm",
+      "name": "9mm 子弹",
+      "category": "weapon",
+      "description": "六发子弹，用纸包着。",
+      "usage": "在背包里与手枪组合：装填 6 发；射击一次消耗 1 发。"
+    },
+    {
+      "id": "rifle",
+      "name": "步枪",
+      "category": "weapon",
+      "description": "旧步枪，枪管有锈，但还能打响。",
+      "usage": "左键：远程射击（射程远、噪声极大）；需要对应步枪弹。",
+      "effect": {
+        "equip": "firearm"
+      }
+    },
+    {
+      "id": "flare",
+      "name": "信号棒",
+      "category": "weapon",
+      "description": "红色信号棒，拉动即燃。",
+      "usage": "使用：照明 2 分钟并制造强烈红烟；不能熄灭，会引爆附近燃气。",
+      "effect": {
+        "noise": 2
+      }
+    },
+    {
+      "id": "firecracker",
+      "name": "鞭炮",
+      "category": "weapon",
+      "description": "过年剩下的摔炮和一挂小鞭。",
+      "usage": "使用：扔出去制造巨大噪声，吸引所有附近的人，5 秒后炸响。",
+      "effect": {
+        "noise": 3
+      }
+    },
+    {
+      "id": "student_id",
+      "name": "学生证",
+      "category": "intel",
+      "description": "半张塑封学生证，照片被水泡过。",
+      "usage": "使用：打开需要身份的门禁/证明身份；被 NPC 看到可能被识破。"
+    },
+    {
+      "id": "keys",
+      "name": "钥匙串",
+      "category": "intel",
+      "description": "一串贴着标签的钥匙，标签快看不清了。",
+      "usage": "使用：打开对应编号的门；强行试锁会发出噪声。"
+    },
+    {
+      "id": "map_school",
+      "name": "校园地图",
+      "category": "intel",
+      "description": "手绘的逃生路线图，标着几个安全屋。",
+      "usage": "使用：在地图上标注房间与安全屋（解锁探索信息）。"
+    },
+    {
+      "id": "notebook",
+      "name": "笔记本",
+      "category": "intel",
+      "description": "写满字迹的棕色笔记本。",
+      "usage": "使用：记录线索（写入 L0 记忆），可作为证据给 NPC 看。"
+    },
+    {
+      "id": "exam_papers",
+      "name": "试卷",
+      "category": "intel",
+      "description": "一沓没人认领的试卷，姓名栏被涂掉了。",
+      "usage": "使用：包东西/引火/查线索；正面写着某个班级的名字。"
+    },
+    {
+      "id": "radio",
+      "name": "收音机",
+      "category": "intel",
+      "description": "老式手摇收音机，天线断了半截。",
+      "usage": "使用：消耗 4 节电池接收广播情报；声音会暴露位置。"
+    },
+    {
+      "id": "walkie_talkie",
+      "name": "对讲机",
+      "category": "intel",
+      "description": "两个对讲机，其中一只是坏的。",
+      "usage": "使用：与同频队友通信；按发射键会暴露位置。"
+    },
+    {
+      "id": "newspaper",
+      "name": "旧报纸",
+      "category": "intel",
+      "description": "日期是爆发前一周的地方报纸。",
+      "usage": "使用：阅读获取背景线索；可引火/包东西。"
+    },
+    {
+      "id": "coins",
+      "name": "硬币",
+      "category": "utility",
+      "description": "几个一元硬币，还沾着泥。",
+      "usage": "使用：投币/撬螺丝/扔出去引开注意（噪声 +1）。"
+    },
+    {
+      "id": "uniform",
+      "name": "校服",
+      "category": "utility",
+      "description": "一套干净的旧校服，尺码偏大。",
+      "usage": "使用：伪装成学生，降低被丧尸识破的概率；穿脏了会暴露。"
+    },
+    {
+      "id": "towel",
+      "name": "毛巾",
+      "category": "utility",
+      "description": "洗得发白的毛巾。",
+      "usage": "使用：堵门缝/擦干身体/止血辅助；潮湿可过滤部分烟尘。"
+    },
+    {
+      "id": "soap",
+      "name": "肥皂",
+      "category": "utility",
+      "description": "旅馆那种小块香皂，还没拆封。",
+      "usage": "使用：清洗气味（降低被追踪）；湿水后地面会变滑。"
+    },
+    {
+      "id": "toothbrush",
+      "name": "牙刷",
+      "category": "utility",
+      "description": "一次性牙刷，包装破了。",
+      "usage": "使用：清洁牙齿（长期不刷会掉卫生状态）；可当小撬棍。"
+    },
+    {
+      "id": "toilet_paper",
+      "name": "厕纸",
+      "category": "utility",
+      "description": "半卷受潮又晒干的厕纸。",
+      "usage": "使用：止血/引火/写纸条；极度短缺时它就是硬通货。"
+    },
+    {
+      "id": "rubber_gloves",
+      "name": "橡胶手套",
+      "category": "medical",
+      "description": "医用手套，一盒只剩两只。",
+      "usage": "使用：处理伤口/翻找脏物不脏手（降低感染概率）。"
+    },
+    {
+      "id": "surgical_mask",
+      "name": "口罩",
+      "category": "medical",
+      "description": "三层医用口罩，鼻夹还在。",
+      "usage": "使用：阻挡部分飞沫与粉尘，降低感染概率；说话声音会闷。"
+    },
+    {
+      "id": "earplugs",
+      "name": "耳塞",
+      "category": "utility",
+      "description": "隔音耳塞，还剩一对。",
+      "usage": "使用：降低噪声干扰/睡眠不受打扰；听不见身后的脚步。"
+    },
+    {
+      "id": "gum",
+      "name": "口香糖",
+      "category": "food",
+      "description": "硬成石头的口香糖。",
+      "usage": "使用：短暂提神；嚼软后可以粘住小机关（一次性胶）。",
+      "effect": {
+        "supplies": 0.01
+      }
+    },
+    {
+      "id": "candy",
+      "name": "水果糖",
+      "category": "food",
+      "description": "一大把散装水果糖，糖纸粘在一起。",
+      "usage": "使用：+0.02 物资；可以哄小孩/收买 NPC。",
+      "effect": {
+        "supplies": 0.02
+      }
+    },
+    {
+      "id": "chalk",
+      "name": "粉笔",
+      "category": "utility",
+      "description": "几支彩色粉笔，断成一截一截。",
+      "usage": "使用：在墙面标记路线（地图上留下记号）；粉末会留脚印。"
+    },
+    {
+      "id": "pencil",
+      "name": "铅笔",
+      "category": "utility",
+      "description": "削得只剩一半的铅笔。",
+      "usage": "使用：记录/标记；可以当小木棍卡住门缝。"
+    },
+    {
+      "id": "first_aid_kit",
+      "name": "急救包",
+      "category": "medical",
+      "description": "完整的急救包，里面什么都有。",
+      "usage": "使用：一次性治疗多处伤口（后续接生命系统），并消耗包内所有耗材。",
+      "effect": {
+        "health": 0.35
+      }
+    },
+    {
+      "id": "iv_bag",
+      "name": "输液袋",
+      "category": "medical",
+      "description": "生理盐水袋，还没拆。",
+      "usage": "使用：补充水分与体力；需要针头与一点时间。",
+      "effect": {
+        "health": 0.2
+      }
+    },
+    {
+      "id": "syringe",
+      "name": "注射器",
+      "category": "medical",
+      "description": "一次性注射器，针头还封着。",
+      "usage": "使用：注射药剂；空针可抽血（给感染者用会传播）。",
+      "effect": {
+        "health": 0.05,
+        "contaminate": true
+      }
+    },
+    {
+      "id": "bleach",
+      "name": "漂白剂",
+      "category": "utility",
+      "description": "大瓶漂白水，盖子拧不开。",
+      "usage": "使用：掩盖血迹/消毒（刺激气味会暴露）；绝不能喝。"
+    },
+    {
+      "id": "rat_poison",
+      "name": "老鼠药",
+      "category": "junk",
+      "description": "粉红色颗粒，装在饼干盒里，看起来像糖。",
+      "usage": "使用：投毒（NPC/动物）；误食会中毒。倒进食物里几乎尝不出来。"
+    },
+    {
+      "id": "adult_magazine",
+      "name": "成人杂志",
+      "category": "junk",
+      "description": "封面卷边的旧杂志，用塑料袋包着防水。",
+      "usage": "使用：引火/垫桌脚/当伪装（塞进衣服假装胖）；也能当硬通货跟人换东西。"
+    },
+    {
+      "id": "condom",
+      "name": "避孕套",
+      "category": "junk",
+      "description": "还没过期的避孕套，独立包装。",
+      "usage": "使用：套在枪口防尘/装小物件防水（一个能装火柴和盐）；当气球吹也能引开注意。"
+    },
+    {
+      "id": "underwear",
+      "name": "蕾丝内衣",
+      "category": "junk",
+      "description": "尺码不合的旧内衣，叠得很整齐。",
+      "usage": "使用：塞住门缝/过滤水/引火；扔在显眼处可以羞辱或激怒某人。"
+    },
+    {
+      "id": "dildo_bat",
+      "name": "橡胶棒",
+      "category": "weapon",
+      "description": "软质橡胶制品，手感沉重，来历不明。",
+      "usage": "左键挥击：侮辱性极强的钝器，伤害低但会让对手短暂僵直；挥动时会发出沉闷的啪啪声。",
+      "effect": {
+        "equip": "melee"
+      }
+    },
+    {
+      "id": "dog_collar",
+      "name": "狗项圈",
+      "category": "junk",
+      "description": "带铃铛的皮革项圈，铃铛还在响。",
+      "usage": "使用：套在 NPC 脖子上可以牵着走（羞辱/控制）；铃铛会持续发出声音。"
+    },
+    {
+      "id": "handcuffs",
+      "name": "手铐",
+      "category": "tool",
+      "description": "一副真手铐，钥匙挂在旁边。",
+      "usage": "使用：铐住 NPC/固定门把；被铐住的人会挣扎并发出噪声。"
+    },
+    {
+      "id": "wig",
+      "name": "假发",
+      "category": "junk",
+      "description": "一顶偏亮色的假发，还有定型发胶味。",
+      "usage": "使用：伪装（改变轮廓，降低被认出概率）；被扯掉时很滑稽。"
+    },
+    {
+      "id": "clown_mask",
+      "name": "小丑面具",
+      "category": "junk",
+      "description": "橡胶小丑面具，笑容画得歪了。",
+      "usage": "使用：遮脸伪装；在黑暗里会把正常人吓跑，也可能引来更坏的东西。"
+    },
+    {
+      "id": "wedding_photo",
+      "name": "婚纱照",
+      "category": "junk",
+      "description": "相框裂了，照片上的两个人笑得很开心。",
+      "usage": "使用：作为线索/情感道具（给 NPC 看可能触发剧情）；也可以砸碎吓人。"
+    },
+    {
+      "id": "urn",
+      "name": "骨灰盒",
+      "category": "junk",
+      "description": "铜制骨灰盒，比想象中重。",
+      "usage": "使用：可以当重物砸/压门；打开会撒一地，NPC 看见会崩溃。"
+    },
+    {
+      "id": "love_letter",
+      "name": "情书",
+      "category": "junk",
+      "description": "折成心形的信，字迹被泪水晕开。",
+      "usage": "使用：线索/情感道具；可以换情报，也可以念给同伴听（士气）。"
+    },
+    {
+      "id": "suicide_note",
+      "name": "遗书",
+      "category": "junk",
+      "description": "一张对折的纸，开头是「对不起」。",
+      "usage": "使用：线索（指向某个人/某个房间）；读它会短暂降低士气。"
+    },
+    {
+      "id": "bloody_shirt",
+      "name": "血衣",
+      "category": "junk",
+      "description": "一件没洗过的衬衫，血已经变黑。",
+      "usage": "使用：伪装（让丧尸以为你是同类，但活人会报警）；可以拆成布条。"
+    },
+    {
+      "id": "human_tooth",
+      "name": "人牙",
+      "category": "junk",
+      "description": "一颗带金冠的后槽牙，牙根还带着一点东西。",
+      "usage": "使用：可以做小刀/撬小东西；是硬通货；别在别人面前数。"
+    },
+    {
+      "id": "car_battery",
+      "name": "汽车电瓶",
+      "category": "tool",
+      "description": "从报废车拆下来的电瓶，还有电。",
+      "usage": "使用：给配电箱/电动门供电（需要电线）；很重，移动速度 -20%。"
+    },
+    {
+      "id": "fuel_can",
+      "name": "汽油桶",
+      "category": "tool",
+      "description": "半桶汽油，盖子用布塞着。",
+      "usage": "使用：给发电机/汽车加油；可以纵火（大幅提升沉积/吸引尸群）。"
+    },
+    {
+      "id": "camping_stove",
+      "name": "露营炉",
+      "category": "tool",
+      "description": "折叠气炉，气罐还剩一点。",
+      "usage": "使用：烧水/加热食物（泡面/咖啡）；火焰会吸引远处注意。"
+    },
+    {
+      "id": "gas_canister",
+      "name": "便携气罐",
+      "category": "tool",
+      "description": "打火机用的补充气罐。",
+      "usage": "使用：补打火机气/当小型爆炸物（扔进火里）；受热会爆炸。"
+    },
+    {
+      "id": "battery_aa",
+      "name": "电池",
+      "category": "tool",
+      "description": "四节五号电池，两节还能用。",
+      "usage": "使用：给手电/收音机/对讲机供电；装反会短路并发出噪声。"
+    },
+    {
+      "id": "power_bank",
+      "name": "充电宝",
+      "category": "tool",
+      "description": "满电的充电宝，线断了。",
+      "usage": "使用：给收音机/手机充电（需要线）；还能当一次性电击器。"
+    },
+    {
+      "id": "phone",
+      "name": "手机",
+      "category": "intel",
+      "description": "屏幕碎了但还能开机，锁屏是一张合影。",
+      "usage": "使用：查看聊天记录/当手电（耗电快）/拨打紧急号码（信号极差）。"
+    },
+    {
+      "id": "screw_nail_bag",
+      "name": "五金袋",
+      "category": "tool",
+      "description": "一袋螺丝、钉子和膨胀螺栓。",
+      "usage": "使用：钉门/修家具/做陷阱；散在地上会扎脚并发出响声。"
+    },
+    {
+      "id": "crowbar_small",
+      "name": "小撬棍",
+      "category": "tool",
+      "description": "二十厘米的迷你撬棍，钥匙扣大小。",
+      "usage": "使用：撬小抽屉/开锁辅助；近战太短，只能吓人。"
+    },
+    {
+      "id": "saw",
+      "name": "手锯",
+      "category": "tool",
+      "description": "生锈的短手锯，锯齿还利。",
+      "usage": "使用：锯木条/锯断挂锁（很慢、很响）；可以当钝器。"
+    },
+    {
+      "id": "fire_extinguisher",
+      "name": "灭火器",
+      "category": "tool",
+      "description": "走廊里拎来的干粉灭火器，压力表在绿区。",
+      "usage": "使用：扑小火/砸人（重型钝器）/制造粉尘掩护；喷完就废。"
+    },
+    {
+      "id": "flashlight_spare",
+      "name": "备用小手电",
+      "category": "tool",
+      "description": "笔式手电，电池还有一点。",
+      "usage": "使用：副光源，续航 20 分钟；只能照到很近的地方。"
+    }
   ]
 }

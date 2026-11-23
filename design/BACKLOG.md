@@ -60,6 +60,8 @@
 | P17 | WASD 全区域可达门禁 | `TRAVERSE_OK corners=4 center=1 leaks=0` | **DONE**（房间分隔墙仍未做） |
 | P18 | 物资与容器系统 v1：剧情不刷新 / 四档珍惜度 / 每建筑唯一高珍惜容器 / 枪械只在最高档 / 104 件物品表（详情不含价值） | `LOOT_OK items=104 story=never capacity_random=ok weapon_only_treasure=ok` + `design/LOOT.md` | **DONE** |
 | P19 | 容器加载校验（稀有度池引用、每建筑唯一 treasure）与面板证据 | `LOOT_OK` 加载失败即拒；`CORRIDOR-LOOT_*.png` | **DONE** |
+| P20 | 背包与使用系统：容量 10、堆叠、拾取入包、E 使用 / Q 丢弃 / Tab 界面、玩家物资/体力/噪声状态 | `INVENTORY_OK effects=41` + `CORRIDOR_INVENTORY_OK` | **DONE** |
+| P21 | 左键攻击占位：装备近战/枪械后挥击、按武器抬噪声、4 帧挥击条 | `CORRIDOR_INVENTORY_OK ... attack=left_click` | **DONE**（无敌人/命中/耐久） |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）

@@ -25,6 +25,12 @@ LOOT_CONTAINERS = ROOT / "data" / "loot" / "containers.json"
 LOOT_ITEMS = ROOT / "data" / "loot" / "items.json"
 # 战利品面板的固定文案：与 corridor.gd 的 _search_container / _loot_lines 保持一致。
 LOOT_UI_TEXT = "找到：共件已经搜过一次剧情模式不会刷新里面是空的连灰都没有、…（）"
+# 背包与使用界面的固定文案（与 corridor.gd 的 _render_inventory / _use_selected_item 一致）。
+INVENTORY_UI_TEXT = (
+    "背包装备物资体力使用丢弃关闭搜柜子会拿到东西已放入背包满了剩件没拿用了丢掉"
+    "这件东西现在用不上已经装备"
+)
+ASCII_EXTRA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/×()"
 PAL = ROOT / "art" / "palettes" / "master.gpl"
 CELL_SIZE = 16
 CJK_COLUMNS = 16
@@ -71,7 +77,7 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
     if not CJK_FONT.exists():
         raise SystemExit(f"CJK font source missing: {CJK_FONT}")
     data = json.loads(INSPECTIONS.read_text(encoding="utf-8"))
-    characters = set("EESCV") | set(str(data.get("ui", {}).get("inspect", "查看"))) | set(str(data.get("ui", {}).get("close", "关闭")))
+    characters = set("EESCV") | set(ASCII_EXTRA) | set(INVENTORY_UI_TEXT) | set(str(data.get("ui", {}).get("inspect", "查看"))) | set(str(data.get("ui", {}).get("close", "关闭")))
     for record in data.get("records", []):
         characters.update(str(record.get("title", "")))
         for line in record.get("lines", []):

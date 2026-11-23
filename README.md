@@ -28,11 +28,12 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 | 不按速度键 | 步行（24 px/s） |
 | `Shift`（按住） | 疾跑（44 px/s，逃跑用，噪声最高） |
 | `Ctrl`（按住） | 蹲下潜行（12 px/s，最慢，噪声最低） |
-| `E` | 拾取 / 搜索（两个可搜索柜子：储物柜、急救柜） |
+| `E` | 拾取 / 搜索（物品自动进背包，容量 10） |
+| `Tab` | 背包：`W/S` 选择、`E` 使用、`Q` 丢弃、`Tab`/`Esc` 关闭 |
 | `V` | 查看文本 / 关闭检查框 |
 | `Esc` | 关闭 / 取消 |
 | `F` | 手电开关 |
-| 鼠标左键 / `Tab` | 已定键位，战斗与背包系统未实现（见 CONTROLS.md） |
+| 鼠标左键 | 攻击 / 挥击（已装备武器；占位，无敌人） |
 
 物资与容器规则见 [`design/LOOT.md`](design/LOOT.md)：**剧情模式下容器搜过一次就永久为空（不刷新）**，
 每栋建筑只有一个高珍惜容器（学校 = 急救柜），物品详情不写价值/稀有度，玩家自己判断。
@@ -86,6 +87,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --headless --path . --script res://game/tests/replay_30d.gd
 & $G --headless --path . --script res://game/tests/shell.gd
 & $G --headless --path . --script res://game/tests/loot.gd
+& $G --headless --path . --script res://game/tests/inventory.gd
 & $G --headless --path . --script res://game/tests/traverse.gd
 # 走廊截图回归（需要图形渲染，不能加 --headless）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_preview.gd -- CORRIDOR-QA
@@ -93,6 +95,8 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT
 # 可搜索柜门禁（真渲染；E 搜索 + 同日拒绝 + 截图）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_loot.gd -- CORRIDOR-LOOT
+# 背包与使用门禁（真渲染；Tab 背包 / E 使用 / Q 丢弃 / 左键攻击）
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_inventory.gd -- CORRIDOR-INV
 ```
 
 ---

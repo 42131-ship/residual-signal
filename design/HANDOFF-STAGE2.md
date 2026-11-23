@@ -200,6 +200,30 @@ python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd
 3. **搜索耗时未接**：`search_seconds` 目前只是数据，还没有「按住 E 搜索 N 秒」的交互。
 4. **`data/loot/items.json` / `containers.json` 还没进 validate.py 的规则与输入台账**。
 
+---
+
+## 十一、Stage 2.8 · 背包与使用系统（2026-11-23 深夜，已提交）
+
+> 反馈：「1（背包 + 使用）然后再做 2（房间分隔墙 + 门洞）」。
+
+| # | 项 | 做法 | 验收 |
+|---|---|---|---|
+| 1 | 背包 | 新增 `game/runtime/inventory.gd`：容量 10、堆叠、`add_many` 一批拾取、装不下返回 rejected；搜索后物品自动进包，满了提示「背包满了，剩 N 件没拿」 | `INVENTORY_OK capacity=3 stack=2` + `corridor_inventory` 搜索入包断言 |
+| 2 | 使用效果 | `items.json` 增加机器可读 `effect`（41 件）：食物 supplies、医疗 health、噪声类 noise、武器 equip；`tools/apply_item_effects.py` 写入 | `INVENTORY_OK effects=41 equip=melee/firearm` |
+| 3 | 背包界面 | `Tab` 打开（锁移动），`W/S` 选择、`E` 使用、`Q` 丢弃、`Tab/Esc/V` 关闭；标题显示 `背包 n/10  装备 xx`，选中行高亮，底部提示与 toast | `CORRIDOR_INVENTORY_OK` + `CORRIDOR-INV_panel.png` |
+| 4 | 左键攻击 | 装备近战/枪械后左键挥击：计数 +1、按武器类型抬噪声、画 4 帧挥击条；空手也能挥；面板打开时不响应 | `CORRIDOR_INVENTORY_OK ... attack=left_click` |
+| 5 | 玩家状态 | 新增 `_supplies` / `_health` / `_noise`；HUD 左上显示「物资 / 体力」数值并在使用后刷新 | 门禁断言使用瓶装水后 supplies 上升 |
+| 6 | 文档 | `design/CONTROLS.md` v0.3（Tab/左键/使用流程）、`design/LOOT.md` 增加「使用效果」表（由 `tools/build_loot_doc.py` 生成） | `python tools/build_loot_doc.py` |
+
+### 仍未做
+
+1. **状态细化**：伤口/流血/感染/中毒/成瘾没有；`contaminate` 字段先只记录。
+2. **战斗**：挥击没有敌人、命中、耐久、弹匣；左键目前是占位。
+3. **丢弃落回世界**：Q 只是移除，没有地面掉落物。
+4. **搜索耗时**：`search_seconds` 仍未接「按住 E 搜索 N 秒」。
+5. **房间分隔墙 + 门洞**：下一步（排队中）。
+
+
 
 
 

@@ -46,6 +46,21 @@ func items_catalog() -> Dictionary:
 	return _items
 
 
+func item_detail(item_id: String) -> Dictionary:
+	return _items.get(item_id, {}).duplicate(true)
+
+
+func item_name(item_id: String) -> String:
+	return str(_items.get(item_id, {}).get("name", item_id))
+
+
+## 物品的使用效果（数据来自 items.json.effect；空字典 = 现在用不上）。
+func item_effect(item_id: String) -> Dictionary:
+	var detail: Dictionary = _items.get(item_id, {})
+	var effect: Variant = detail.get("effect", {})
+	return effect.duplicate(true) if effect is Dictionary else {}
+
+
 func can_search(id: String, mode := "story") -> bool:
 	if not _containers.has(id):
 		return false
@@ -163,12 +178,28 @@ func _load_items(path: String) -> bool:
 		if _items.has(item_id):
 			_load_error = "LOOT_ITEM_DUPLICATE: " + item_id
 			return false
+		var effect: Variant = row.get("effect", {})
+		if effect != null and not effect is Dictionary:
+			_load_error = "LOOT_ITEM_EFFECT_INVALID: " + item_id
+			return false
+		var effect_row: Dictionary = effect if effect is Dictionary else {}
+		for key: Variant in effect_row:
+			var effect_key := str(key)
+			if effect_key not in ["supplies", "health", "noise", "equip", "contaminate"]:
+				_load_error = "LOOT_ITEM_EFFECT_UNKNOWN: %s.%s" % [item_id, effect_key]
+				return false
+		if effect_row.has("equip"):
+			var kind := str(effect_row["equip"])
+			if kind != "melee" and kind != "firearm":
+				_load_error = "LOOT_ITEM_EQUIP_INVALID: " + item_id
+				return false
 		_items[item_id] = {
 			"id": item_id,
 			"name": name,
 			"category": str(row.get("category", "")),
 			"description": description,
 			"usage": usage,
+			"effect": effect_row.duplicate(true),
 		}
 	return true
 
