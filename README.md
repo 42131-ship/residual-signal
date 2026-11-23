@@ -24,12 +24,15 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 
 | 键 | 动作 |
 |---|---|
-| `A` / `D`（或 `←` / `→`） | 左右走 |
-| `W` / `S`（或 `↑` / `↓`） | 纵深走进下方房间 |
-| `Shift`（按住） | 慢走（12 px/s，无声） |
-| `E` | 查看 / 关闭检查框 |
+| `W` `A` `S` `D` / 方向键 | 移动（`A/D` 横轴，`W/S` 纵深走进下方房间） |
+| 不按速度键 | 步行（24 px/s） |
+| `Shift`（按住） | 疾跑（44 px/s，逃跑用，噪声最高） |
+| `Ctrl`（按住） | 蹲下潜行（12 px/s，最慢，噪声最低） |
+| `E` | 拾取 / 搜索（两个可搜索柜子：储物柜、急救柜） |
+| `V` | 查看文本 / 关闭检查框 |
 | `Esc` | 关闭 / 取消 |
 | `F` | 手电开关 |
+| 鼠标左键 / `Tab` | 已定键位，战斗与背包系统未实现（见 CONTROLS.md） |
 
 ---
 
@@ -77,10 +80,14 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --headless --path . --script res://game/tests/smoke.gd
 & $G --headless --path . --script res://game/tests/replay_30d.gd
 & $G --headless --path . --script res://game/tests/shell.gd
+& $G --headless --path . --script res://game/tests/loot.gd
+& $G --headless --path . --script res://game/tests/traverse.gd
 # 走廊截图回归（需要图形渲染，不能加 --headless）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_preview.gd -- CORRIDOR-QA
 # 检查框门禁（真渲染 + 真实 InputEventKey；同样不能加 --headless）
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT
+# 可搜索柜门禁（真渲染；E 搜索 + 同日拒绝 + 截图）
+& $G --path . --fixed-fps 60 --script res://game/tests/corridor_loot.gd -- CORRIDOR-LOOT
 ```
 
 ---

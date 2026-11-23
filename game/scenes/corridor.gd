@@ -38,6 +38,12 @@ var _inspection_ui_enabled := true
 var _inspection_prompt_root: Node2D
 var _inspection_prompt_layer: CanvasLayer
 var _inspection_panel_root: Node2D
+var _loot: LootService
+## 面板当前内容（测试与调试用，不参与渲染）。
+var _panel_title := ""
+var _panel_lines: Array = []
+## 走廊 demo 的世界日（HUD 写死 DAY 3，等接入 WorldState 后替换）。
+var _world_day := 3
 
 
 func _ready() -> void:
@@ -47,6 +53,7 @@ func _ready() -> void:
 	_build_actor()
 	_apply_depth_sort()
 	_load_inspections()
+	_load_loot()
 	_build_camera()
 	_build_hud()
 	_build_flashlight()
@@ -238,10 +245,28 @@ func _ensure_actions() -> void:
 	# 纵深轴：W/S（与 A/D 正交，见 design/PIXEL_SPEC.md §2）
 	_add_action("move_up", [KEY_W, KEY_UP])
 	_add_action("move_down", [KEY_S, KEY_DOWN])
-	_add_action("walk", [KEY_SHIFT])
-	_add_action("inspect", [KEY_E])
+	# 三档速度：默认步行；Shift 疾跑；Ctrl 蹲下潜行（最慢）。
+	_add_action("sprint", [KEY_SHIFT])
+	_add_action("crouch", [KEY_CTRL])
+	# E = 上下文交互（搜索/拾取），V = 查看文本，F = 手电。
+	_add_action("pickup", [KEY_E])
+	_add_action("view", [KEY_V])
 	_add_action("cancel_inspect", [KEY_ESCAPE])
 	_add_action("toggle_light", [KEY_F])
+	# 战斗与背包键位已按 v0.2 定下，系统未实现，先注册 InputMap。
+	_add_mouse_action("attack", MOUSE_BUTTON_LEFT)
+	_add_action("inventory", [KEY_TAB])
+
+
+func _add_mouse_action(action_name: String, button: int) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+	for event: InputEvent in InputMap.action_get_events(action_name):
+		if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == button:
+			return
+	var button_event := InputEventMouseButton.new()
+	button_event.button_index = button
+	InputMap.action_add_event(action_name, button_event)
 
 
 func _add_action(action_name: String, keys: Array) -> void:
@@ -386,31 +411,66 @@ func _draw_inspection_prompt(id: String) -> void:
 		return
 	var record: Dictionary = _inspection_records.get(id, {})
 	var title := str(record.get("title", ""))
-	var width := 44 + PixelFont.width_of(title)
+	var key_text := "V"
+	var verb := str(_inspection_ui.get("inspect", "查看"))
+	if _loot != null and _loot.has_container(id):
+		# E = 上下文搜索；容器名字来自 data/loot/containers.json。
+		title = _loot.label_of(id)
+		key_text = "E"
+		verb = "搜索"
+	var width := 44 + PixelFont.width_of(title) + maxi(0, PixelFont.width_of(verb) - 12)
 	var x := clampf(_player.position.x - _camera.position.x + VIEW_SIZE.x / 2.0 - width / 2.0, 4.0, VIEW_SIZE.x - width - 4.0)
 	var y := 20.0
 	_inspection_prompt_root.set_meta("target_id", id)
 	_add_rect_polygon(_inspection_prompt_root, "PromptBg", Vector2(x, y), Vector2(width, 20), Color("#0b1119"))
 	_add_ui_frame(_inspection_prompt_root, Vector2(x, y), Vector2(width, 20), Color("#354b60"))
-	PixelFont.draw(_inspection_prompt_root, "E", Vector2(x + 6, y + 6), Color("#9fb2bd"))
-	PixelFont.draw(_inspection_prompt_root, str(_inspection_ui.get("inspect", "查看")), Vector2(x + 14, y + 4), Color("#9fb2bd"))
-	PixelFont.draw(_inspection_prompt_root, title, Vector2(x + 14 + PixelFont.width_of("查看"), y + 4), Color("#f6f6f0"))
+	PixelFont.draw(_inspection_prompt_root, key_text, Vector2(x + 6, y + 6), Color("#9fb2bd"))
+	PixelFont.draw(_inspection_prompt_root, verb, Vector2(x + 14, y + 4), Color("#9fb2bd"))
+	PixelFont.draw(_inspection_prompt_root, title, Vector2(x + 14 + PixelFont.width_of(verb), y + 4), Color("#f6f6f0"))
 
 
 func _show_inspection(id: String) -> void:
 	var record: Dictionary = _inspection_records.get(id, {})
 	if record.is_empty():
 		return
+	_show_panel(str(record.get("title", "")), record.get("lines", []), id)
+
+
+func _search_container(id: String) -> void:
+	if _loot == null:
+		return
+	var result: Dictionary = _loot.search(id, _world_day)
+	if not bool(result.get("ok", false)):
+		var reason := str(result.get("reason", ""))
+		var line := "今天已经翻过" if reason == "already_searched_today" else "打不开"
+		_show_panel(_loot.label_of(id), [line, "明天再来"], id)
+		return
+	var lines: Array[String] = []
+	if bool(result.get("empty", false)):
+		lines = ["里面是空的", "明天再来"]
+	else:
+		lines = ["找到：" + str(result.get("item", "")), "已收进背包"]
+	_show_panel(_loot.label_of(id), lines, id)
+
+
+func _load_loot() -> void:
+	_loot = LootService.new()
+	if not _loot.load_containers():
+		push_error("LOOT_LOAD_FAILED: " + _loot.load_error())
+
+
+func _show_panel(title: String, lines: Array, id: String) -> void:
 	for child: Node in _inspection_panel_root.get_children():
 		child.queue_free()
+	_panel_title = title
+	_panel_lines = lines.duplicate()
 	var panel_x := 8.0
 	var panel_y := 154.0
 	var panel_w := 368.0
 	var panel_h := 54.0
 	_add_rect_polygon(_inspection_panel_root, "PanelBg", Vector2(panel_x, panel_y), Vector2(panel_w, panel_h), Color("#0b1119"))
 	_add_ui_frame(_inspection_panel_root, Vector2(panel_x, panel_y), Vector2(panel_w, panel_h), Color("#635e57"))
-	PixelFont.draw(_inspection_panel_root, str(record.get("title", "")), Vector2(16, 160), Color("#f6f6f0"))
-	var lines: Array = record.get("lines", [])
+	PixelFont.draw(_inspection_panel_root, title, Vector2(16, 160), Color("#f6f6f0"))
 	for index: int in mini(2, lines.size()):
 		PixelFont.draw(_inspection_panel_root, str(lines[index]), Vector2(16, 176 + index * 14), Color("#9fb2bd"))
 	PixelFont.draw(_inspection_panel_root, "ESC", Vector2(326, 160), Color("#9fb2bd"))
@@ -571,22 +631,32 @@ func _update_depth_order() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# 检查框唯一的按键入口：echo（按住重复）与松开都不算一次按下。
+	# 唯一的按键入口：echo（按住重复）与松开都不算一次按下。
 	if not _inspection_ui_enabled or not event is InputEventKey or event.is_echo() or not event.is_pressed():
 		return
-	# 手电开关（F）：面板打开时不响应，避免和检查交互抢键。
+	# 手电开关（F）：面板打开时不响应，避免和交互抢键。
 	if event.is_action_pressed("toggle_light") and not _inspection_open:
 		_set_flashlight(not _flashlight_on)
 		get_viewport().set_input_as_handled()
 		return
 	if _inspection_open:
-		if event.is_action("inspect") or event.is_action("cancel_inspect"):
+		# 面板打开时：V/E/Esc 都关掉（E 是上下文交互键，顺手关面板）。
+		if event.is_action("view") or event.is_action("pickup") or event.is_action("cancel_inspect"):
 			_close_inspection()
 			get_viewport().set_input_as_handled()
 		return
 	if event.is_action("cancel_inspect"):
 		return
-	if event.is_action_pressed("inspect"):
+	# E = 上下文交互：只有可搜索容器 + 背包/拾取系统落地后才有效果；当前先接搜索。
+	if event.is_action_pressed("pickup"):
+		var pickup_target := _nearest_inspection_id()
+		if pickup_target.is_empty() or _loot == null or not _loot.has_container(pickup_target):
+			return
+		_search_container(pickup_target)
+		get_viewport().set_input_as_handled()
+		return
+	# V = 查看文本（检查框）。
+	if event.is_action_pressed("view"):
 		var target := _nearest_inspection_id()
 		if target.is_empty():
 			return

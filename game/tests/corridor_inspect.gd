@@ -9,7 +9,7 @@ extends SceneTree
 ## 事件仍是带 physical_keycode/keycode/echo 的真实 InputEventKey，动作映射也来自真实 InputMap。
 ##
 ## 覆盖：数据↔节点一一对应、28px 边界含/不含、同距朝向裁决、15 条文本逐条打开、
-## 中文与按键提示真的落到像素上、Esc/E 关闭、echo 不算一次按下、按住只开一个、面板期间锁移动。
+## 中文与按键提示真的落到像素上、Esc/V/E 关闭、echo 不算一次按下、按住只开一个、面板期间锁移动。
 
 const SCENE: PackedScene = preload("res://game/scenes/corridor.tscn")
 const DATA := "res://data/prop_inspections.json"
@@ -104,8 +104,8 @@ func _verify_boundary() -> void:
 
 	# 空按 E：范围外不能打开，也不能沿用上一次对象。
 	await _place(4.0, anchor_y)
-	await _press(KEY_E)
-	_check(not _corridor._inspection_open, "E outside any range must not open a panel")
+	await _press(KEY_V)
+	_check(not _corridor._inspection_open, "V outside any range must not open a panel")
 
 	# 纵深容差：站在房间最下缘（y=216）时，墙面时钟（锚点 136）已在 24px 容差外。
 	await _place(44.0, 216.0)
@@ -156,7 +156,7 @@ func _verify_all_records() -> void:
 		var record: Dictionary = _records[id]
 		var anchor := await _focus_x(id)
 		await _place(anchor, _focus_y(id))
-		await _press(KEY_E)
+		await _press(KEY_V)
 		_check(_corridor._inspection_open, "%s did not open" % id)
 		var shown := str(_corridor._inspection_panel_root.get_meta("inspection_id", ""))
 		_check(shown == id, "%s opened %s instead" % [id, shown])
@@ -178,17 +178,17 @@ func _verify_hold_and_lock() -> void:
 	var before: float = _actor.global_position.x
 
 	# 键盘重复（echo）不能当第二次按下。
-	await _send_key(KEY_E, true, true)
+	await _send_key(KEY_V, true, true)
 	await process_frame
-	_check(not _corridor._inspection_open, "echo press must be ignored")
+	_check(not _corridor._inspection_open, "echo press on V must be ignored")
 
-	await _press(KEY_E)
-	_check(_corridor._inspection_open, "normal press must open")
+	await _press(KEY_V)
+	_check(_corridor._inspection_open, "normal V press must open")
 
 	# 按住不放：持续多帧也只开一个面板。
 	for _frame in range(30):
 		await process_frame
-	_check(_corridor._inspection_open, "holding E must keep a single panel")
+	_check(_corridor._inspection_open, "holding V must keep a single panel")
 	_check(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")).length() > 0,
 		"panel lost its id")
 
@@ -200,8 +200,8 @@ func _verify_hold_and_lock() -> void:
 	_check(absf(_actor.global_position.x - before) < 0.5,
 		"player moved %.2fpx while the panel was open" % absf(_actor.global_position.x - before))
 
-	await _press(KEY_E)
-	_check(not _corridor._inspection_open, "second E must close the panel")
+	await _press(KEY_V)
+	_check(not _corridor._inspection_open, "second V must close the panel")
 
 	# 关掉之后必须能重新走，并且不会立刻弹回面板。
 	Input.action_press("move_right")
@@ -219,7 +219,7 @@ func _verify_hold_and_lock() -> void:
 func _capture_open_panel() -> void:
 	# trash_bin 的正文是全表最长的一行（12 字 = 144px），最容易裁切。
 	await _place(await _focus_x("trash_bin"), _focus_y("trash_bin"))
-	await _press(KEY_E)
+	await _press(KEY_V)
 	_check(_corridor._inspection_open, "panel must be open before capture")
 	_actor.set_physics_process(false)
 	await process_frame

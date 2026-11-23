@@ -1,8 +1,8 @@
-# 操作键位 · v0.1
+# 操作键位 · v0.2
 
 > 本文是键位的唯一真源。实现位置：`game/scenes/corridor.gd:_ensure_actions()`（InputMap 动作）
-> 与 `game/scenes/player.gd`（移动 / 慢走状态）。
-> 状态：✅ 已实现且有门禁断言 · ⏳ 已定键位但系统未实现 · ❓ 待拍板
+> 与 `game/scenes/player.gd`（三档速度 / 纵深移动）。
+> 状态：✅ 已实现且有门禁断言 · ⏳ 已注册键位、系统未实现
 
 ---
 
@@ -10,40 +10,46 @@
 
 | 动作 | 键 | 行为 | 门禁 |
 |---|---|---|---|
-| 左右移动 | `A` / `D` 或 `←` / `→` | 24 px/s（按住 Shift 12 px/s） | `corridor_preview` |
-| 纵深移动 | `W` / `S` 或 `↑` / `↓` | 走进下方房间；纵深 19.2 px/s（24 × 0.8） | `corridor_preview` |
-| 慢走 | 按住 `Shift` | 12 px/s；无声但时间推移更快（v0.6 氛围手册） | `corridor_preview` |
-| 查看 / 交互 | `E` | 水平 28px + 纵深 24px 内最近道具；打开检查框并锁移动 | `corridor_inspect` |
-| 关闭 / 取消 | `Esc` 或 `E` | 关面板；面板打开时按 E 也关 | `corridor_inspect` |
-| 手电开关 | `F` | 光锥半径 240 → 0，整屏压暗；面板打开时不响应 | `corridor_preview`（`CORRIDOR-QA_light_off.png`） |
+| 水平移动 | `A` / `D` 或 `←` / `→` | 横轴移动 | `corridor_preview` / `traverse` |
+| 纵深移动 | `W` / `S` 或 `↑` / `↓` | 走进下方房间（y=128..216） | `traverse`（四角 + 中心可达） |
+| 步行（默认） | 不按速度键 | 24 px/s；纵深 19.2 px/s（×0.8） | `corridor_preview` |
+| 蹲下潜行 | 按住 `Ctrl` | 12 px/s，最慢、噪声最低 | `corridor_preview`（crouch=29.5） |
+| 疾跑逃跑 | 按住 `Shift` | 44 px/s，最快、噪声最高 | `corridor_preview`（sprint=107.7） |
+| 拾取 / 搜索 | `E` | 上下文交互：两个可搜索柜子（储物柜 / 急救柜）；同一天第二次显示「今天已经翻过」 | `corridor_loot` / `loot` |
+| 查看文本 | `V` | 打开检查框（28px 水平 + 24px 纵深）并锁移动 | `corridor_inspect` |
+| 关闭 / 取消 | `Esc`（或 `E` / `V`） | 关面板；面板打开时 `E`/`V`/`Esc` 都关 | `corridor_inspect` |
+| 手电开关 | `F` | 光锥半径 240→0，整屏压暗 | `corridor_preview`（`CORRIDOR-QA_light_off.png`） |
 
-移动是四向正交的：`A/D` 走横轴，`W/S` 走纵深；`Shift` 只改速度不改方向。
-所有动作都先进 InputMap（`_ensure_actions()`），`player.gd` 另带 WASD/方向键兜底，
-所以即使 InputMap 被外部重绑，demo 也不会失去移动能力。
+## 二、已注册键位、系统未实现（⏳）
 
----
-
-## 二、已定键位、系统未实现（⏳）
-
-| 动作 | 建议键 | 依据 / 设计意图 |
+| 动作 | 键 | 说明 |
 |---|---|---|
-| 拾取 / 开门（上下文交互） | `E` | 与查看共用上下文键；拾取无高亮（v0.6 开工盘点） |
-| 丢弃 | `Q` | 库存系统（无高亮、无拖拽） |
-| 背包 / 日记 | `Tab` | 记忆 L0/L1/L2 与归属 UI |
-| 近战挥击 | 鼠标左键 / `J` | 一次挥击 + 命中冻结（程序 4 人日） |
-| 手枪射击 | 鼠标左键 | 装填/卡壳/后坐/枪口闪光（程序 6 人日） |
-| 装填 | `R` | 同上 |
-| 时间跳格 / 等待 | `T` | 搜节点 +2h / 睡一觉 +8h（v0.6 开工盘点 #2） |
+| 攻击 / 射击 | **鼠标左键** | 按你的拍板定左键；战斗系统未实现，InputMap 已注册 `attack` |
+| 装填 | `R` | 枪械系统未实现 |
+| 背包 | `Tab` | 按你的拍板定 Tab；库存系统未实现，InputMap 已注册 `inventory` |
+| 丢弃 | `Q` | 库存系统未实现 |
 | 暂停 | `Esc`（无面板时） | 存档只在剧情模式（R17） |
 
-这些键位现在**没有实现**：对应系统（库存、战斗、日历跳格、暂停）都还没写。
-先把键位定下来，等系统落地时直接接 InputMap，不用再改玩家肌肉记忆。
+## 三、为什么这么定（参考了同类游戏）
 
----
+- **E = 交互 / 拾取**、**F = 手电**、**Tab = 背包** 是三件套的常见做法：
+  [Silver Pines](https://www.magicgameworld.com/silver-pines-controls-guide-all-pc-keyboard-and-mouse-controls/)
+  （Run=Shift、Crouch=Ctrl、Interact=E、Inventory=Tab/I、Flashlight=F）与
+  [Slender: The Haunt](https://www.speedrun.com/ko-KR/slender_haunt/guides/3nh0r)
+  （Shift 疾跑、F 手电、E 交互、Tab 背包）一致。
+- **查看/检查拆成独立键**：Crow Country 用单独的 examine 键（J），
+  [Darkwood](https://www.magicgameworld.com/darkwood-pc-controls/) 则是鼠标指到物体后出现
+  Examine / Search 上下文命令。我们把「查看文本」放 `V`（view），`E` 留给拾取/搜索，
+  避免「想捡东西却弹出说明文本」。
+- **左键战斗**：Crow Country 的鼠标布局把射击/装填都放在鼠标键上，
+  与 [Crow Country 控制表](https://strategywiki.org/w/index.php?title=Crow_Country/Controls) 一致。
 
-## 三、待你拍板
+> 备注：现在 `V` 是查看键（Stage 2 时查看是 `E`）；`E` 已改作拾取/搜索。旧的 `inspect`
+  动作名已拆成 `view` 与 `pickup` 两个 InputMap 动作，重绑键位时不会互相牵连。
 
-1. **战斗键**：近战/射击用 `鼠标左键` 还是键盘 `J`/`K`？横版朝左右，鼠标不一定顺手。
-2. **拾取与查看**：共用 `E`（上下文切换）可接受吗？还是拆成 `E` 查看 + 另一个键拾取（`F` 已被手电占用）。
-3. **背包**：`Tab` 还是 `B`？
-4. 是否需要第三档速度（例如按住 `Ctrl` 蹲行）？设计目前只写了两档（正常/慢走），暂不推荐加。
+## 四、待定 / 已知缺口
+
+1. **背包系统未实现**，所以搜到的东西只显示文本、不落库存（下一步接 `inventory`）。
+2. **战斗系统未实现**，左键目前只是注册了键位。
+3. `Q`（丢弃）、`R`（装填）、`T`（时间跳格）仍是提案，等对应系统落地时启用。
+4. 房间目前是**一整条可走地面带**，还没有分隔墙/门洞；`traverse` 只验证了整块区域的四角与中心可达。

@@ -149,4 +149,29 @@ python tools/gd_sanity.py game/runtime/data_layer.gd game/runtime/world_state.gd
 2. 走路帧（`SPR-player_walk1/2_32x48.png`）已生成但**还没接动画**，玩家目前是静态帧；NPC 仍是 32×32。
 3. 手电光点已按 41px 身高调到 `-24`，但走路时没有摆动。
 
+---
+
+## 九、Stage 2.6 · 键位 v0.2 + 三档速度 + 可搜索柜子（2026-11-23 晚，已提交）
+
+> 反馈：「战斗键位默认左键，拆开吧，看看别人游戏怎么做的，背包放 tab，速度分为步行/蹲下潜行/疾跑，
+> 顺便看看 WASD 是否正常能够探索整个房间所有区块，做两个可以搜索物资的柜子，看看物资是否随机刷新测试。」
+
+| # | 项 | 做法 | 验收 |
+|---|---|---|---|
+| 1 | 拾取/查看拆键 | `E` = 拾取/搜索（`pickup`），`V` = 查看文本（`view`）；旧的 `inspect` 动作拆成两个 InputMap 动作 | `corridor_inspect`（V 键全流程） |
+| 2 | 战斗/背包键位 | 鼠标左键 = `attack`、`Tab` = `inventory`，已注册 InputMap，系统未实现 | 键位表 + 编译 |
+| 3 | 三档速度 | 蹲下（Ctrl，12 px/s，潜行/最慢）< 步行（默认 24）< 疾跑（Shift，44，逃跑） | `CORRIDOR_OK ... crouch=29.5 sprint=107.7` |
+| 4 | 两个可搜索柜子 | `data/loot/containers.json`：`locker_bank`（储物柜）与 `first_aid_cabinet`（急救柜），E 搜索、同日第二次显示「今天已经翻过」、按世界日刷新 | `CORRIDOR_LOOT_OK containers=2 refresh=per_day panel=ok` + `CORRIDOR-LOOT_panel.png` |
+| 5 | 随机战利品 | `game/runtime/loot.gd`：权重表抽取，随机种子 = (容器, 世界日, 当日次数, 盐)，确定性可回放 | `LOOT_OK distinct_locker=5 deterministic=ok refresh=per_day` |
+| 6 | 可达性 | `traverse.gd`：不瞬移，只用 WASD 走到可走地面带的四角 + 中心，并验证边界不泄漏 | `TRAVERSE_OK corners=4 center=1 leaks=0` |
+| 7 | 字体图集 | `font_build.py` 把战利品文案（柜名/物品/固定提示）与 `V` 键涂进 PF-02（216 字），避免缺字告警 | 三张图形门禁无 PixelFont 告警 |
+
+### 仍未做
+
+1. **背包/拾取落库未做**：搜到的东西只显示文本，没有 inventory 与 supplies 变化（下一步接 `inventory`）。
+2. **战斗系统未做**：左键只是注册了键位。
+3. **房间分隔墙/门洞仍未做**：当前是一整条可走地面带，`traverse` 验证的是整块区域可达。
+4. `data/loot/containers.json` 还没进 `validate.py` 的规则与输入台账（R 规则未覆盖战利品表）。
+
+
 

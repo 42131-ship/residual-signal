@@ -53,7 +53,11 @@
 | P10 | 输入台账 20/23 | `validate.py --inventory` → 23/23 | **DONE**（`cf290af`） |
 | P11 | 主角放大（32×48 原生帧，可见 41px） | `pixelpipe gate` 三帧 PASS + `corridor_preview` 角色断言 | **DONE**（Stage 2.5） |
 | P12 | WASD 纵深移动 + 下方区域可走 | `CORRIDOR_OK` 深度移动断言 + `CORRIDOR-QA_depth.png` | **DONE**（Stage 2.5） |
-| P13 | 键位总表 + 手电开关 F | `design/CONTROLS.md` + `CORRIDOR-QA_light_off.png` | **DONE**（键位 v0.1；战斗/背包等 ⏳ 待系统） |
+| P13 | 键位总表 + 手电开关 F | `design/CONTROLS.md` + `CORRIDOR-QA_light_off.png` | **DONE**（键位 v0.1；已升级 v0.2） |
+| P14 | 键位 v0.2：拾取/查看拆键（E/V）、左键战斗、Tab 背包 | `corridor_inspect` 全流程用 V；InputMap 含 attack/inventory | **DONE**（系统未实现，键位已注册） |
+| P15 | 三档速度：蹲下潜行 / 步行 / 疾跑 | `CORRIDOR_OK ... crouch=29.5 sprint=107.7` | **DONE** |
+| P16 | 两个可搜索柜子 + 随机战利品 + 按日刷新 | `CORRIDOR_LOOT_OK` + `LOOT_OK distinct_locker=5`（确定性随机） | **DONE** |
+| P17 | WASD 全区域可达门禁 | `TRAVERSE_OK corners=4 center=1 leaks=0` | **DONE**（房间分隔墙仍未做） |
 | A2 | 签核第一条资产让 R21 开火 | `approved/` 出现第一个文件 | **NEEDS-DEC**（需要人签，仍空） |
 
 ## 队列纪律（三模型共守）

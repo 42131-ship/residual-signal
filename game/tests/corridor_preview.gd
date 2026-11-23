@@ -117,8 +117,8 @@ func _run() -> void:
 	Input.action_press("move_right")
 	if not await _walk_to(184.0, true):
 		return
-	if steps.is_empty() or steps.has(false):
-		_fail("normal movement did not emit normal footsteps")
+	if steps.is_empty() or steps.has(true):
+		_fail("normal walk should emit walking footsteps, not sprinting: %s" % str(steps))
 		return
 	if not await _capture("classroom", 56):
 		return
@@ -142,17 +142,21 @@ func _run() -> void:
 		_fail("terminal wall did not stop the player: %s" % str(_actor.position))
 		return
 
-	var walk_start := _actor.position.x
+	# 三档速度 v0.2：蹲下（Ctrl，12 px/s）< 步行（默认，24）< 疾跑（Shift，44）。
+	var crouch_start := _actor.position.x
 	steps.clear()
-	Input.action_press("walk")
+	Input.action_press("crouch")
 	Input.action_press("move_left")
 	# 12 px/s → 60Hz 下每帧 0.2px；150 帧约 30px，正好跨过一个 16px 步距。
 	for _frame in range(150):
 		await physics_frame
-	Input.action_release("walk")
-	var walk_distance := walk_start - _actor.position.x
-	if walk_distance < 27.0 or walk_distance > 33.0 or steps.is_empty() or steps.has(true):
-		_fail("slow movement distance=%.1f steps=%s" % [walk_distance, str(steps)])
+	if _actor.gear != "crouch":
+		_fail("gear should be crouch, got %s" % _actor.gear)
+		return
+	Input.action_release("crouch")
+	var crouch_distance := crouch_start - _actor.position.x
+	if crouch_distance < 27.0 or crouch_distance > 33.0 or steps.is_empty() or steps.has(true):
+		_fail("crouch/stealth distance=%.1f steps=%s" % [crouch_distance, str(steps)])
 		return
 	if not await _walk_to(15.0, false):
 		return
@@ -163,8 +167,31 @@ func _run() -> void:
 		_fail("left wall did not stop the player: %s" % str(_actor.position))
 		return
 
-	print("CORRIDOR_OK size=384x216 props=%d min_changed_pixels=%d slow_walk=%.1f bounds=both" % [
-		_evidence.size(), _evidence.values().min(), walk_distance])
+	# 疾跑：44 px/s × 2.5s ≈ 110px，且步距事件必须标成 running。
+	var sprint_start := _actor.position.x
+	steps.clear()
+	Input.action_press("sprint")
+	Input.action_press("move_right")
+	for _frame in range(150):
+		await physics_frame
+	var sprint_gear := _actor.gear
+	Input.action_release("sprint")
+	Input.action_release("move_right")
+	for _frame in range(20):
+		await physics_frame
+	var sprint_distance := _actor.position.x - sprint_start
+	if sprint_gear != "sprint":
+		_fail("gear should be sprint while Shift is held, got %s" % sprint_gear)
+		return
+	if sprint_distance < 100.0 or sprint_distance > 125.0:
+		_fail("sprint distance=%.1f (expected ~110)" % sprint_distance)
+		return
+	if steps.is_empty() or not steps.has(true):
+		_fail("sprint did not emit running footsteps: %s" % str(steps))
+		return
+
+	print("CORRIDOR_OK size=384x216 props=%d min_changed_pixels=%d crouch=%.1f sprint=%.1f bounds=both" % [
+		_evidence.size(), _evidence.values().min(), crouch_distance, sprint_distance])
 	quit(0)
 
 
@@ -449,7 +476,8 @@ func _changed_pixels(before: Image, after: Image, area: Rect2i) -> int:
 func _fail(detail: String) -> bool:
 	Input.action_release("move_right")
 	Input.action_release("move_left")
-	Input.action_release("walk")
+	Input.action_release("sprint")
+	Input.action_release("crouch")
 	push_error("CORRIDOR_FAIL %s" % detail)
 	quit(1)
 	return false

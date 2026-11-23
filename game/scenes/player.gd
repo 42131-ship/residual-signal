@@ -3,8 +3,11 @@ class_name Player
 
 signal stepped(is_running: bool)
 
-const SLOW_SPEED := 12.0
-const NORMAL_SPEED := 24.0
+## 三档速度：蹲下（潜行，最慢）< 步行（默认）< 疾跑（逃跑，最快）。
+## 依据 design/CONTROLS.md v0.2（用户 2026-11-23 拍板：步行 / 蹲下潜行 / 疾跑）。
+const CROUCH_SPEED := 12.0
+const WALK_SPEED := 24.0
+const SPRINT_SPEED := 44.0
 const DEPTH_SPEED_SCALE := 0.8
 const ACCELERATION := 600.0
 const DECELERATION := 900.0
@@ -16,10 +19,12 @@ var walk_bounds := Rect2()
 
 var _distance_since_step := 0.0
 var _movement_locked := false
-var _walk_action_available := false
+var _sprint_action_available := false
+var _crouch_action_available := false
 var _previous_global_position := Vector2.ZERO
 var facing_x := 1.0
 var facing_y := 0.0
+var gear := "walk"
 
 
 func _ready() -> void:
@@ -37,7 +42,8 @@ func _ready() -> void:
 	camera.limit_top = 0
 	add_child(camera)
 
-	_walk_action_available = InputMap.has_action("walk")
+	_sprint_action_available = InputMap.has_action("sprint")
+	_crouch_action_available = InputMap.has_action("crouch")
 
 
 func _physics_process(delta: float) -> void:
@@ -48,8 +54,16 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var direction := _get_direction()
-	var walking := _walk_action_available and Input.is_action_pressed("walk")
-	var speed := SLOW_SPEED if walking else NORMAL_SPEED
+	var crouching := _crouch_action_available and Input.is_action_pressed("crouch")
+	var sprinting := _sprint_action_available and Input.is_action_pressed("sprint")
+	var speed := WALK_SPEED
+	gear = "walk"
+	if crouching:
+		speed = CROUCH_SPEED
+		gear = "crouch"
+	elif sprinting:
+		speed = SPRINT_SPEED
+		gear = "sprint"
 	var target_velocity := Vector2(
 		direction.x * speed,
 		direction.y * speed * DEPTH_SPEED_SCALE,
@@ -70,7 +84,7 @@ func _physics_process(delta: float) -> void:
 		_distance_since_step += distance_moved
 		while _distance_since_step >= STEP_DISTANCE:
 			_distance_since_step -= STEP_DISTANCE
-			stepped.emit(not walking)
+			stepped.emit(gear == "sprint")
 	elif direction == Vector2.ZERO and velocity.is_zero_approx():
 		_distance_since_step = 0.0
 
