@@ -1,0 +1,36 @@
+{
+  "schema": "weapons.v1",
+  "note": "武器资源清单：templates/*.json 的 weapon_budget 键必须在本表登记，本表是 weapon_budget 的引用目标。当前只登记类别、噪声等级与单发沉积口径；装填/卡壳/弹道/枪口闪光尚未实现（v0.6 开工盘点：demo 只做「捡到枪、没有弹」）。",
+  "weapons": {
+    "撬棍": {
+      "kind": "melee",
+      "noise_level": 1,
+      "sediment_per_shot": 1,
+      "note": "学校/消防站/加油站的近战武器，沉默、只对贴身目标有效。"
+    },
+    "手术剪": {
+      "kind": "melee",
+      "noise_level": 1,
+      "sediment_per_shot": 1,
+      "note": "医院专属近战武器，来自手术室。"
+    },
+    "军刺": {
+      "kind": "melee",
+      "noise_level": 1,
+      "sediment_per_shot": 1,
+      "note": "军事基地的近战武器。"
+    },
+    "手枪": {
+      "kind": "firearm",
+      "noise_level": 3,
+      "sediment_per_shot": 3,
+      "note": "学校模板 rounds=0（捡到枪但没有弹），加油站模板给 2 发；R28 用 sediment_per_shot 计算噪声预算。"
+    },
+    "步枪": {
+      "kind": "firearm",
+      "noise_level": 3,
+      "sediment_per_shot": 3,
+      "note": "军事基地专属，20 发；一发就会把尸群引向自己（v0.6 氛围手册）。"
+    }
+  }
+}

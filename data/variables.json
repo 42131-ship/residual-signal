@@ -1,0 +1,54 @@
+{
+  "schema": "variables.v1",
+  "note": "六组世界变量的唯一定义。game/runtime/world_state.gd 的 VARIABLE_NAMES 必须与本表键一致；事件卡 trigger.vars 与 effects[].vars 只能引用这些键（R35）。time 是派生量（day/30），不可由卡直接写入（v0.6 开工盘点：事件卡 +0h）。",
+  "variables": {
+    "trust": {
+      "label": "信任",
+      "min": 0,
+      "max": 1,
+      "derived": false,
+      "meaning": "同伴与幸存者对你的信任；决定记忆/求助类卡是否触发。",
+      "initial": 0.3
+    },
+    "reputation": {
+      "label": "声望",
+      "min": 0,
+      "max": 1,
+      "derived": false,
+      "meaning": "外界如何谈论你；影响结盟与敌对行为。",
+      "initial": 0.0
+    },
+    "supplies": {
+      "label": "物资",
+      "min": 0,
+      "max": 1,
+      "derived": false,
+      "meaning": "水、食物、电池、药品的抽象总量；loot 潮汐与交易卡的主要输入。",
+      "initial": 0.8
+    },
+    "control": {
+      "label": "控制度",
+      "min": 0,
+      "max": 1,
+      "derived": false,
+      "meaning": "你对局面的掌控：门锁、路线、信息优势；结局判定的关键量。",
+      "initial": 0.0
+    },
+    "knowledge": {
+      "label": "知情度",
+      "min": 0,
+      "max": 1,
+      "derived": false,
+      "meaning": "关于撤离点与广播真相的信息量；决定终局分支。",
+      "initial": 0.5
+    },
+    "time": {
+      "label": "时间",
+      "min": 0,
+      "max": 1,
+      "derived": true,
+      "meaning": "派生量 = day / 30；只由 spend_time/advance_day 改变，事件卡不直接写。",
+      "initial": 0.0
+    }
+  }
+}

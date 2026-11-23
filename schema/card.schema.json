@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://residual-signal.local/schema/card.schema.json",
+  "title": "残余信号 · 事件卡 v1",
+  "description": "data/cards/*.json 里单张事件卡的 schema。由现有 layer_l / layer_s 卡片形状反向生成，供静态校验与后续 CI 使用；额外的实验字段允许存在（additionalProperties: true）。",
+  "type": "object",
+  "required": ["card_id", "layer", "title", "trigger", "slots", "text", "effects", "returns_after_days"],
+  "additionalProperties": true,
+  "properties": {
+    "card_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "全局唯一；一次性卡与常驻卡都在 data/cards 下，L/S 层使用 l_/s_ 前缀。"
+    },
+    "layer": {
+      "type": "string",
+      "enum": ["L", "S"],
+      "description": "L = 跨模板常驻层；S = 模板专属层。"
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "trigger": {
+      "type": "object",
+      "required": ["day", "vars"],
+      "additionalProperties": true,
+      "properties": {
+        "day": {
+          "type": "object",
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "integer", "minimum": 0, "maximum": 30 },
+            "max": { "type": "integer", "minimum": 0, "maximum": 30 }
+          }
+        },
+        "vars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "op", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": ["trust", "reputation", "supplies", "control", "knowledge", "time"]
+              },
+              "op": { "type": "string", "enum": ["<", "<=", ">", ">=", "==", "!="] },
+              "value": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "node_tags_any": { "type": "array", "items": { "type": "string" } },
+        "sediment_min": { "type": "integer", "minimum": 0 },
+        "requires_npc_alive": { "type": "boolean" }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slot", "options"],
+        "additionalProperties": false,
+        "properties": {
+          "slot": { "type": "string", "minLength": 1 },
+          "options": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "text": {
+      "type": "object",
+      "required": ["default"],
+      "additionalProperties": true,
+      "properties": {
+        "default": { "type": "string", "minLength": 1 },
+        "heard": { "type": "string" }
+      }
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["when", "vars", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "when": { "type": "string", "minLength": 1, "description": "必须逐字等于该卡某个 slot 的一个 option（R39）。" },
+          "vars": {
+            "type": "object",
+            "additionalProperties": { "type": "number", "minimum": -1, "maximum": 1 },
+            "description": "只能是六组变量；time 是派生量，事件卡不直接写（v0.6 开工盘点：事件卡 +0h）。"
+          },
+          "evidence": { "type": "string", "minLength": 1, "description": "写回 L0 事件账本的事件 id。" }
+        }
+      }
+    },
+    "noise": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["level", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "level": { "type": "number", "minimum": 0, "maximum": 1 },
+            "source": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "leftover": { "type": "string", "description": "卡结算后留在世界里的痕迹（可选）。" },
+    "returns_after_days": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "0 = 一次性，永不返回；>0 = 冷却天数。"
+    },
+    "day_window_reviewed": { "type": "boolean" }
+  }
+}
