@@ -19,11 +19,14 @@ func _run() -> void:
 	for argument: String in OS.get_cmdline_user_args():
 		if argument.begins_with("MENU"):
 			_prefix = argument
+	# 门禁必须控制前置条件：先清掉上一次跑测试留下的存档，否则「继续」会读到它。
+	RunState.current = null
+	if FileAccess.file_exists(RunState.SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(RunState.SAVE_PATH))
 	_menu = SCENE.instantiate() as Node2D
 	root.add_child(_menu)
 	await process_frame
 	await process_frame
-
 	_check(_menu.view_name() == "root", "menu must start on the root view")
 	_check(_menu.current_index() == 0, "cursor must start on the first entry")
 

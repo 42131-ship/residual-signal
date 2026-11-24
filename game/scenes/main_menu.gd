@@ -21,7 +21,8 @@ var _index := 0
 var _view := "root"          # root / endings
 var _message := ""
 var _message_frames := 0
-var _run := RunState.new()
+## 菜单与走廊共用同一个 RunState（静态引用），否则「新游戏」会丢掉结局档案。
+var _run: RunState = RunState.ensure()
 var _book := EndingBook.new()
 var _item_root: Node2D
 var _body_root: Node2D
@@ -208,13 +209,17 @@ func move(delta: int) -> void:
 func confirm() -> void:
 	match _index:
 		0:
-			_run.new_run()
+			_run = RunState.start_new()
 			_flash("新的一天。")
 		1:
-			if _run.day <= 0 and not _run.has_any_unlock():
+			var saved := RunState.load_saved()
+			if saved == null:
 				_flash("没有可继续的进度。")
 			else:
-				_flash("从第 %d 天继续（场景切换待接）。" % (_run.day + 1))
+				# 继续时把菜单持有的引用也换成读回来的那局，否则后续解锁会写到旧对象上。
+				_run = saved
+				RunState.current = saved
+				_flash("从第 %d 天继续。" % (saved.day + 1))
 		2:
 			_view = "endings"
 			_render()

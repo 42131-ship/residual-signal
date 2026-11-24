@@ -97,6 +97,7 @@ var _combat_message_frames := 0
 var _status: StatusService
 ## 一天与出行：结算与「能不能走」（数据在 data/travel/routes.json）。
 var _day: DayCycle
+var _run: RunState
 var _travel: TravelService
 var _at_exit := false
 ## 走到这个 x 就算站在出口（尽头墙在 576，玩家被夹在 ~600）。
@@ -164,6 +165,15 @@ func _ready() -> void:
 		push_error("STATUS_LOAD_FAILED: " + _status.load_error())
 	_day = DayCycle.new()
 	_day.new_run()
+	# 跨场景状态：RunState 是唯一来源（静态引用，切场景不会丢）。
+	_run = RunState.ensure()
+	_current_building = _run.building
+	_visited = _run.visited.duplicate()
+	_fuel = _run.fuel
+	_supplies = _run.supplies
+	_health = _run.health
+	_day.day = _run.day
+	_day.sediment = _run.sediment
 	_travel = TravelService.new()
 	if not _travel.load_all():
 		push_error("TRAVEL_LOAD_FAILED: " + _travel.load_error())
@@ -1054,6 +1064,8 @@ func _build_hud() -> void:
 	var day3_mark := Color("#0b1119")
 	var frame_color := Color("#635e57")
 	PixelFont.draw(layer, "DAY 3", Vector2(8, 8), ink)
+	if _travel != null and _travel.has_building(_current_building):
+		PixelFont.draw(layer, _travel.label_of(_current_building), Vector2(8, 22), Color("#635e57"))
 	_build_hud_stats_root(layer)
 
 	var widths := [44, 36, 28, 44, 24, 40]
@@ -1497,12 +1509,36 @@ func _depart_to(target: String) -> void:
 	_at_exit = false
 	_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
 	_player.velocity = Vector2.ZERO
+	_persist_run()
 	var lines: Array = result["lines"]
-	lines.append("明天在%s（场景切换待接）" % label)
+	lines.append("明天在%s" % label)
 	_show_panel("第 %d 天结束" % (int(result["day"]) + 1), lines.slice(1), "exit")
 	if bool(result["finished"]):
 		_toast_combat("三十天到了。")
 	_refresh_hud_stats()
+	# 真切换：同一个走廊场景，但 RunState.building 已经变了，重新加载后读到新楼。
+	# 门禁/manual add 场景时 current_scene 为空，这种情况下只更新状态、不换场景。
+	var tree := get_tree()
+	if tree != null and tree.current_scene != null:
+		tree.change_scene_to_file("res://game/scenes/corridor.tscn")
+
+
+## 把走廊的状态写回 RunState 并存盘 —— 切场景/重启都靠它。
+func _persist_run() -> void:
+	if _run == null:
+		return
+	_run.day = _day.day
+	_run.sediment = _day.sediment
+	_run.building = _current_building
+	_run.fuel = _fuel
+	_run.supplies = _supplies
+	_run.health = _health
+	_run.visited = _visited.duplicate()
+	_run.save()
+
+
+func current_building_id() -> String:
+	return _current_building
 
 
 func _update_player_anim(delta: float) -> void:

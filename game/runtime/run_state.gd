@@ -6,6 +6,10 @@ extends RefCounted
 ## 不放进来的：玩家坐标、容器搜过没有（那些属于具体场景，换场景就该重置）。
 
 const MAX_DAY := 30
+const SAVE_PATH := "user://run.json"
+
+## 跨场景的唯一状态：静态引用，切换场景后仍然存在（不是 Node，所以不会被 free）。
+static var current: RunState = null
 
 var day := 0
 var sediment := 0
@@ -13,8 +17,30 @@ var building := "school"
 var actions_left := 1
 var supplies := 0.8
 var health := 1.0
+var fuel := 0
+var visited: Array[String] = ["school"]
 var unlocked: Dictionary = {}   # template -> { ending_id: true }
 var finished := false
+
+
+## 取当前局；没有就开一局新的。
+static func ensure() -> RunState:
+	if current == null:
+		current = RunState.new()
+		current.new_run()
+	return current
+
+
+## 新开一局：天数/物资归零，但**结局档案要留着**（那是长期收集品）。
+static func start_new() -> RunState:
+	var previous := current
+	var fresh := RunState.new()
+	fresh.new_run()
+	if previous != null:
+		fresh.unlocked = previous.unlocked.duplicate(true)
+	current = fresh
+	return fresh
+
 
 
 func new_run() -> void:
@@ -24,8 +50,37 @@ func new_run() -> void:
 	actions_left = 1
 	supplies = 0.8
 	health = 1.0
+	fuel = 0
+	visited = ["school"]
 	finished = false
 	# 解锁记录跨局保留：结局栏是长期档案，不该被「新游戏」清掉。
+
+
+## 存档：跨场景要活下来，重启也要活下来。
+func save() -> bool:
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_error("RUN_SAVE_FAILED: " + SAVE_PATH)
+		return false
+	file.store_string(JSON.stringify(to_dict(), "  "))
+	return true
+
+
+## 读档：没有存档/坏档都返回 null，由调用方决定开新局。
+static func load_saved() -> RunState:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return null
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	if not parsed is Dictionary:
+		return null
+	var state := RunState.new()
+	if not state.from_dict(parsed):
+		return null
+	return state
+
+
+func visited_label() -> String:
+	return ",".join(visited)
 
 
 func unlock_ending(template: String, ending_id: String) -> void:
@@ -54,6 +109,8 @@ func to_dict() -> Dictionary:
 		"actions_left": actions_left,
 		"supplies": supplies,
 		"health": health,
+		"fuel": fuel,
+		"visited": visited,
 		"finished": finished,
 		"unlocked": unlocked.duplicate(true),
 	}
@@ -68,6 +125,12 @@ func from_dict(data: Dictionary) -> bool:
 	actions_left = maxi(0, int(data.get("actions_left", 1)))
 	supplies = clampf(float(data.get("supplies", 0.8)), 0.0, 1.0)
 	health = clampf(float(data.get("health", 1.0)), 0.0, 1.0)
+	fuel = maxi(0, int(data.get("fuel", 0)))
+	visited = []
+	for value: Variant in data.get("visited", []):
+		visited.append(str(value))
+	if visited.is_empty():
+		visited.append(building)
 	finished = bool(data.get("finished", false))
 	var raw: Variant = data.get("unlocked", {})
 	unlocked = (raw as Dictionary).duplicate(true) if raw is Dictionary else {}

@@ -20,7 +20,8 @@
     {"name": "day-cycle", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/day_cycle.gd", "gate": "hard", "status": "ready", "note": "离场 +1 沉积 / 未离场 +2、体力恢复、30 天收束"},
     {"name": "corridor-exit", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_exit.gd -- CORRIDOR-EXIT", "gate": "hard", "status": "ready", "note": "走到尽头按 E 离场，结算面板与翻页（需渲染，不能加 --headless）"},
     {"name": "main-menu", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/main_menu.gd -- MENU", "gate": "hard", "status": "ready", "note": "主界面三项 + 结局栏四槽遮罩 + 新游戏保留解锁档案（需渲染）"},
-    {"name": "travel-map", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_map.gd -- MAP", "gate": "hard", "status": "ready", "note": "2.5D 立体块几何/明度/深度排序 + 连线=邻接 + 可选集与灰显"}
+    {"name": "travel-map", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_map.gd -- MAP", "gate": "hard", "status": "ready", "note": "2.5D 立体块几何/明度/深度排序 + 连线=邻接 + 可选集与灰显 + 楼位/细节/街道标注"},
+    {"name": "scene-switch", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/scene_switch.gd -- SWITCH", "gate": "hard", "status": "ready", "note": "出门 -> 结算 -> RunState 落盘 -> 重载后仍在新楼新天数（需渲染）"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",

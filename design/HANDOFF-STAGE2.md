@@ -786,6 +786,54 @@ CORRIDOR_EXIT_OK map=open selectable=2 picked=gas_station day=1 sediment=1 fuel_
 
 **顺序风险**：先做 ②场景切换会多一个场景读状态，M2 的工作面翻倍；建议 **②做完立刻做 M2a**，中间别插别的。
 
+---
+
+## 二十八、Stage 3.7 · 真场景切换 + RunState 持久化（2026-11-24）
+
+> 地图位置定稿后开工 ②：把「换状态回入口」的假切换换成真切换。
+
+### 一、RunState 变成跨场景唯一状态源
+
+| 项 | 做法 |
+|---|---|
+| 静态持有 | `static var current: RunState`；`ensure()` 取当前局、`start_new()` 开新局 |
+| 字段 | day / sediment / building / actions_left / supplies / health / **fuel** / **visited** / unlocked / finished |
+| 落盘 | `save()` → `user://run.json`；`load_saved()` 读回，坏档返回 null |
+| 结局档案 | `start_new()` **继承上一局的 unlocked** —— 结局栏是长期收集品，不被新游戏清掉 |
+
+走廊 `_ready` 从 RunState 恢复（楼、天数、沉积、物资、体力、燃料、去过哪），
+`_depart_to()` 结算后写回并 `save()`，随后 `change_scene_to_file("res://game/scenes/corridor.tscn")`；
+门禁/manual add 场景（`current_scene == null`）时不换场景，只更新状态。
+
+HUD 左上新增当前楼名（`DAY 3` 下面）。
+
+### 二、菜单接上真存档
+
+- 新游戏 → `RunState.start_new()`（保留解锁档案）
+- 继续 → `load_saved()`，把菜单持有的引用也换成读回来的那局（否则后续解锁会写到旧对象上）
+
+### 三、验收
+
+```text
+SCENE_SWITCH_OK school->gas_station day=1 saved=yes reload=gas_station neighbours=3 gated=1
+MENU_OK entries=3 wrap=yes endings_slots=4 masked=3 unlock=kept_on_new_game
+```
+
+`scene_switch` 覆盖：出门 → 换楼 → 天数 +1 → 文件落盘 → **新建一个走廊实例模拟重载**后仍在新楼新天数、
+去过记录保留、从加油站出发邻接=3 且医院无燃料时被挡。全量 **23 条门禁全绿**。
+
+### 四、善后与两个教训
+
+1. **门禁必须自己控制前置条件**：`main_menu` 之前假设「没有存档」，被上一个门禁留下的
+   `user://run.json` 打脸（继续按钮读到 day=1）。现在门禁开头显式删档 + 清 `RunState.current`。
+2. **共享引用要一起换**：菜单「继续」只改 `RunState.current` 而没改自己持有的 `_run`，
+   导致随后解锁写到旧对象上。这类 bug 只有门禁能抓到，肉眼看不出来。
+
+### 五、下一步
+
+②完成后按之前的判断，**立刻做 M2a**（supplies/noise 归 `world_state`，health 明确留作运行时状态），
+再往下是 M3 外部层（广播/手机/空投）与 M4 人物层（bond）。
+
 
 
 
