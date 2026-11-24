@@ -19,6 +19,12 @@ var supplies := 0.8
 var health := 1.0
 var fuel := 0
 var visited: Array[String] = ["school"]
+## 同伴相关（M4 才会真的有人，但结局判定现在就要读它们）。
+var companions_alive := 0
+var companions_lost := 0
+var bond := 0.0
+## 终局选择：hold_broadcast / send_decoy / hide_in_infirmary / alone（空 = 还没选）
+var finale := ""
 var unlocked: Dictionary = {}   # template -> { ending_id: true }
 var finished := false
 
@@ -52,6 +58,10 @@ func new_run() -> void:
 	health = 1.0
 	fuel = 0
 	visited = ["school"]
+	companions_alive = 0
+	companions_lost = 0
+	bond = 0.0
+	finale = ""
 	finished = false
 	# 解锁记录跨局保留：结局栏是长期档案，不该被「新游戏」清掉。
 
@@ -111,6 +121,10 @@ func to_dict() -> Dictionary:
 		"health": health,
 		"fuel": fuel,
 		"visited": visited,
+		"companions_alive": companions_alive,
+		"companions_lost": companions_lost,
+		"bond": bond,
+		"finale": finale,
 		"finished": finished,
 		"unlocked": unlocked.duplicate(true),
 	}
@@ -131,6 +145,10 @@ func from_dict(data: Dictionary) -> bool:
 		visited.append(str(value))
 	if visited.is_empty():
 		visited.append(building)
+	companions_alive = maxi(0, int(data.get("companions_alive", 0)))
+	companions_lost = maxi(0, int(data.get("companions_lost", 0)))
+	bond = clampf(float(data.get("bond", 0.0)), 0.0, 1.0)
+	finale = str(data.get("finale", ""))
 	finished = bool(data.get("finished", false))
 	var raw: Variant = data.get("unlocked", {})
 	unlocked = (raw as Dictionary).duplicate(true) if raw is Dictionary else {}

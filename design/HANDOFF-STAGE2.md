@@ -894,6 +894,37 @@ M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1
 **为什么分四步走**：每一步都能单独跑门禁、单独提交，红了只回滚那一步。
 第 1 步先留成员当镜像、第 4 步才删，就是为了让「读取接入」和「字段删除」互不牵连。
 
+---
+
+## 三十二、D5 · 结局真的能解锁了（2026-11-24）
+
+**之前的状态**：`EndingBook.match_ending()` 只是纯判定函数，通关不写任何东西 → 结局栏永远是灰的。
+
+### 做法
+
+| 件 | 内容 |
+|---|---|
+| `RunState` 新字段 | `companions_alive / companions_lost / bond / finale`（M4 之前先给默认值，但判定要用） |
+| 走廊 `_ending_context()` | 把局势拼成判定上下文：六组变量取 `world_state`，同伴/终局取 `RunState`，弹药取 `_magazine`，道具取背包 |
+| 走廊 `_evaluate_ending()` | `match_ending` → 命中则写 `RunState.unlocked` + `save()` + 提示；返回结局 id（空 = 没到结局） |
+| 调用点 | 每次离场结算后调一次（`_depart_to` 末尾） |
+
+### 验收（新门禁 `ending-unlock`，已进 pipeline hard）
+
+```text
+ENDING_UNLOCK_OK lone_wolf=yes body_double=yes masked=2 persist=yes early_run=none
+```
+
+断言五件事：孤狼条件能命中并写入；存档读回仍在；替身条件能命中；
+结局栏此时 2 个真名 + 2 个问号；**第 3 天、变量都不够时不许乱记**。
+
+全量 **25 条门禁全绿**。
+
+### 说明（不是掩饰）
+
+「军队」结局现在**不可能触发**——它要求 `companions_alive ≥ 2`，而同伴系统（M4）还没做。
+这条链路的正确性由 `ending_unlock` 用「直接喂上下文」验证，等 M4 接上同伴后自然可达。
+
 
 
 

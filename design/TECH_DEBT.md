@@ -90,7 +90,7 @@
 | D2 | `_noise` 与 `add_noise` 语义不同 | corridor.gd / world_state.gd | 同一件事两个定义，迟早对不上 | M（M2a-2） |
 | D3 | `actions_left` 恒为 1、从未消耗 | corridor.gd:1488 | 「一天一次外出」只写在数据里，实际没约束 | S |
 | D4 | `fuel` 只减不增，加油站不产燃料 | corridor.gd / routes.json | 地图上的燃料门槛玩两天就死锁 | S |
-| D5 | 结局只有判定函数，没有解锁写入 | ending_book.gd / corridor.gd | 打穿也进不了结局栏，收集系统是空的 | S |
+| ~~D5~~ | ~~结局只有判定函数，没有解锁写入~~ | — | **已还（D5）**：判定 → `RunState.unlocked` → 落盘 → 结局栏解锁 | ✅ |
 | D6 | `validate.py` 不覆盖 `data/travel`、`data/endings`、`data/systems`、`data/loot` | tools/validate.py | 新 JSON 写错了没人拦，只有运行时才炸 | M |
 
 ## 接着该还（影响体验/可玩性）

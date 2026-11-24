@@ -81,6 +81,9 @@ var _door_toast_frames := 0
 var _data: DataLayer
 var _state: WorldState
 var _supplies_online := false
+## 结局判定：定义在 data/endings/<template>.json，解锁写进 RunState 并落盘。
+var _book: EndingBook
+const ENDING_TEMPLATE := "school"
 var _health := 1.0
 var _noise := 0
 var _equipped := ""
@@ -183,6 +186,10 @@ func _ready() -> void:
 	else:
 		_state = null
 		push_error("STATE_OFFLINE: world_state 初始化失败，物资退回 RunState 镜像")
+	_book = EndingBook.new()
+	if not _book.load_template(ENDING_TEMPLATE):
+		push_error("ENDING_BOOK_FAILED: " + _book.load_error())
+		_book = null
 	_health = _run.health
 	_day.day = _run.day
 	_day.sediment = _run.sediment
@@ -1531,6 +1538,8 @@ func _depart_to(target: String) -> void:
 	if bool(result["finished"]):
 		_toast_combat("三十天到了。")
 	_refresh_hud_stats()
+	# D5：结算之后判定一次结局——够格就写进档案，回主界面的结局栏能看到。
+	_evaluate_ending()
 	# 真切换：同一个走廊场景，但 RunState.building 已经变了，重新加载后读到新楼。
 	# 门禁/manual add 场景时 current_scene 为空，这种情况下只更新状态、不换场景。
 	var tree := get_tree()
@@ -1579,6 +1588,46 @@ func _add_supplies(delta: float) -> float:
 		return value
 	_run.supplies = clampf(_run.supplies + delta, 0.0, 1.0)
 	return _run.supplies
+
+
+## D5：把「判定结局 → 记进档案 → 落盘」这条路打通。
+## 条件数据在 data/endings/school.json；这里只负责把当前局势喂进去。
+func _ending_context() -> Dictionary:
+	var ctx := {
+		"day": _day.day,
+		"companions_alive": _run.companions_alive,
+		"companions_lost": _run.companions_lost,
+		"bond": _run.bond,
+		"finale": _run.finale,
+		"ammo": _magazine,
+		"items": _inventory.ids(),
+	}
+	if _state != null:
+		ctx["trust"] = _state.var_of("trust")
+		ctx["control"] = _state.var_of("control")
+		ctx["knowledge"] = _state.var_of("knowledge")
+		ctx["supplies"] = _state.var_of("supplies")
+	else:
+		ctx["trust"] = 0.0
+		ctx["control"] = 0.0
+		ctx["knowledge"] = 0.0
+		ctx["supplies"] = _get_supplies()
+	return ctx
+
+
+## 返回命中的结局 id（空 = 还没走到任何结局）。命中即写进档案并保存。
+func _evaluate_ending() -> String:
+	if _book == null or _run == null:
+		return ""
+	var ending_id := _book.match_ending(ENDING_TEMPLATE, _ending_context())
+	if ending_id.is_empty():
+		return ""
+	if not _book.is_unlocked(ENDING_TEMPLATE, ending_id):
+		_book.unlock(ENDING_TEMPLATE, ending_id)
+		_run.unlock_ending(ENDING_TEMPLATE, ending_id)
+		_run.save()
+		_toast_combat("结局已记入档案")
+	return ending_id
 
 
 func supplies_online() -> bool:

@@ -22,7 +22,8 @@
     {"name": "main-menu", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/main_menu.gd -- MENU", "gate": "hard", "status": "ready", "note": "主界面三项 + 结局栏四槽遮罩 + 新游戏保留解锁档案（需渲染）"},
     {"name": "travel-map", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_map.gd -- MAP", "gate": "hard", "status": "ready", "note": "2.5D 立体块几何/明度/深度排序 + 连线=邻接 + 可选集与灰显 + 楼位/细节/街道标注"},
     {"name": "scene-switch", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/scene_switch.gd -- SWITCH", "gate": "hard", "status": "ready", "note": "出门 -> 结算 -> RunState 落盘 -> 重载后仍在新楼新天数（需渲染）"},
-    {"name": "m2a-state", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_state.gd -- M2A", "gate": "hard", "status": "ready", "note": "物资真源=world_state，RunState 只做镜像；用药/结算后不漂移、0..1 夹取"}
+    {"name": "m2a-state", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_state.gd -- M2A", "gate": "hard", "status": "ready", "note": "物资真源=world_state，RunState 只做镜像；用药/结算后不漂移、0..1 夹取"},
+    {"name": "ending-unlock", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/ending_unlock.gd -- ENDING", "gate": "hard", "status": "ready", "note": "结局判定 -> RunState 解锁 -> 落盘 -> 结局栏显示；条件不足不许乱记"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",
