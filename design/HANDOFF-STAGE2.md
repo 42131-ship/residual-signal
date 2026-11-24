@@ -925,6 +925,33 @@ ENDING_UNLOCK_OK lone_wolf=yes body_double=yes masked=2 persist=yes early_run=no
 「军队」结局现在**不可能触发**——它要求 `companions_alive ≥ 2`，而同伴系统（M4）还没做。
 这条链路的正确性由 `ending_unlock` 用「直接喂上下文」验证，等 M4 接上同伴后自然可达。
 
+---
+
+## 三十三、推送与同步的防呆（2026-11-24，事故记录）
+
+这一晚同一个事故发生了**两次**：
+
+```
+git fetch 失败（网络被 reset）
+  -> origin/main 仍是旧值
+  -> 紧接着 git reset --hard origin/main
+  -> 把已提交但未推送的工作区删掉（提交对象还在 reflog，靠 reset --hard <sha> 救回）
+```
+
+两次都救回来了，但不该靠运气。现在的做法：
+
+| 工具 | 作用 |
+|---|---|
+| `.tools/push_via_api.ps1` | git 传输被 reset 时走 GitHub Git Data API 推（内容等价，sha 不同） |
+| `.tools/gh_check.py` | 读本机凭据查远端 HEAD / 可见性 / 文件是否存在（内联拼凭据被转义坑过两次） |
+| `.tools/sync_local.ps1` | **先确认 fetch 成功再快进**；fetch 失败就什么都不动；本地领先时只报告不合并 |
+
+三支脚本都在 `.tools/`（不入库，属本机工具）。判断「远端有没有我的提交」用**树哈希**比对，
+不信 `origin/main` 这个本地引用：`REMOTE_TREE == LOCAL_TREE` 即内容一致，即便 sha 不同。
+
+当前状态：远端 `18b5cc8`、本地 `507d8b4`，**树相同**（`2ed93cb`），仅因走 API 推送而 sha 不同；
+下次网络恢复后 `git fetch` + `rebase` 即可把历史拉直。
+
 
 
 
