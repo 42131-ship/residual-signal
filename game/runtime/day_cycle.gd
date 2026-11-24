@@ -29,7 +29,8 @@ func new_run() -> void:
 ## 返回：{day, next_day, sediment, health, supplies, lines[], finished}
 func settle(outcome: Dictionary) -> Dictionary:
 	var extracted := bool(outcome.get("extracted", false))
-	var supplies := clampf(float(outcome.get("supplies", 0.0)), 0.0, 1.0)
+	var supplies_in := clampf(float(outcome.get("supplies", 0.0)), 0.0, 1.0)
+	var supplies := supplies_in
 	var health := clampf(float(outcome.get("health", 1.0)), 0.0, 1.0)
 	var kills := maxi(0, int(outcome.get("kills", 0)))
 	var noise := maxi(0, int(outcome.get("noise", 0)))
@@ -64,6 +65,8 @@ func settle(outcome: Dictionary) -> Dictionary:
 		"sediment": sediment,
 		"health": rested,
 		"supplies": supplies,
+		# M2a 第 3 步：调用方拿这个增量去写，不要覆盖整个字段。
+		"supplies_delta": supplies - supplies_in,
 		"lines": lines,
 		"finished": finished,
 	}

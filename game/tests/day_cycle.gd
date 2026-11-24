@@ -24,6 +24,10 @@ func _initialize() -> void:
 	var lost := cycle.settle({"extracted": false, "supplies": 0.8, "health": 0.5})
 	_check(int(lost["sediment"]) == 3, "a lost day must add 2 sediment, got %d" % int(lost["sediment"]))
 	_check(absf(float(lost["supplies"]) - 0.75) < 0.001, "a lost day must consume 0.05 supplies")
+	_check(absf(float(lost["supplies_delta"]) + 0.05) < 0.001,
+		"a lost day must report a -0.05 supplies delta, got %s" % str(lost["supplies_delta"]))
+	_check(absf(float(extract["supplies_delta"])) < 0.001,
+		"an extracted day must report a zero supplies delta, got %s" % str(extract["supplies_delta"]))
 	_check(absf(float(lost["health"]) - 0.6) < 0.001, "a lost day must only restore 0.1 health")
 
 	# ③ 沉积有上限 40

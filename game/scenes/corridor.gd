@@ -76,8 +76,7 @@ var _door_prompt_text := ""
 var _door_toast_text := ""
 var _door_toast_frames := 0
 ## 玩家状态：物资/体力/噪声/已装备武器/挥击次数（背包与使用系统的落地数据）。
-var _supplies := 0.8
-## M2a：supplies 的真源是 world_state；下面两个函数是唯一读写口。
+## M2a 第 4 步：不再有本地物资字段。真源是 world_state，`RunState.supplies` 只是存档镜像。
 ## 初始化失败时退回 RunState 镜像（并在 HUD 报 STATE_OFFLINE）。
 var _data: DataLayer
 var _state: WorldState
@@ -175,12 +174,11 @@ func _ready() -> void:
 	_current_building = _run.building
 	_visited = _run.visited.duplicate()
 	_fuel = _run.fuel
-	_supplies = _run.supplies
 	# M2a：把「物资」接到数据层的六组变量上。失败就退回镜像值，绝不静默变 0。
 	_data = DataLayer.new()
 	_state = WorldState.new()
 	if _data.load_all() and _state.init_from(_data):
-		_state.set_var("supplies", _supplies)
+		_state.set_var("supplies", _run.supplies)
 		_supplies_online = true
 	else:
 		_state = null
@@ -1265,7 +1263,7 @@ func _use_selected_item() -> void:
 		_render_inventory()
 		return
 	if effect.has("supplies"):
-		_set_supplies(_get_supplies() + float(effect["supplies"]))
+		_add_supplies(float(effect["supplies"]))
 		consumed = true
 	if effect.has("health"):
 		_health = clampf(_health + float(effect["health"]), 0.0, 1.0)
@@ -1506,14 +1504,17 @@ func _depart_to(target: String) -> void:
 	var route := _travel.route(_current_building, target)
 	var label := _travel.label_of(target)
 	var spent := int(route.get("fuel", 0))
+	var supplies_before := _get_supplies()
 	var result := _day.settle({
 		"extracted": true,
-		"supplies": _get_supplies(),
+		"supplies": supplies_before,
 		"health": _health,
 		"kills": _enemies_killed,
 		"noise": _noise,
 	})
-	_set_supplies(float(result["supplies"]))
+	# M2a 第 3 步：结算只交出「增量」，由 _add_supplies 写进真源。
+	# 这样即使同一天里别的系统改过物资，也不会被一次覆盖抹掉。
+	_add_supplies(float(result.get("supplies_delta", 0.0)))
 	_health = float(result["health"])
 	_fuel = maxi(0, _fuel - spent)
 	_current_building = target
@@ -1559,16 +1560,25 @@ func current_building_id() -> String:
 func _get_supplies() -> float:
 	if _state != null:
 		return _state.var_of("supplies")
-	return _supplies
+	return _run.supplies
 
 
-## M2a 的唯一物资写口：两边都写（world_state 是真源，RunState 是存档镜像）。
+## M2a 的唯一物资写口（绝对值）：真源 + 存档镜像一起写。
 func _set_supplies(value: float) -> void:
 	var clamped := clampf(value, 0.0, 1.0)
 	if _state != null:
 		_state.set_var("supplies", clamped)
-	_supplies = clamped
 	_run.supplies = clamped
+
+
+## M2a 第 2 步：增量写。所有「涨/掉一点」都走这里，不再读出来加完再写回去。
+func _add_supplies(delta: float) -> float:
+	if _state != null:
+		var value := _state.add_var("supplies", delta)
+		_run.supplies = value
+		return value
+	_run.supplies = clampf(_run.supplies + delta, 0.0, 1.0)
+	return _run.supplies
 
 
 func supplies_online() -> bool:

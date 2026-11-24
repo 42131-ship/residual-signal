@@ -8,15 +8,18 @@
 
 | 步骤 | 状态 | 提交/门禁 |
 |---|---|---|
-| 1. 接入读取（world_state 为真源） | **已完成** | 门禁 `m2a-state`：`M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1` |
-| 2. 接入写入（add_var 写增量） | 待做 | — |
-| 3. 结算写增量（DayCycle 出口） | 待做 | — |
-| 4. 删旧字段 | 待做 | — |
+| 1. 接入读取（world_state 为真源） | **已完成** | 门禁 `m2a-state` |
+| 2. 接入写入（`add_var` 增量） | **已完成** | `changed()` 信号断言 + 两次 +0.05 == 一次 +0.1 |
+| 3. 结算写增量（DayCycle 出口） | **已完成** | `DayCycle.settle()` 新增 `supplies_delta`；`day_cycle` 门禁断言 -0.05 / 0 |
+| 4. 删旧字段 | **已完成** | `corridor.gd` 里已无 `_supplies` 成员，镜像改成 `RunState.supplies` |
 
-第 1 步的实际做法与方案略有出入，记在这里：**没有删掉 `_supplies` 成员**，而是把它降级为
-「RunState 存档镜像」，并新增 `_get_supplies()/_set_supplies()` 两个唯一读写口：
-在线时读写 `world_state.var_of("supplies")`，同时同步镜像；初始化失败则退回镜像值并 `push_error("STATE_OFFLINE")`。
-这样任何一处漏改都不会静默变成 0，门禁也能断言两边一致。
+第 1 步的实际做法与方案略有出入，记在这里：**没有立刻删掉 `_supplies` 成员**，而是先把它降级为
+「RunState 存档镜像」，并新增 `_get_supplies()/_set_supplies()/_add_supplies()` 三个唯一读写口；
+第 4 步再把成员整个删掉，镜像直接落到 `RunState.supplies`。分两步做的好处是每一步门禁都能单独复跑。
+
+**M2a 完成后的状态**：物资只有一个真源（`world_state`），三条写入路径（用药/搜刮/结算）全部走增量，
+`RunState.supplies` 只在存档时同步。门禁 `m2a-state` 断言：
+`M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1`。
 
 ---
 
@@ -83,7 +86,7 @@
 
 | # | 欠账 | 位置 | 为什么必须还 | 量 |
 |---|---|---|---|---|
-| D1 | 双状态：`_supplies` 与 `world_state` 并行 | corridor.gd / world_state.gd | 卡牌永远影响不到玩家；越晚还，读它的地方越多 | M（M2a） |
+| ~~D1~~ | ~~双状态：`_supplies` 与 `world_state` 并行~~ | — | **已还（M2a）** | ✅ |
 | D2 | `_noise` 与 `add_noise` 语义不同 | corridor.gd / world_state.gd | 同一件事两个定义，迟早对不上 | M（M2a-2） |
 | D3 | `actions_left` 恒为 1、从未消耗 | corridor.gd:1488 | 「一天一次外出」只写在数据里，实际没约束 | S |
 | D4 | `fuel` 只减不增，加油站不产燃料 | corridor.gd / routes.json | 地图上的燃料门槛玩两天就死锁 | S |

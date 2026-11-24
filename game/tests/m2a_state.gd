@@ -38,15 +38,34 @@ func _run() -> void:
 		"world_state and accessor disagree at boot")
 	_check(is_equal_approx(state.var_of("supplies"), 0.8), "fresh run should start at 0.8 supplies")
 
-	# ② 用药 -> world_state 上涨，访问器与镜像同步
+	# ② 用药 -> world_state 上涨，访问器与镜像同步；且必须走 add_var（changed 信号）
+	var emissions: Array = []
+	state.changed.connect(func(name: String, old_value: float, new_value: float) -> void:
+		if name == "supplies":
+			emissions.append([old_value, new_value]))
 	var before: float = state.var_of("supplies")
 	_corridor._inventory.add("bottled_water")
 	_corridor._inventory_index = _find_item("bottled_water")
 	_corridor._use_selected_item()
 	var after: float = state.var_of("supplies")
 	_check(after > before, "drinking water must raise world_state.supplies (%.3f -> %.3f)" % [before, after])
+	_check(not emissions.is_empty(), "supplies change must go through add_var (changed signal)")
+	if not emissions.is_empty():
+		var last: Array = emissions[emissions.size() - 1]
+		_check(is_equal_approx(float(last[0]), before), "changed() old value must be the pre-drink value")
+		_check(is_equal_approx(float(last[1]), after), "changed() new value must be the post-drink value")
 	_check(is_equal_approx(_corridor._get_supplies(), after), "accessor must read world_state")
 	_check(is_equal_approx(RunState.current.supplies, after), "RunState mirror must follow world_state")
+
+	# ②b 增量语义：两次 +0.05 必须等于一次 +0.1（不是覆盖写）
+	var base: float = state.var_of("supplies")
+	if base > 0.85:
+		_corridor._set_supplies(0.5)
+		base = state.var_of("supplies")
+	_corridor._add_supplies(0.05)
+	_corridor._add_supplies(0.05)
+	_check(absf(state.var_of("supplies") - (base + 0.1)) < 0.001,
+		"two +0.05 adds must equal +0.1, got %.3f from %.3f" % [state.var_of("supplies"), base])
 
 	# ③ 结算后仍然一致（结算会改物资）
 	var actor := _corridor.get_node_or_null("Player") as Player

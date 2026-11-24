@@ -876,8 +876,23 @@ M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1
 断言点：开局两边一致且为 0.8；喝水后 `world_state` 上涨、访问器与镜像同步；
 出门结算后仍一致；写越界被夹到 0..1。全量 **24 条门禁全绿**。
 
-**仍欠**：第 2 步（写入改 `add_var` 增量）、第 3 步（结算出口写增量）、第 4 步（删成员）。
-`noise` 与 `health` 按 TECH_DEBT 的决定不动。
+**仍欠**：`noise` 与 `health` 按 TECH_DEBT 的决定不动。
+
+---
+
+## 三十一、M2a 收尾：增量写 + 删旧字段（2026-11-24）
+
+| 步骤 | 做法 | 验收 |
+|---|---|---|
+| 2. 增量写 | 新增 `_add_supplies(delta)`，用药改走它；`world_state.add_var` 自带 0..1 夹取与 `changed` 信号 | 门禁连 `changed` 信号断言旧值/新值；两次 +0.05 == 一次 +0.1 |
+| 3. 结算写增量 | `DayCycle.settle()` 返回值新增 **`supplies_delta`**；走廊只把增量交给 `_add_supplies` | `day_cycle` 断言未离场 -0.05、离场 0 |
+| 4. 删旧字段 | `corridor.gd` 里 `_supplies` 成员**已删除**，镜像直接用 `RunState.supplies` | 全仓 grep 无裸 `_supplies`；24 条门禁全绿 |
+
+**现在的物资链路**：`world_state.supplies`（唯一真源） ← `_get/_set/_add_supplies` ← 用药 / 搜刮 / 结算；
+`_persist_run()` 把它同步到 `RunState.supplies` 供存档。
+
+**为什么分四步走**：每一步都能单独跑门禁、单独提交，红了只回滚那一步。
+第 1 步先留成员当镜像、第 4 步才删，就是为了让「读取接入」和「字段删除」互不牵连。
 
 
 
