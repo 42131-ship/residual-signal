@@ -62,6 +62,12 @@ EXPECTED: dict[str, str] = {
     "data/cards/layer_l.json": "L 层地点无关卡 8-10 张（5 模板共享）",
     "data/cards/layer_s_school.json": "S 层地点专属卡（每模板 2-4 张）",
     "data/npcs/npcs.json": "20 张 NPC 状态卡",
+    "data/travel/routes.json": "出行层：5 栋楼 + 6 条无向边 + 一天一次（R44）",
+    "data/travel/map_layout.json": "旅行图楼位（2.5D 锚点；改位置只改这里）",
+    "data/endings/school.json": "学校模板 4 个结局（含未解锁占位，R45）",
+    "data/systems/status.json": "4 条状态 + 分级倍率 + 对症药（R46）",
+    "data/loot/containers.json": "容器档位 / 掉落池 / 高珍惜唯一性（R47）",
+    "data/loot/items.json": "105 件物品与使用效果（R47 效果键）",
     "data/weapons/weapons.json": "武器资源（weapon_budget 的引用目标）",
     "data/audio/sounds.json": "事件 → asset_key 映射",
     "L0/events.jsonl": "append-only 世界事实日志",
@@ -1438,6 +1444,205 @@ def inventory(ctx: Ctx) -> tuple[int, int]:
         print(f"[{mark}] {rel:<{width}}  {desc}")
     print(f"\n输入台账：{present}/{total} 就位")
     return present, total
+
+
+# ================================================================ R44-R47
+# 2026-11-24：D6。新加的四份数据（出行/结局/状态/战利品）此前完全没有规则覆盖，
+# 写错了只有跑到游戏里才炸。下面四条把它们纳入同一套校验。
+
+ENDING_CONDITION_KEYS = {
+    "day_min", "companions_alive_min", "companions_alive_max", "companions_lost_min",
+    "ammo_at_end", "requires_finale", "requires_item_any",
+    "trust_min", "trust_max", "reputation_min", "reputation_max",
+    "supplies_min", "supplies_max", "control_min", "control_max",
+    "knowledge_min", "knowledge_max", "bond_min", "bond_max",
+}
+STATUS_PER_STAGE_KEYS = {"health_drain_per_hour", "speed_mult", "noise_mult"}
+LOOT_EFFECT_KEYS = {
+    "supplies", "health", "noise", "equip", "contaminate",
+    "damage", "durability", "magazine", "ammo",
+}
+
+
+def _doc_list(doc: Any, key: str) -> list[dict]:
+    if not isinstance(doc, dict):
+        return []
+    rows = doc.get(key)
+    if not isinstance(rows, list):
+        return []
+    return [r for r in rows if isinstance(r, dict)]
+
+
+@rule("R44", "出行层：5 栋楼 + 唯一安全屋 + 路线端点合法且不重复 + 一天一次")
+def r44(ctx: Ctx):
+    rel = "data/travel/routes.json"
+    doc = ctx.get(rel)
+    if not isinstance(doc, dict):
+        return
+    buildings = _doc_list(doc, "buildings")
+    ids = [str(b.get("id", "")) for b in buildings]
+    if len(ids) != 5 or len(set(ids)) != 5:
+        yield bad("R44", rel, f"必须恰好 5 栋楼且 id 唯一，实际 {ids}")
+    safehouses = [str(b.get("id")) for b in buildings if b.get("safehouse")]
+    if safehouses != ["school"]:
+        yield bad("R44", rel, f"安全屋必须且只能是 school，实际 {safehouses}")
+    seen: set[tuple[str, str]] = set()
+    for route in _doc_list(doc, "routes"):
+        a, b = str(route.get("a", "")), str(route.get("b", ""))
+        if a not in ids or b not in ids or a == b:
+            yield bad("R44", rel, f"路线端点非法：{a}<->{b}")
+            continue
+        if (a, b) in seen:
+            yield bad("R44", rel, f"路线重复声明：{a}<->{b}")
+        seen.add((a, b))
+        if int(route.get("cost", 0)) < 1:
+            yield bad("R44", rel, f"{a}<->{b} 的 cost 必须 ≥1")
+        if int(route.get("fuel", 0)) < 0:
+            yield bad("R44", rel, f"{a}<->{b} 的 fuel 不能为负")
+        if int(route.get("risk", 0)) < 1:
+            yield bad("R44", rel, f"{a}<->{b} 的 risk 必须 ≥1")
+    day = doc.get("day") or {}
+    if int(day.get("actions_per_day", 0)) < 1:
+        yield bad("R44", rel, "actions_per_day 必须 ≥1")
+    hour = int(day.get("night_hour", -1))
+    if not 0 <= hour <= 23:
+        yield bad("R44", rel, f"night_hour 必须在 0..23，实际 {hour}")
+
+
+@rule("R45", "结局：每模板恰好 4 条 + id/order 唯一 + 未解锁占位 + 条件键合法")
+def r45(ctx: Ctx):
+    folder = ctx.p("data/endings")
+    if not folder.is_dir():
+        return
+    for path in sorted(folder.glob("*.json")):
+        rel = f"data/endings/{path.name}"
+        doc = ctx.get(rel)
+        if not isinstance(doc, dict):
+            continue
+        template = str(doc.get("template", ""))
+        if template != path.stem:
+            yield bad("R45", rel, f"template={template} 与文件名 {path.stem} 不一致")
+        rows = _doc_list(doc, "endings")
+        if len(rows) != 4:
+            yield bad("R45", rel, f"必须恰好 4 个结局，实际 {len(rows)}")
+        ids = [str(r.get("id", "")) for r in rows]
+        if len(set(ids)) != len(ids):
+            yield bad("R45", rel, f"结局 id 重复：{ids}")
+        orders = sorted(int(r.get("order", 0)) for r in rows)
+        if orders != [1, 2, 3, 4]:
+            yield bad("R45", rel, f"order 必须是 1..4，实际 {orders}")
+        for row in rows:
+            eid = str(row.get("id", ""))
+            for field in ("label", "locked_label", "summary", "locked_summary", "grade"):
+                if not str(row.get(field, "")).strip():
+                    yield bad("R45", rel, f"{eid} 缺少 {field}")
+            conditions = row.get("conditions")
+            if not isinstance(conditions, dict) or not conditions:
+                yield bad("R45", rel, f"{eid} 没有 conditions")
+                continue
+            for key in conditions:
+                if key not in ENDING_CONDITION_KEYS:
+                    yield bad("R45", rel, f"{eid} 的条件键 {key} 不被结局判定支持")
+
+
+@rule("R46", "状态：4 条状态 + 阶段与倍率合法 + 对症药必须真实存在")
+def r46(ctx: Ctx):
+    rel = "data/systems/status.json"
+    doc = ctx.get(rel)
+    if not isinstance(doc, dict):
+        return
+    rows = _doc_list(doc, "statuses")
+    if len(rows) != 4:
+        yield bad("R46", rel, f"必须恰好 4 条状态，实际 {len(rows)}")
+    items = ctx.get("data/loot/items.json") or {}
+    known_items = {str(i.get("id", "")) for i in _doc_list(items, "items")}
+    for row in rows:
+        sid = str(row.get("id", ""))
+        if int(row.get("max_stage", 0)) < 1:
+            yield bad("R46", rel, f"{sid} 的 max_stage 必须 ≥1")
+        per_stage = row.get("per_stage")
+        if not isinstance(per_stage, dict):
+            yield bad("R46", rel, f"{sid} 缺少 per_stage")
+        else:
+            for key in STATUS_PER_STAGE_KEYS:
+                if key not in per_stage:
+                    yield bad("R46", rel, f"{sid} 的 per_stage 缺少 {key}")
+            speed = float(per_stage.get("speed_mult", 1.0))
+            noise = float(per_stage.get("noise_mult", 1.0))
+            if not 0.0 < speed <= 1.0:
+                yield bad("R46", rel, f"{sid} 的 speed_mult 必须在 (0,1]，实际 {speed}")
+            if noise < 1.0:
+                yield bad("R46", rel, f"{sid} 的 noise_mult 必须 ≥1，实际 {noise}")
+        cures = row.get("cure_items")
+        if cures is not None and not isinstance(cures, list):
+            yield bad("R46", rel, f"{sid} 的 cure_items 必须是数组")
+        for item_id in (cures or []):
+            if known_items and str(item_id) not in known_items:
+                yield bad("R46", rel, f"{sid} 的对症药 {item_id} 不在 items.json 里")
+
+
+@rule("R47", "战利品：容器档位存在 + 每建筑唯一高珍惜 + 池引用真实物品 + 效果键合法")
+def r47(ctx: Ctx):
+    rel = "data/loot/containers.json"
+    doc = ctx.get(rel)
+    items_doc = ctx.get("data/loot/items.json")
+    if not isinstance(doc, dict):
+        return
+    items = _doc_list(items_doc, "items")
+    item_ids = {str(i.get("id", "")) for i in items}
+    tiers = doc.get("tiers") if isinstance(doc.get("tiers"), dict) else {}
+    pools = doc.get("pools") if isinstance(doc.get("pools"), dict) else {}
+    for tier_id, tier in tiers.items():
+        if not isinstance(tier, dict):
+            yield bad("R47", rel, f"档位 {tier_id} 不是对象")
+            continue
+        capacity = tier.get("capacity")
+        if not (isinstance(capacity, list) and len(capacity) == 2 and 1 <= int(capacity[0]) <= int(capacity[1])):
+            yield bad("R47", rel, f"档位 {tier_id} 的 capacity 必须是 [小,大] 且 ≥1")
+        if int(tier.get("search_seconds", -1)) < 0:
+            yield bad("R47", rel, f"档位 {tier_id} 的 search_seconds 不能为负")
+        for pool_id in tier.get("pools", []):
+            if str(pool_id) not in pools:
+                yield bad("R47", rel, f"档位 {tier_id} 引用了不存在的池 {pool_id}")
+    for pool_id, entries in pools.items():
+        if not isinstance(entries, list) or not entries:
+            yield bad("R47", rel, f"池 {pool_id} 为空")
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                yield bad("R47", rel, f"池 {pool_id} 里有非对象条目")
+                continue
+            item_id = str(entry.get("item", ""))
+            if item_ids and item_id not in item_ids:
+                yield bad("R47", rel, f"池 {pool_id} 引用了不存在的物品 {item_id}")
+            if int(entry.get("weight", 0)) < 1:
+                yield bad("R47", rel, f"池 {pool_id} 的 {item_id} 权重必须 ≥1")
+    treasure_per_building: dict[str, int] = {}
+    for row in _doc_list(doc, "containers"):
+        cid = str(row.get("id", ""))
+        tier_id = str(row.get("tier", ""))
+        if tier_id not in tiers:
+            yield bad("R47", rel, f"容器 {cid} 的档位 {tier_id} 不存在")
+        if tier_id == "treasure":
+            building = str(row.get("building", ""))
+            treasure_per_building[building] = treasure_per_building.get(building, 0) + 1
+    for building, count in treasure_per_building.items():
+        if count != 1:
+            yield bad("R47", rel, f"建筑 {building} 有 {count} 个高珍惜容器，必须恰好 1 个")
+    for row in items:
+        iid = str(row.get("id", ""))
+        for forbidden in ("tier", "rarity", "value", "grade", "price"):
+            if forbidden in row:
+                yield bad("R47", "data/loot/items.json", f"{iid} 的物品详情泄露了 {forbidden}")
+        effect = row.get("effect")
+        if effect is None:
+            continue
+        if not isinstance(effect, dict):
+            yield bad("R47", "data/loot/items.json", f"{iid} 的 effect 不是对象")
+            continue
+        for key in effect:
+            if key not in LOOT_EFFECT_KEYS:
+                yield bad("R47", "data/loot/items.json", f"{iid} 的效果键 {key} 不合法")
 
 
 def main(argv: list[str] | None = None) -> int:

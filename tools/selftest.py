@@ -158,12 +158,57 @@ FIXTURE: dict[str, object] = {
         "fonts": [{"name": "Vonwaon", "license": "CC0-1.0", "source": "", "author": "", "notice_path": ""}]
     },
     "art/palettes/master.gpl": "GIMP Palette\nName: master\nColumns: 16\n#\n13 17 20\tbg\n224 138 60\taccent\n",
+    # ---- D6：新加的四份数据各埋一个必被抓的错 ----
+    # 两栋安全屋 + cost 0 + actions_per_day 0 + night_hour 越界（R44）
+    "data/travel/routes.json": {
+        "buildings": [
+            {"id": "school", "label": "学校", "safehouse": True},
+            {"id": "gas_station", "label": "加油站", "safehouse": True},
+            {"id": "hospital", "label": "医院"},
+            {"id": "fire_station", "label": "消防站"},
+            {"id": "military_base", "label": "军事基地"},
+        ],
+        "routes": [{"a": "school", "b": "gas_station", "cost": 0, "fuel": 0, "risk": 0}],
+        "day": {"actions_per_day": 0, "night_hour": 99},
+    },
+    # 只有 3 条结局 + 条件键不认识（R45）
+    "data/endings/school.json": {
+        "template": "school",
+        "endings": [
+            {"id": "a", "order": 1, "label": "A", "grade": "S", "locked_label": "？",
+             "locked_summary": "？", "summary": "s", "conditions": {"day_min": 26}},
+            {"id": "b", "order": 2, "label": "B", "grade": "A", "locked_label": "？",
+             "locked_summary": "？", "summary": "s", "conditions": {"day_min": 28}},
+            {"id": "c", "order": 3, "label": "C", "grade": "B", "locked_label": "？",
+             "locked_summary": "？", "summary": "s", "conditions": {"moon_phase": 3}},
+        ],
+    },
+    # speed_mult 超过 1 + 对症药不存在（R46）
+    "data/systems/status.json": {
+        "statuses": [
+            {"id": "wound", "label": "伤口", "max_stage": 3,
+             "per_stage": {"health_drain_per_hour": 1.0, "speed_mult": 1.5, "noise_mult": 1.0},
+             "cure_items": ["ghost_item"]},
+        ],
+    },
+    # 池引用不存在的物品 + 同建筑两个高珍惜容器 + 物品泄露 value（R47）
+    "data/loot/containers.json": {
+        "tiers": {"treasure": {"capacity": [1, 1], "search_seconds": 6, "pools": ["missing_pool"]}},
+        "pools": {"household": [{"item": "ghost_item", "weight": 1}]},
+        "containers": [
+            {"id": "t1", "building": "school", "tier": "treasure"},
+            {"id": "t2", "building": "school", "tier": "treasure"},
+        ],
+    },
+    "data/loot/items.json": {
+        "items": [{"id": "water", "name": "水", "category": "food", "effect": {"value": 3}}],
+    },
 }
 
 EXPECTED_ERRORS = {
     "R02", "R07", "R09", "R10", "R14", "R15", "R17", "R18", "R20",
     "R22", "R23", "R24", "R25", "R26", "R27", "R28", "R29", "R30", "R32",
-    "R33", "R35",
+    "R33", "R35", "R44", "R45", "R46", "R47",
 }
 
 

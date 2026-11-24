@@ -952,6 +952,39 @@ git fetch 失败（网络被 reset）
 当前状态：远端 `18b5cc8`、本地 `507d8b4`，**树相同**（`2ed93cb`），仅因走 API 推送而 sha 不同；
 下次网络恢复后 `git fetch` + `rebase` 即可把历史拉直。
 
+---
+
+## 三十四、D6 · 校验器补上四份新数据（2026-11-24）
+
+**问题**：`data/travel`、`data/endings`、`data/systems`、`data/loot` 是这两周新写的，
+`validate.py` 一条规则都没管——写错只会在游戏里炸。
+
+### 新增四条规则
+
+| 规则 | 管什么 | 关键判据 |
+|---|---|---|
+| **R44** 出行层 | `data/travel/routes.json` | 恰好 5 栋楼、id 唯一、**唯一安全屋必须是 school**、路线端点存在且不重复、cost≥1 / fuel≥0 / risk≥1、`actions_per_day≥1`、`night_hour` 在 0–23 |
+| **R45** 结局 | `data/endings/*.json` | 每模板**恰好 4 条**、id 与 order 唯一且为 1..4、`template` 与文件名一致、五个文案字段非空、**条件键必须在判定支持的集合内** |
+| **R46** 状态 | `data/systems/status.json` | 恰好 4 条、`max_stage≥1`、`per_stage` 三键齐全、`speed_mult`∈(0,1]、`noise_mult≥1`、**对症药必须真实存在于 items.json** |
+| **R47** 战利品 | `data/loot/containers.json` + `items.json` | 档位 `capacity` 合法、池引用真实物品且权重≥1、档位引用的池存在、**每建筑高珍惜容器恰好 1 个**、物品不得泄露 `value/tier/grade`、效果键白名单 |
+
+同时把六份文件加进输入台账：**29/29 就位**。
+
+### 关键：证明规则不是空转
+
+`tools/selftest.py` 的夹具里埋了坏数据，四条都会开火：
+
+```text
+[PASS] R44  安全屋必须且只能是 school，实际 ['school', 'gas_station']
+[PASS] R45  必须恰好 4 个结局，实际 3
+[PASS] R46  必须恰好 4 条状态，实际 1
+[PASS] R47  档位 treasure 引用了不存在的池 missing_pool
+```
+
+这一步不能省——只看「0 报错」无法区分「数据干净」和「规则读错字段名、静默跳过」。
+
+**当前**：47 条规则，`ERROR 0 · WARN 0 · SKIP 0`；台账 29/29。
+
 
 
 
