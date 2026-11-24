@@ -834,6 +834,25 @@ MENU_OK entries=3 wrap=yes endings_slots=4 masked=3 unlock=kept_on_new_game
 ②完成后按之前的判断，**立刻做 M2a**（supplies/noise 归 `world_state`，health 明确留作运行时状态），
 再往下是 M3 外部层（广播/手机/空投）与 M4 人物层（bond）。
 
+---
+
+## 二十九、交接补齐：M2a 方案与欠账清单（2026-11-24）
+
+M2a 的详细方案、字段归属、四个可单独验收的步骤、风险与回滚，以及**全部欠账 21 条**（按「立即该还 /
+接着该还 / 工程债 / 观感线」分组，各带位置与工作量），都写在 **[`design/TECH_DEBT.md`](TECH_DEBT.md)**。
+
+要点摘录：
+
+- M2a **只做三件**：`supplies` 改读 `world_state`、结算改写成写增量、HUD 读真源；
+  **`health` 明确不进数据模型**（那是 M2c，要动 R35 白名单与 43 条规则 fixture）。
+- `noise` 本轮**不接**：走廊是「本日累计 int + 预算 14」，`world_state.add_noise` 是
+  「单次动作 × 夜倍率 → 沉积」，语义不同，留给 M2a-2。
+- 立即该还的六条：D1 双状态、D2 noise 语义、D3 `actions_left` 从未消耗、D4 燃料只减不增、
+  D5 结局没有解锁写入路径、D6 校验器不覆盖新数据目录。
+- 观感线仍欠：Stage 3 地面细节、Stage 4 前景遮挡、Stage 5 HUD 重构（D19–D21）。
+
+顺序建议：`M2a → D5 → D6 → M2a-2 → D14 → D8 → D9 → D10/D11 → D7 → D19~D21`。
+
 
 
 
