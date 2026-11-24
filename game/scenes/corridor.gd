@@ -46,6 +46,8 @@ var _world: Node2D
 var _player: Player
 var _camera: Camera2D
 var _light_material: ShaderMaterial
+## 光锥当前角度（弧度）：0 = 朝右，PI = 朝左。跟着朝向插值，避免转身硬切。
+var _light_angle := 0.0
 var _last_step_was_running := false
 var _steps := 0
 var _flashlight_on := true
@@ -1276,7 +1278,7 @@ func _use_selected_item() -> void:
 		_health = clampf(_health + float(effect["health"]), 0.0, 1.0)
 		consumed = true
 	if effect.has("noise"):
-		_noise += int(effect["noise"])
+		_emit_noise(int(effect["noise"]))
 		consumed = true
 	# 污染食物：吃下去先中毒；止痛/安眠这类还会上瘾。
 	if bool(effect.get("contaminate", false)):
@@ -1329,7 +1331,7 @@ func _perform_attack() -> void:
 				_toast_combat("没有子弹，按 R 装填")
 			else:
 				_magazine -= 1
-	_noise += noise
+	_emit_noise(noise)
 	var target := _enemy_in_reach(reach)
 	if target != null and damage > 0:
 		var killed := target.hp - damage <= 0
@@ -1634,6 +1636,35 @@ func supplies_online() -> bool:
 	return _supplies_online
 
 
+## M2a-2：噪声唯一出口。走廊的三段对应学校主轴的三节，别处（d/e 及其他楼层）还没接。
+## 世界层负责「按当天敏感度缩放 + 传染给相邻节点 + 加沉积」，走廊只负责「报一个底值」。
+const ROOM_NODE_IDS: Array[String] = ["school_corridor_a", "school_corridor_b", "school_corridor_c"]
+
+
+func _current_room_node() -> String:
+	if _player == null:
+		return ROOM_NODE_IDS[0]
+	var tile_x := _player.global_position.x / float(TILE_SIZE)
+	if tile_x < float(ROOM_PARTITION_TILES[0]):
+		return ROOM_NODE_IDS[0]
+	if tile_x < float(ROOM_PARTITION_TILES[1]):
+		return ROOM_NODE_IDS[1]
+	return ROOM_NODE_IDS[2]
+
+
+func _emit_noise(base: int) -> int:
+	if base <= 0:
+		return _noise
+	if _state != null:
+		# night=false：走廊现在没有时刻概念（搜索按游戏小时推进但不区分昼夜），
+		# 等 M3 的时间层接上再传真实昼夜，别在这里假装有。
+		var result := _state.add_noise(_current_room_node(), base, false)
+		_noise += int(result.get("self", base))
+	else:
+		_noise += base
+	return _noise
+
+
 func _update_player_anim(delta: float) -> void:
 	if _player == null or not CharAnim.has("player"):
 		return
@@ -1908,5 +1939,25 @@ func _set_flashlight(on: bool) -> void:
 func _update_flashlight() -> void:
 	if _light_material == null or _player == null:
 		return
+	var facing := 1.0 if _player.facing_x >= 0.0 else -1.0
+	# 灯位跟着朝向镜像：朝左时灯在身体左侧，否则光会从身体右边冒出去。
 	var screen_origin := _player.get_global_transform_with_canvas().origin.round()
-	_light_material.set_shader_parameter("light_pos_px", screen_origin + Vector2(9, -13))
+	_light_material.set_shader_parameter("light_pos_px", screen_origin + Vector2(9.0 * facing, -13))
+	# 光锥方向：0 = 朝右，PI = 朝左。之前这里从来没写过 cone_dir，
+	# 所以朝左走时光锥还一直朝右——这是可见的 bug，不是观感问题。
+	var target_angle := 0.0 if facing > 0.0 else PI
+	_light_angle = lerp_angle(_light_angle, target_angle, 0.35)
+	if absf(_angle_delta(_light_angle, target_angle)) < 0.02:
+		_light_angle = target_angle
+	# 归一化到 [0, 2π)：-PI 与 PI 指向同一个方向，但写进着色器前统一成正值更好读。
+	_light_material.set_shader_parameter("cone_dir", fposmod(_light_angle, TAU))
+
+
+## 两个角度之间的最短夹角（弧度，取绝对值）。
+func _angle_delta(a: float, b: float) -> float:
+	return atan2(sin(a - b), cos(a - b))
+
+
+## 门禁用：当前光锥角度（0 = 朝右，PI = 朝左）。
+func light_angle() -> float:
+	return _light_angle
