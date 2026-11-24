@@ -985,6 +985,46 @@ git fetch 失败（网络被 reset）
 
 **当前**：47 条规则，`ERROR 0 · WARN 0 · SKIP 0`；台账 29/29。
 
+---
+
+## 三十五、手电筒朝向 bug + M2a-2 噪声收敛（2026-11-25 凌晨）
+
+### 一、用户报的可见 bug：朝左走，光朝右射
+
+**根因不是观感，是没接线**：`flashlight.gdshader` 有 `cone_dir` 参数（0 = 朝右），
+但 `_update_flashlight()` 只写了 `light_pos_px`，**从没写过 `cone_dir`**，所以永远朝右。
+
+修法三件：朝向取 `_player.facing_x` 写入 `cone_dir`（0 / PI，归一化到 [0,2π)）；
+灯位偏移同样镜像（朝左时灯在身体左侧）；转身用 `lerp_angle(…, 0.35)` 插值不硬切。
+
+新门禁 `corridor-light`：`CORRIDOR_LIGHT_OK right=0rad left=PI lamp=mirrored input=A`
+——包含「按 A 真实输入」的复验，不只是直接改 facing 字段。
+
+### 二、M2a-2：噪声只剩一条出口
+
+之前有两套定义：走廊 `_noise` 是「本日累计 int + 预算 14」，`world_state.add_noise` 是
+「单次动作 × 当天敏感度 × 夜倍率 → 加该节点沉积并传染邻接」。同一件事两个算法，迟早对不上。
+
+现在走廊只负责**报底值**：
+
+```gdscript
+_emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b；否则 c
+                   # 世界层缩放后返回 self 增量，走廊计数 += 该增量
+```
+
+`night=false` 是**刻意**的：走廊目前没有昼夜概念（搜索按游戏小时推进但不分昼夜），
+等 M3 时间层接上再传真实昼夜，不在这里假装有。
+
+**验收**：`M2A_NOISE_OK rooms=a/b/c self=matched neighbour=infected guard=0`
+—— 三段映射正确、走廊计数等于世界缩放增量（不是各算各的）、邻接节点被传染、0/负值忽略。
+
+全量 **27 条门禁全绿**；47 条规则 0 报错。
+
+### 三、欠账进度
+
+已还：D1（双状态）、D2（noise 语义）、D5（结局解锁）、D6（校验覆盖），加这次的灯光 bug。
+剩 17 条，下一条按顺序是 **D3：`actions_left` 恒为 1、从未消耗**（「一天一次外出」只写在数据里）。
+
 
 
 
