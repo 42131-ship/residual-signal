@@ -853,6 +853,32 @@ M2a 的详细方案、字段归属、四个可单独验收的步骤、风险与�
 
 顺序建议：`M2a → D5 → D6 → M2a-2 → D14 → D8 → D9 → D10/D11 → D7 → D19~D21`。
 
+---
+
+## 三十、M2a 第 1 步落地（2026-11-24 深夜）
+
+**目标**：物资（`supplies`）的真源从走廊本地字段换成 `world_state`，卡牌将来才可能影响玩家。
+
+做法（与方案文档的差异也写进去了）：
+
+- 走廊 `_ready` 建 `DataLayer` + `WorldState.init_from()`，成功后 `set_var("supplies", 开局值)`
+- 新增**唯一读写口** `_get_supplies()` / `_set_supplies(value)`：
+  在线读写 `world_state.var_of("supplies")`，同时同步 `RunState.supplies`（存档镜像）
+- 初始化失败 → `_state = null` + `push_error("STATE_OFFLINE")`，退回镜像值，**绝不静默变 0**
+- HUD、用药、结算、`_persist_run()` 全部改走这两个口；`_supplies` 成员降级为镜像
+
+**验收**：新门禁 `m2a-state`
+
+```text
+M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1
+```
+
+断言点：开局两边一致且为 0.8；喝水后 `world_state` 上涨、访问器与镜像同步；
+出门结算后仍一致；写越界被夹到 0..1。全量 **24 条门禁全绿**。
+
+**仍欠**：第 2 步（写入改 `add_var` 增量）、第 3 步（结算出口写增量）、第 4 步（删成员）。
+`noise` 与 `health` 按 TECH_DEBT 的决定不动。
+
 
 
 

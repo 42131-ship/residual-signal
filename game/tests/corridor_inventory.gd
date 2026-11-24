@@ -59,10 +59,10 @@ func _run() -> void:
 	if water_index >= 0:
 		_corridor._inventory_index = water_index
 		_corridor._render_inventory()
-		var supplies_before: float = _corridor._supplies
+		var supplies_before: float = _corridor._get_supplies()
 		var count_before: int = _corridor._inventory.count_of("bottled_water")
 		await _press(KEY_E)
-		_check(_corridor._supplies > supplies_before, "using bottled_water did not raise supplies")
+		_check(_corridor._get_supplies() > supplies_before, "using bottled_water did not raise supplies")
 		_check(_corridor._inventory.count_of("bottled_water") == count_before - 1,
 			"using bottled_water did not consume it")
 		_check(_corridor._inventory.has("bottled_water") == false or true, "sanity")

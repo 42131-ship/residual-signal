@@ -77,6 +77,11 @@ var _door_toast_text := ""
 var _door_toast_frames := 0
 ## 玩家状态：物资/体力/噪声/已装备武器/挥击次数（背包与使用系统的落地数据）。
 var _supplies := 0.8
+## M2a：supplies 的真源是 world_state；下面两个函数是唯一读写口。
+## 初始化失败时退回 RunState 镜像（并在 HUD 报 STATE_OFFLINE）。
+var _data: DataLayer
+var _state: WorldState
+var _supplies_online := false
 var _health := 1.0
 var _noise := 0
 var _equipped := ""
@@ -171,6 +176,15 @@ func _ready() -> void:
 	_visited = _run.visited.duplicate()
 	_fuel = _run.fuel
 	_supplies = _run.supplies
+	# M2a：把「物资」接到数据层的六组变量上。失败就退回镜像值，绝不静默变 0。
+	_data = DataLayer.new()
+	_state = WorldState.new()
+	if _data.load_all() and _state.init_from(_data):
+		_state.set_var("supplies", _supplies)
+		_supplies_online = true
+	else:
+		_state = null
+		push_error("STATE_OFFLINE: world_state 初始化失败，物资退回 RunState 镜像")
 	_health = _run.health
 	_day.day = _run.day
 	_day.sediment = _run.sediment
@@ -1137,7 +1151,7 @@ func _refresh_hud_stats() -> void:
 		_player.status_speed_scale = _status.speed_multiplier()
 		_refresh_status_fx()
 	# 行距 15：PF-02 汉字墨迹 13×14，10px 行距会直接叠字。
-	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_supplies * 100.0)), Vector2(8, 42), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_get_supplies() * 100.0)), Vector2(8, 42), Color("#9fb2bd"))
 	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), Color("#9fb2bd"))
 	var weapon_text := "空手"
 	if not _equipped.is_empty():
@@ -1251,7 +1265,7 @@ func _use_selected_item() -> void:
 		_render_inventory()
 		return
 	if effect.has("supplies"):
-		_supplies = clampf(_supplies + float(effect["supplies"]), 0.0, 1.0)
+		_set_supplies(_get_supplies() + float(effect["supplies"]))
 		consumed = true
 	if effect.has("health"):
 		_health = clampf(_health + float(effect["health"]), 0.0, 1.0)
@@ -1494,12 +1508,12 @@ func _depart_to(target: String) -> void:
 	var spent := int(route.get("fuel", 0))
 	var result := _day.settle({
 		"extracted": true,
-		"supplies": _supplies,
+		"supplies": _get_supplies(),
 		"health": _health,
 		"kills": _enemies_killed,
 		"noise": _noise,
 	})
-	_supplies = float(result["supplies"])
+	_set_supplies(float(result["supplies"]))
 	_health = float(result["health"])
 	_fuel = maxi(0, _fuel - spent)
 	_current_building = target
@@ -1531,7 +1545,7 @@ func _persist_run() -> void:
 	_run.sediment = _day.sediment
 	_run.building = _current_building
 	_run.fuel = _fuel
-	_run.supplies = _supplies
+	_run.supplies = _get_supplies()
 	_run.health = _health
 	_run.visited = _visited.duplicate()
 	_run.save()
@@ -1539,6 +1553,26 @@ func _persist_run() -> void:
 
 func current_building_id() -> String:
 	return _current_building
+
+
+## M2a 的唯一物资读口：在线走 world_state，离线退回 RunState 镜像。
+func _get_supplies() -> float:
+	if _state != null:
+		return _state.var_of("supplies")
+	return _supplies
+
+
+## M2a 的唯一物资写口：两边都写（world_state 是真源，RunState 是存档镜像）。
+func _set_supplies(value: float) -> void:
+	var clamped := clampf(value, 0.0, 1.0)
+	if _state != null:
+		_state.set_var("supplies", clamped)
+	_supplies = clamped
+	_run.supplies = clamped
+
+
+func supplies_online() -> bool:
+	return _supplies_online
 
 
 func _update_player_anim(delta: float) -> void:

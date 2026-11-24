@@ -1,8 +1,22 @@
 # TECH_DEBT · M2a 方案与欠账清单
 
-> 状态：2026-11-24 整理。M2a **未开工**（本文只定方案）。
+> 状态：2026-11-24 整理；**同日 M2a 第 1 步已落地**（见下方「进度」）。
 > 数字都是当次实测，不是印象：`corridor.gd` 1819 行，`_supplies` 出现 7 次、`_health` 9 次、
 > `_noise` 4 次、`_fuel` 7 次；断言 `_supplies` 的门禁只有 `corridor_inventory` 两处。
+
+## 进度
+
+| 步骤 | 状态 | 提交/门禁 |
+|---|---|---|
+| 1. 接入读取（world_state 为真源） | **已完成** | 门禁 `m2a-state`：`M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1` |
+| 2. 接入写入（add_var 写增量） | 待做 | — |
+| 3. 结算写增量（DayCycle 出口） | 待做 | — |
+| 4. 删旧字段 | 待做 | — |
+
+第 1 步的实际做法与方案略有出入，记在这里：**没有删掉 `_supplies` 成员**，而是把它降级为
+「RunState 存档镜像」，并新增 `_get_supplies()/_set_supplies()` 两个唯一读写口：
+在线时读写 `world_state.var_of("supplies")`，同时同步镜像；初始化失败则退回镜像值并 `push_error("STATE_OFFLINE")`。
+这样任何一处漏改都不会静默变成 0，门禁也能断言两边一致。
 
 ---
 
