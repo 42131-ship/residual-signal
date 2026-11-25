@@ -116,7 +116,7 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 
 | # | 欠账 | 位置 | 影响 | 量 |
 |---|---|---|---|---|
-| D15 | 字体图集要手动重建 | tools/font_build.py | 新增文案就缺字（已踩两次） | S |
+| D15 | 字体图集要手动重建 | tools/font_build.py | ✅ 已还（2026-11-25）：`--check` 只读覆盖门禁进 pipeline，卡牌/结局文案已入图集（792 字） | S |
 | D16 | `psd-tools` 未进 CI | requirements-tools.txt | 换机器导不出 PSD | S |
 | D17 | 存档只有 schema 字符串，无版本迁移 | run_state.gd | 改字段就废档 | M |
 | D18 | 截图证据靠门禁顺手生成，没有 diff 基线 | design/previews | 观感回归只能靠肉眼 | M |

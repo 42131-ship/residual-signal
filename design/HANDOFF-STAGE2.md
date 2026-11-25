@@ -1037,7 +1037,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **34 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light`；`pipeline.json` 里 step 数 30 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **34 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light`；`pipeline.json` 里 step 数 31 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
@@ -1096,7 +1096,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 
 | # | 项 | 现状 | 验收 |
 |---|---|---|---|
-| D15 | 字体图集手动重建 | 新增文案缺字已踩两次（`站/医院/区`） | `pipeline` 加一步「图集覆盖所有 data 文案」的检查 |
+| D15 | 字体图集手动重建 | 新增文案缺字已踩两次（`站/医院/区`） | **已还（2026-11-25）**：`font_build.py --check` 只读门禁进 pipeline；图集 790 字覆盖卡牌/结局（见 §四十二） |
 | D16 | `psd-tools` 未进 CI | 只在 `requirements-tools.txt` 声明 | `pipeline` 加 `pip install -r requirements-tools.txt` |
 | D17 | 存档无版本迁移 | 只有 `schema: run-state.v1` 字符串 | 老档读入时按 version 走迁移函数 |
 | D18 | 截图无基线 | `design/previews` 靠门禁顺手生成，没有 diff | 每张预览存 hash，变了要显式更新 |
@@ -1292,3 +1292,28 @@ ROOM_LIGHT_OK zones=3 light=A>B>C uniforms=follow containers=A/B/C enemies=B/C s
 ```
 
 下一步：A2 还剩 D13（同伴/bond，工作量 L）；工程债 D15/D17/D18 可穿插。
+
+---
+
+# 四十二、D15 · 字体图集覆盖门禁（2026-11-25）
+
+> 之前图集只扫检查文本 / 战利品 / 状态 / 楼名 / 脚本字面量；事件卡与结局栏是这两周新加的，
+> 它们的中文没进图集，运行时会静默缺字（本机日志里反复出现 `陌/儿/又/…` 告警）。
+
+| 件 | 做法 |
+|---|---|
+| 来源补齐 | `tools/font_build.py` 抽出 `_collect_cjk_characters()`，新增 `data/cards/*.json`（text / slots.options / effects.when）与 `data/endings/*.json`（label / locked_label / locked_summary / summary） |
+| 只读门禁 | `python tools/font_build.py --check`：对比「运行时会画的字」与图集 JSON，缺字打印 `FONT_MISSING …` 并 exit 1；不写任何文件 |
+| 重建 | `python tools/font_build.py`：PF-02 从 585 字 → **792 字**（256×800，步进 14px；3 个字仍超 13×14 被降采样，属已知上限） |
+| 像素门禁 | 新图集单帧 1 色、二值 alpha、16px 整数边界，`pixelpipe gate` PASS |
+| 标点 | `_scan_script_cjk` 的字符范围从「中日韩」扩到「中文标点 + 箭头 + 间隔号 + 引号/省略号」，`沉积 3→4 · 体力 80` 这类结算文案不再缺字 |
+| CI | `pipeline.json` 新增 `font-coverage`（hard）：`python tools/font_build.py --check`；README 同步命令 |
+
+验收：
+
+```text
+python tools/font_build.py --check
+FONT_COVERAGE required=792 glyphs=792 missing=0
+```
+
+后续：如果卡池继续加卡，先跑 `--check`，缺字再重建图集；`font_build.py` 的 3 个降采样字可另行微调 `CJK_MAX_INK_W/H`。

@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 """Build PF-01 (legacy 5×7 HUD) and PF-02 (hard-alpha inspection text).
 
-Usage: python tools/font_build.py
-PF-02 bakes only the glyphs used by the current inspection catalog and key hints.
+Usage: python tools/font_build.py          # 重建 PF-01/PF-02 图集
+       python tools/font_build.py --check  # 只读门禁：图集是否覆盖所有运行时文案
+PF-02 bakes every glyph the runtime can draw: inspection catalog, loot/backpack UI,
+status names, travel labels, event cards, endings, and CJK string literals in game/*.gd.
 The bundled OFL font is a build input; the scene draws the PNG at native size.
 """
 
@@ -26,6 +28,8 @@ LOOT_CONTAINERS = ROOT / "data" / "loot" / "containers.json"
 LOOT_ITEMS = ROOT / "data" / "loot" / "items.json"
 STATUS_DATA = ROOT / "data" / "systems" / "status.json"
 TRAVEL_ROUTES = ROOT / "data" / "travel" / "routes.json"
+CARD_DIR = ROOT / "data" / "cards"
+ENDINGS_DIR = ROOT / "data" / "endings"
 # 战利品面板的固定文案：与 corridor.gd 的 _search_container / _loot_lines 保持一致。
 LOOT_UI_TEXT = "找到：共件已经搜过一次剧情模式不会刷新里面是空的连灰都没有、…（）"
 # 背包与使用界面的固定文案（与 corridor.gd 的 _render_inventory / _use_selected_item 一致）。
@@ -98,15 +102,16 @@ def _scan_script_cjk() -> set[str]:
         for path in sorted(root.rglob("*.gd")):
             text = path.read_text(encoding="utf-8", errors="replace")
             for literal in re.findall(r'"(?:[^"\\]|\\.)*"', text):
-                found.update(re.findall(r"[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]", literal))
+                # 不只中日韩：箭头 / 间隔号 / 引号 / 省略号 / 全角标点也会被画出来
+                # （如 DayCycle 结算文案里的 "沉积 3→4 · 体力 80"）。
+                found.update(re.findall(
+                    r"[\u00b7\u00d7\u2010-\u2027\u2030-\u205e\u2190-\u21ff"
+                    r"\u2500-\u257f\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]", literal))
     return found
 
 
-def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
-    from PIL import ImageDraw, ImageFont
-
-    if not CJK_FONT.exists():
-        raise SystemExit(f"CJK font source missing: {CJK_FONT}")
+def _collect_cjk_characters() -> list[str]:
+    """所有**运行时会被画出来**的中日韩字符（单一来源，构建与检查共用）。"""
     data = json.loads(INSPECTIONS.read_text(encoding="utf-8"))
     characters = set("EESCV") | set(ASCII_EXTRA) | set(INVENTORY_UI_TEXT) | set(str(data.get("ui", {}).get("inspect", "查看"))) | set(str(data.get("ui", {}).get("close", "关闭")))
     for record in data.get("records", []):
@@ -133,10 +138,39 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
         routes = json.loads(TRAVEL_ROUTES.read_text(encoding="utf-8"))
         for entry in routes.get("buildings", []):
             characters.update(str(entry.get("label", "")))
+    # D15：事件卡文本（default 会替换槽位，所以槽位选项 + when 也要进图集）——
+    # 卡牌每天都会渲染到 HUD，漏字会静默少字。
+    if CARD_DIR.exists():
+        for path in sorted(CARD_DIR.glob("*.json")):
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            for card in raw.get("cards", []):
+                for value in (card.get("text", {}) or {}).values():
+                    characters.update(str(value))
+                for slot in card.get("slots", []):
+                    for option in slot.get("options", []):
+                        characters.update(str(option))
+                for effect in card.get("effects", []):
+                    characters.update(str(effect.get("when", "")))
+    # D15：结局栏（label / summary / 未解锁占位）由主菜单渲染。
+    if ENDINGS_DIR.exists():
+        for path in sorted(ENDINGS_DIR.glob("*.json")):
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            for ending in raw.get("endings", []):
+                for key in ("label", "locked_label", "locked_summary", "summary"):
+                    characters.update(str(ending.get(key, "")))
     characters = sorted(characters - {"", "\n", "\r", "\t", " "})
     # 代码里的中文字面量（动词、提示语、报错文案）也要进图集：
     # 「搜索」的『索』只出现在 .gd 里，不扫脚本就会静默少字。
-    characters = sorted(set(characters) | (_scan_script_cjk() - {"", "\n", "\r", "\t", " "}))
+    return sorted(set(characters) | (_scan_script_cjk() - {"", "\n", "\r", "\t", " "}))
+
+
+def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
+    from PIL import ImageDraw, ImageFont
+
+    if not CJK_FONT.exists():
+        raise SystemExit(f"CJK font source missing: {CJK_FONT}")
+    data = json.loads(INSPECTIONS.read_text(encoding="utf-8"))
+    characters = _collect_cjk_characters()
 
 
     rows = (len(characters) + CJK_COLUMNS - 1) // CJK_COLUMNS
@@ -198,7 +232,31 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
     return len(characters)
 
 
+def _check_coverage() -> int:
+    """D15 门禁：图集必须覆盖所有会在运行时被画出来的字符。
+
+    只读：不重写 PNG/JSON。缺字时打印 `FONT_MISSING <chars>` 并返回 1。
+    """
+    if not CJK_MAP_OUT.exists():
+        print(f"FONT_MAP_MISSING {CJK_MAP_OUT}")
+        return 1
+    atlas = json.loads(CJK_MAP_OUT.read_text(encoding="utf-8"))
+    glyphs = set((atlas.get("characters") or {}).keys())
+    required = set(_collect_cjk_characters())
+    missing = sorted(required - glyphs)
+    print(f"FONT_COVERAGE required={len(required)} glyphs={len(glyphs)} missing={len(missing)}")
+    if missing:
+        print("FONT_MISSING " + "".join(missing))
+        return 1
+    extra = len(glyphs - required)
+    if extra:
+        print(f"FONT_EXTRA {extra}（数据删字后图集允许冗余，不判失败）")
+    return 0
+
+
 def main() -> int:
+    if "--check" in sys.argv[1:]:
+        return _check_coverage()
     P = read_gpl_named(PAL)
     ink = P.get("c30_white", (246, 246, 240))
     img = Image.new("RGB", (16 * 6, 16), P.get("c00_void", (3, 5, 10)))

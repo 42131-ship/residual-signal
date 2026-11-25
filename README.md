@@ -80,6 +80,8 @@ python tools/prop_build.py
 
 # 重建点阵字库（PF-01 HUD / PF-02 中文检查文本 + 战利品文案）
 python tools/font_build.py
+# D15：字体图集覆盖门禁（只读；新增文案缺字会红）
+python tools/font_build.py --check
 # 从 data/loot/*.json 重新生成物资文档 design/LOOT.md
 python tools/build_loot_doc.py
 
@@ -142,6 +144,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 | D10 | 敌人听声（≥3 噪声引向声源 2 秒，看见优先） | 已实现并通过 `enemy_hearing` 门禁 |
 | D12 | 事件卡接玩法（每天 1 张写 world_state，效果随存档保留） | 已实现并通过 `card_day` 门禁 |
 | D11 | 房间级状态（A/B/C 独立灯光、容器与敌人按区） | 已实现并通过 `room_light` 门禁 |
+| D15 | 字体图集覆盖门禁（792 字，卡牌/结局文案 + 结算标点入图集） | 已实现并通过 `font_build.py --check` |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |
