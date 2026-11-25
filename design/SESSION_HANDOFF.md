@@ -153,3 +153,8 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 | 字体图集（加新文案会缺字） | `tools/font_build.py` → 重建 atlas → 跑 `--import`；已有覆盖门禁 |
 | 校验规则 | `tools/validate.py`（R44–R47 最近加的）+ `tools/selftest.py` |
 | 一键跑门禁 | `tools/run_gates.ps1`（纯 ASCII） |
+
+**推送状态（2026-11-26）**：本机到 `github.com:443` 间歇性 reset，`git push` 连试多次都失败，
+最后走的是 `.tools/push_files.py`（GitHub API）。所以**本地 HEAD 的 sha 与远端 `main` 不一样，但树哈希一致**
+（核对方式见 §4 的「比树哈希」）。下次开工先 `git fetch`；确认树一致后再决定要不要对齐引用，
+**不要**直接 `reset --hard`。
