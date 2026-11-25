@@ -129,6 +129,10 @@ python tools/font_build.py --check   # FONT_COVERAGE required=801 glyphs=801 mis
 `python tools/font_build.py` 重建后 `PF-02` 从 792 → **801 字**，`--check` 归零。
 以后加按钮文案，先跑 `--check` 再重建，别等运行时静默缺字。
 
+> **踩过的坑**：重建图集之后必须再跑一次 `--import`。否则 Godot 用的还是旧 PNG 的导入结果，
+> 区域坐标与新 JSON 对不上——运行时表现不是「缺字」而是**整屏乱码**（每个字都画成别的字）。
+> 2026-11-26 加引导文案时就撞了一次。
+
 ## 7. 还没做（诚实清单）
 
 | # | 项 | 为什么重要 | 怎么验 |

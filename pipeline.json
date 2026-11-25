@@ -342,6 +342,13 @@
       "gate": "hard",
       "status": "broken",
       "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "tutorial",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/tutorial.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "首 10 分钟引导：三步顺序不可跳 / 键盘与触摸两套文案 / tutorial_step 存档往返与老档缺键 / corridor 三处 hook 已接。headless 可跑"
     }
   ],
   "forbidden": [

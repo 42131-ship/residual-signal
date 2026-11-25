@@ -85,6 +85,8 @@ var _hud_stats_root: Node2D
 var _attack_visual: Polygon2D
 ## 手机触摸层（null = 桌面，整条手机路径都不存在）。见 design/MOBILE.md
 var _mobile: TouchControls
+## 首 10 分钟引导（P0-4）：三步，由玩法事件推进
+var _tutorial: Tutorial
 ## 门状态：{tile_x, center_x, leaf, shape, handle, open, locked}
 var _doors: Array[Dictionary] = []
 var _nearest_door := -1
@@ -231,6 +233,9 @@ func _ready() -> void:
 	_health = _run.health
 	_day.day = _run.day
 	_day.sediment = _run.sediment
+	# P0-4：首 10 分钟引导，状态住在 RunState.tutorial_step（老档缺键当 0）。
+	_tutorial = Tutorial.new()
+	_tutorial.sync(_run.tutorial_step)
 	# D12：world_state 的世界日与 DayCycle 对齐，事件卡 trigger.day 才读得到正确天数。
 	_sync_world_day()
 	# D12：卡牌引擎接进走廊；每天开始抽 1 张 L 卡并作用于 world_state。
@@ -651,6 +656,17 @@ func _build_actor() -> void:
 func _on_player_stepped(is_running: bool) -> void:
 	_last_step_was_running = is_running
 	_steps += 1
+	# P0-4：走路是第一步引导的推进条件
+	_tutorial_advance(_tutorial.note_moved() if _tutorial != null else false)
+
+
+## 引导推进一步：落盘 + 重画 HUD（不做「点击继续」，走完就消失）
+func _tutorial_advance(advanced: bool) -> void:
+	if not advanced or _tutorial == null:
+		return
+	_run.tutorial_step = _tutorial.step
+	_persist_run()
+	_refresh_hud_stats()
 
 
 func _ensure_actions() -> void:
@@ -947,6 +963,8 @@ func _finish_search() -> void:
 	_player._movement_locked = false
 	_refresh_search_progress()
 	_search_container(id)
+	# P0-4：搜过一个柜子 = 第二步引导完成
+	_tutorial_advance(_tutorial.note_search() if _tutorial != null else false)
 	# 搜索要花时间：这段时间里伤口在流血、感染在恶化。
 	advance_hours(seconds * SEARCH_SECONDS_PER_GAME_HOUR)
 
@@ -1265,6 +1283,17 @@ func _refresh_hud_stats() -> void:
 		PixelFont.draw(_hud_stats_root, "按 E 离场", Vector2(8, 132), Color("#f6f6f0"))
 	elif _combat_message_frames > 0 and not _combat_message.is_empty():
 		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 132), Color("#f6f6f0"))
+	_draw_tutorial_hint()
+
+
+## P0-4：引导那一行字。放在 (120, 8)：左边是 DAY/楼名，右边 238 起是触摸按钮。
+func _draw_tutorial_hint() -> void:
+	if _tutorial == null or _hud_stats_root == null:
+		return
+	var text := _tutorial.prompt(_mobile != null)
+	if text.is_empty():
+		return
+	PixelFont.draw(_hud_stats_root, text, Vector2(120, 8), Color("#e8c07a"))
 
 
 func _open_inventory() -> void:
@@ -1688,6 +1717,8 @@ func _depart_to(target: String) -> void:
 	_sync_world_day()
 	_fire_daily_card()
 	_persist_run()
+	# P0-4：第一次成功出门 = 第三步引导完成
+	_tutorial_advance(_tutorial.note_depart() if _tutorial != null else false)
 	var lines: Array = result["lines"]
 	lines.append("明天在%s" % label)
 	_show_panel("第 %d 天结束" % (int(result["day"]) + 1), lines.slice(1), "exit")

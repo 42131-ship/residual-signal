@@ -29,6 +29,8 @@ var bond := 0.0
 var finale := ""
 var unlocked: Dictionary = {}   # template -> { ending_id: true }
 var finished := false
+## 首 10 分钟引导走到第几步（0 走 / 1 搜 / 2 出门 / 3 完成）。老档没这个键 → 0。
+var tutorial_step := 0
 
 
 ## 取当前局；没有就开一局新的。
@@ -66,6 +68,8 @@ func new_run() -> void:
 	bond = 0.0
 	finale = ""
 	finished = false
+	# 引导是「这一局」的事：新游戏重新教一遍（老玩家会很快走完，不打断）。
+	tutorial_step = 0
 	# 解锁记录跨局保留：结局栏是长期档案，不该被「新游戏」清掉。
 
 
@@ -130,6 +134,7 @@ func to_dict() -> Dictionary:
 		"bond": bond,
 		"finale": finale,
 		"finished": finished,
+		"tutorial_step": tutorial_step,
 		"unlocked": unlocked.duplicate(true),
 	}
 
@@ -156,6 +161,8 @@ func from_dict(data: Dictionary) -> bool:
 	bond = clampf(float(data.get("bond", 0.0)), 0.0, 1.0)
 	finale = str(data.get("finale", ""))
 	finished = bool(data.get("finished", false))
+	# 老档（v1 早期）没有这个键：当成「没做过引导」，不丢其它数据。
+	tutorial_step = clampi(int(data.get("tutorial_step", 0)), 0, 3)
 	var raw: Variant = data.get("unlocked", {})
 	unlocked = (raw as Dictionary).duplicate(true) if raw is Dictionary else {}
 	return true
