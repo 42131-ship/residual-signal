@@ -92,6 +92,7 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 
 | # | 欠账 | 位置 | 为什么必须还 | 量 |
 |---|---|---|---|---|
+| **D24** | **9 条旧走廊门禁在 `ebe33e7` 上失效** —— 5 条断言失败（animation / corridor-combat / corridor-inspect / corridor-status / traverse）、4 条卡死 >300s（corridor-preview / corridor-doors / corridor-inventory / corridor-loot） | `game/tests/*`、`pipeline.json` | 它们守着搜刮/战斗/状态/走廊渲染，现在等于**没有安全网**；后续改动会悄悄破坏这些系统 | M–L |
 | ~~D1~~ | ~~双状态：`_supplies` 与 `world_state` 并行~~ | — | **已还（M2a）** | ✅ |
 | ~~D2~~ | ~~`_noise` 与 `add_noise` 语义不同~~ | — | **已还（M2a-2）**：走廊只报底值，世界层缩放进沉积并传染邻接 | ✅ |
 | D3 | `actions_left` 恒为 1、从未消耗 | corridor.gd:1488 | 「一天一次外出」只写在数据里，实际没约束 | S |

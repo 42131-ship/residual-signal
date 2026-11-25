@@ -2,41 +2,340 @@
   "schema": "pipeline.v1",
   "note": "CI 步骤声明。R22 校验：风格漂移不得被设成硬门禁（gate=hard）。",
   "steps": [
-    {"name": "json-lint", "cmd": "python tools/validate.py", "gate": "hard"},
-    {"name": "rule-selftest", "cmd": "python tools/selftest.py", "gate": "hard"},
-    {"name": "gd-structure", "cmd": "python tools/gd_sanity.py game/runtime/*.gd", "gate": "hard"},
-    {"name": "pixel-gate", "cmd": "python tools/pixelpipe.py gate --palette art/palettes/master.gpl", "gate": "hard"},
-    {"name": "style-drift-report", "cmd": "python tools/drift_report.py", "gate": "warn",
-     "note": "R22：只报警，不裁决。模型观感不得替代像素 diff。"},
-    {"name": "headless-import", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --import", "gate": "hard", "status": "ready", "note": "工程根 = 仓库根；.tools/design/logs 已 .gdignore"},
-    {"name": "gd-compile-check", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --check-only --script res://game/runtime/main.gd", "gate": "hard", "status": "ready", "note": "五个类逐个跑；2026-11-23 5/5 通过"},
-    {"name": "smoke-30d", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/smoke.gd", "gate": "hard", "status": "ready", "note": "真引擎跑 30 天；SMOKE_OK 为通过"},
-    {"name": "headless-replay-30d", "cmd": "python tools/headless_30d.py --seeds 3", "gate": "warn", "status": "ready", "note": "Python 镜像，验数据语义，不是 GDScript"},
-    {"name": "nodes-map", "cmd": "python tools/nodes_map.py", "gate": "warn", "status": "ready", "note": "DEC-D1 附加条件：只读拓扑预览"},
-    {"name": "char-anim", "cmd": "python tools/char_anim_build.py", "gate": "hard", "status": "ready", "note": "全人物 idle/walk/hurt/death 精灵表 + 部件拆解；逐帧过 ≤16 色 / 二值 alpha"},
-    {"name": "see-through-layers", "cmd": "python tools/see_through_export.py", "gate": "hard", "status": "ready", "note": "按 see-through bodytags_v3 的 23 个语义层名拆层；内置「所有层合回 == 原图」无损校验"},
-    {"name": "travel", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/travel.gd", "gate": "hard", "status": "ready", "note": "五楼路线、一天一次外出、燃料门槛、夜间风险翻倍"},
-    {"name": "endings", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/endings.gd", "gate": "hard", "status": "ready", "note": "每模板 4 槽、未解锁不剧透、四结局判定与优先级"},
-    {"name": "day-cycle", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/day_cycle.gd", "gate": "hard", "status": "ready", "note": "离场 +1 沉积 / 未离场 +2、体力恢复、30 天收束"},
-    {"name": "corridor-exit", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_exit.gd -- CORRIDOR-EXIT", "gate": "hard", "status": "ready", "note": "走到尽头按 E 离场，结算面板与翻页（需渲染，不能加 --headless）"},
-    {"name": "corridor-light", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_light.gd -- LIGHT", "gate": "hard", "status": "ready", "note": "手电光锥跟朝向：朝右=0rad、朝左=PI、灯位镜像（用户报过的可见 bug，需渲染）"},
-    {"name": "main-menu", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/main_menu.gd -- MENU", "gate": "hard", "status": "ready", "note": "主界面三项 + 结局栏四槽遮罩 + 新游戏保留解锁档案（需渲染）"},
-    {"name": "travel-map", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_map.gd -- MAP", "gate": "hard", "status": "ready", "note": "2.5D 立体块几何/明度/深度排序 + 连线=邻接 + 可选集与灰显 + 楼位/细节/街道标注 + 当前楼闪烁角标（D8）"},
-    {"name": "scene-switch", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/scene_switch.gd -- SWITCH", "gate": "hard", "status": "ready", "note": "出门 -> 结算 -> RunState 落盘 -> 重载后仍在新楼新天数（需渲染）"},
-    {"name": "m2a-state", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_state.gd -- M2A", "gate": "hard", "status": "ready", "note": "物资真源=world_state，RunState 只做镜像；用药/结算后不漂移、0..1 夹取"},
-    {"name": "m2a-noise", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_noise.gd -- NOISE", "gate": "hard", "status": "ready", "note": "噪声唯一出口：三段映射 a/b/c、走廊计数=世界缩放增量、邻接传染、0/负值忽略"},
-    {"name": "ending-unlock", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/ending_unlock.gd -- ENDING", "gate": "hard", "status": "ready", "note": "结局判定 -> RunState 解锁 -> 落盘 -> 结局栏显示；条件不足不许乱记"},
-    {"name": "m2a-actions", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_actions.gd -- ACTIONS", "gate": "hard", "status": "ready", "note": "D3：一天一次外出的真消耗与跨天恢复；同日第二次出发被拒且世界状态不动"},
-    {"name": "menu-entry", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY", "gate": "hard", "status": "ready", "note": "D14：主菜单继续/新游戏真的切到走廊场景，RunState 读到存档（需渲染）"},
-    {"name": "travel-fuel", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_fuel.gd -- FUEL", "gate": "hard", "status": "ready", "note": "D4：燃料是门槛不消耗；到加油站 +1（上限 3），医院/军事基地按访问次数解锁"},
-    {"name": "down", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/down.gd -- DOWN", "gate": "hard", "status": "ready", "note": "D9：体力归零触发一次「倒下」结算（沉积 -1、翻页、回学校、体力 0.3）；同日不重复"},
-    {"name": "enemy-hearing", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/enemy_hearing.gd -- HEAR", "gate": "hard", "status": "ready", "note": "D10：≥3 噪声把听程内感染体引向声源 2 秒；小声不惊动、听程外不理、看见优先"},
-    {"name": "card-day", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/card_day.gd -- CARD", "gate": "hard", "status": "ready", "note": "D12：每天开始抽 1 张事件卡写 world_state；同日去重、RunState.world_vars 跨场景恢复"},
-    {"name": "room-light", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/room_light.gd -- ROOM", "gate": "hard", "status": "ready", "note": "D11：A/B/C 三区独立灯光档 + 平滑过渡；容器按区各一档、敌人只在 B/C"},
-    {"name": "font-coverage", "cmd": "python tools/font_build.py --check", "gate": "hard", "status": "ready", "note": "D15：只读门禁——PF-02 图集必须覆盖所有运行时会画的字（检查文本/战利品/状态/楼名/事件卡/结局/脚本字面量）"},
-    {"name": "theme-build", "cmd": "python tools/theme_build.py", "gate": "hard", "status": "ready", "note": "D7：按 data/buildings 主题重建四楼 tile 表/道具换色/标志物与 props 场景（学校沿用现资产）"},
-    {"name": "building-theme", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/building_theme.gd -- THEME", "gate": "hard", "status": "ready", "note": "D7：五楼主题互异（tileset/色集/道具场景/标志物/环境亮度），按 RunState.building 切换（需渲染）"},
-    {"name": "analytics", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --fixed-fps 60 --script res://game/tests/analytics.gd -- ANALYTICS", "gate": "hard", "status": "ready", "note": "TapDB 客户端直连离线门禁：注册表/必填字段/同意门控/失败重试 uuid 稳定/撤销清队列；MockTransport 不联网"}
+    {
+      "name": "json-lint",
+      "cmd": "python tools/validate.py",
+      "gate": "hard"
+    },
+    {
+      "name": "rule-selftest",
+      "cmd": "python tools/selftest.py",
+      "gate": "hard"
+    },
+    {
+      "name": "gd-structure",
+      "cmd": "python tools/gd_sanity.py game/runtime/*.gd",
+      "gate": "hard"
+    },
+    {
+      "name": "pixel-gate",
+      "cmd": "python tools/pixelpipe.py gate --palette art/palettes/master.gpl",
+      "gate": "hard"
+    },
+    {
+      "name": "style-drift-report",
+      "cmd": "python tools/drift_report.py",
+      "gate": "warn",
+      "note": "R22：只报警，不裁决。模型观感不得替代像素 diff。"
+    },
+    {
+      "name": "headless-import",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --import",
+      "gate": "hard",
+      "status": "ready",
+      "note": "工程根 = 仓库根；.tools/design/logs 已 .gdignore"
+    },
+    {
+      "name": "gd-compile-check",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --check-only --script res://game/runtime/main.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "五个类逐个跑；2026-11-23 5/5 通过"
+    },
+    {
+      "name": "smoke-30d",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/smoke.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "真引擎跑 30 天；SMOKE_OK 为通过"
+    },
+    {
+      "name": "headless-replay-30d",
+      "cmd": "python tools/headless_30d.py --seeds 3",
+      "gate": "warn",
+      "status": "ready",
+      "note": "Python 镜像，验数据语义，不是 GDScript"
+    },
+    {
+      "name": "nodes-map",
+      "cmd": "python tools/nodes_map.py",
+      "gate": "warn",
+      "status": "ready",
+      "note": "DEC-D1 附加条件：只读拓扑预览"
+    },
+    {
+      "name": "char-anim",
+      "cmd": "python tools/char_anim_build.py",
+      "gate": "hard",
+      "status": "ready",
+      "note": "全人物 idle/walk/hurt/death 精灵表 + 部件拆解；逐帧过 ≤16 色 / 二值 alpha"
+    },
+    {
+      "name": "see-through-layers",
+      "cmd": "python tools/see_through_export.py",
+      "gate": "hard",
+      "status": "ready",
+      "note": "按 see-through bodytags_v3 的 23 个语义层名拆层；内置「所有层合回 == 原图」无损校验"
+    },
+    {
+      "name": "travel",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/travel.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "五楼路线、一天一次外出、燃料门槛、夜间风险翻倍"
+    },
+    {
+      "name": "endings",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/endings.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "每模板 4 槽、未解锁不剧透、四结局判定与优先级"
+    },
+    {
+      "name": "day-cycle",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/day_cycle.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "离场 +1 沉积 / 未离场 +2、体力恢复、30 天收束"
+    },
+    {
+      "name": "corridor-exit",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_exit.gd -- CORRIDOR-EXIT",
+      "gate": "hard",
+      "status": "ready",
+      "note": "走到尽头按 E 离场，结算面板与翻页（需渲染，不能加 --headless）"
+    },
+    {
+      "name": "corridor-light",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_light.gd -- LIGHT",
+      "gate": "hard",
+      "status": "ready",
+      "note": "手电光锥跟朝向：朝右=0rad、朝左=PI、灯位镜像（用户报过的可见 bug，需渲染）"
+    },
+    {
+      "name": "main-menu",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/main_menu.gd -- MENU",
+      "gate": "hard",
+      "status": "ready",
+      "note": "主界面三项 + 结局栏四槽遮罩 + 新游戏保留解锁档案（需渲染）"
+    },
+    {
+      "name": "travel-map",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_map.gd -- MAP",
+      "gate": "hard",
+      "status": "ready",
+      "note": "2.5D 立体块几何/明度/深度排序 + 连线=邻接 + 可选集与灰显 + 楼位/细节/街道标注 + 当前楼闪烁角标（D8）"
+    },
+    {
+      "name": "scene-switch",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/scene_switch.gd -- SWITCH",
+      "gate": "hard",
+      "status": "ready",
+      "note": "出门 -> 结算 -> RunState 落盘 -> 重载后仍在新楼新天数（需渲染）"
+    },
+    {
+      "name": "m2a-state",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_state.gd -- M2A",
+      "gate": "hard",
+      "status": "ready",
+      "note": "物资真源=world_state，RunState 只做镜像；用药/结算后不漂移、0..1 夹取"
+    },
+    {
+      "name": "m2a-noise",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_noise.gd -- NOISE",
+      "gate": "hard",
+      "status": "ready",
+      "note": "噪声唯一出口：三段映射 a/b/c、走廊计数=世界缩放增量、邻接传染、0/负值忽略"
+    },
+    {
+      "name": "ending-unlock",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/ending_unlock.gd -- ENDING",
+      "gate": "hard",
+      "status": "ready",
+      "note": "结局判定 -> RunState 解锁 -> 落盘 -> 结局栏显示；条件不足不许乱记"
+    },
+    {
+      "name": "m2a-actions",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_actions.gd -- ACTIONS",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D3：一天一次外出的真消耗与跨天恢复；同日第二次出发被拒且世界状态不动"
+    },
+    {
+      "name": "menu-entry",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D14：主菜单继续/新游戏真的切到走廊场景，RunState 读到存档（需渲染）"
+    },
+    {
+      "name": "travel-fuel",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_fuel.gd -- FUEL",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D4：燃料是门槛不消耗；到加油站 +1（上限 3），医院/军事基地按访问次数解锁"
+    },
+    {
+      "name": "down",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/down.gd -- DOWN",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D9：体力归零触发一次「倒下」结算（沉积 -1、翻页、回学校、体力 0.3）；同日不重复"
+    },
+    {
+      "name": "enemy-hearing",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/enemy_hearing.gd -- HEAR",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D10：≥3 噪声把听程内感染体引向声源 2 秒；小声不惊动、听程外不理、看见优先"
+    },
+    {
+      "name": "card-day",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/card_day.gd -- CARD",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D12：每天开始抽 1 张事件卡写 world_state；同日去重、RunState.world_vars 跨场景恢复"
+    },
+    {
+      "name": "room-light",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/room_light.gd -- ROOM",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D11：A/B/C 三区独立灯光档 + 平滑过渡；容器按区各一档、敌人只在 B/C"
+    },
+    {
+      "name": "font-coverage",
+      "cmd": "python tools/font_build.py --check",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D15：只读门禁——PF-02 图集必须覆盖所有运行时会画的字（检查文本/战利品/状态/楼名/事件卡/结局/脚本字面量）"
+    },
+    {
+      "name": "theme-build",
+      "cmd": "python tools/theme_build.py",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D7：按 data/buildings 主题重建四楼 tile 表/道具换色/标志物与 props 场景（学校沿用现资产）"
+    },
+    {
+      "name": "building-theme",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/building_theme.gd -- THEME",
+      "gate": "hard",
+      "status": "ready",
+      "note": "D7：五楼主题互异（tileset/色集/道具场景/标志物/环境亮度），按 RunState.building 切换（需渲染）"
+    },
+    {
+      "name": "analytics",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --fixed-fps 60 --script res://game/tests/analytics.gd -- ANALYTICS",
+      "gate": "hard",
+      "status": "ready",
+      "note": "TapDB 客户端直连离线门禁：注册表/必填字段/同意门控/失败重试 uuid 稳定/撤销清队列；MockTransport 不联网"
+    },
+    {
+      "name": "animation",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/animation.gd -- QA",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-combat",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_combat.gd",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-doors",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_doors.gd",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-inspect",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_inspect.gd",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-inventory",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_inventory.gd",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-loot",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_loot.gd",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-preview",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_preview.gd -- QA",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "corridor-status",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_status.gd -- QA",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    },
+    {
+      "name": "display",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/display.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "数据门禁（脚本自带 --headless）"
+    },
+    {
+      "name": "inventory",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/inventory.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "数据门禁（脚本自带 --headless）"
+    },
+    {
+      "name": "loot",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/loot.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "数据门禁（脚本自带 --headless）"
+    },
+    {
+      "name": "replay-30d",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/replay_30d.gd -- QA",
+      "gate": "hard",
+      "status": "ready",
+      "note": "需渲染（截图/光照断言，不能加 --headless）"
+    },
+    {
+      "name": "shell",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/shell.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "数据门禁（脚本自带 --headless）"
+    },
+    {
+      "name": "status",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/status.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "数据门禁（脚本自带 --headless）"
+    },
+    {
+      "name": "traverse",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/traverse.gd",
+      "gate": "hard",
+      "status": "broken",
+      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+    }
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",
