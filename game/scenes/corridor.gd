@@ -89,7 +89,13 @@ var _supplies_online := false
 ## 结局判定：定义在 data/endings/<template>.json，解锁写进 RunState 并落盘。
 var _book: EndingBook
 const ENDING_TEMPLATE := "school"
+## D9：倒下后会被拖回的安全屋（data/travel/routes.json 里唯一 safehouse）。
+const SAFEHOUSE_ID := "school"
 var _health := 1.0
+## D9 倒下状态：结算后的天数（同一天不重复结算）、累计次数、重入保护。
+var _down_day := -1
+var _down_count := 0
+var _downing := false
 var _noise := 0
 var _equipped := ""
 var _attacks := 0
@@ -1439,6 +1445,43 @@ func _on_enemy_died(enemy: Enemy) -> void:
 	_refresh_hud_stats()
 
 
+## D9：体力归零的后果——丢 1 沉积、翻到次日、被拖回学校安全屋、体力恢复到 0.3。
+## 一天最多触发一次（_down_day 记录结算后的天数），避免同一帧被多次结算。
+func _trigger_down() -> void:
+	if _downing or _day == null:
+		return
+	_downing = true
+	_down_count += 1
+	var result := _day.down(_health)
+	_health = float(result["health"])
+	_down_day = int(result["next_day"])
+	_current_building = SAFEHOUSE_ID
+	if not _visited.has(SAFEHOUSE_ID):
+		_visited.append(SAFEHOUSE_ID)
+	if _map_open:
+		_close_travel_map()
+	if _inventory_open:
+		_close_inventory()
+	if _inspection_open:
+		_close_inspection()
+	if _player != null:
+		_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
+		_player.velocity = Vector2.ZERO
+	_run.actions_left = _travel.actions_per_day() if _travel != null else 1
+	_persist_run()
+	_show_panel("你倒下了", result["lines"], "down")
+	_refresh_hud_stats()
+	_downing = false
+
+
+func down_count() -> int:
+	return _down_count
+
+
+func last_down_day() -> int:
+	return _down_day
+
+
 ## 主角动作：受击优先 → 走动播 walk → 静止播 idle。帧由精灵表按 fps 推进。
 ## 离场：打开旅行图，只列相邻且可达的楼；选完才结算翻页。
 ## 场景切换还没做，所以选完是把「当前楼」换掉 + 回入口，结算面板上写明这一点。
@@ -1794,6 +1837,9 @@ func _build_flashlight() -> void:
 
 func _process(delta: float) -> void:
 	_update_hit_feedback()
+	# D9：体力归零 → 倒下结算。放在顿帧 return 之前，免得被顿帧拖到无敌窗口。
+	if not _downing and _health <= 0.0 and _day != null and int(_day.day) != _down_day:
+		_trigger_down()
 	if _hitstop_frames > 0:
 		# 顿帧：世界停住，只有反馈在动。镜头也刻意不跟，让这一下“钉”在屏幕上。
 		return

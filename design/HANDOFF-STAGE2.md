@@ -1037,7 +1037,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **30 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel`；`pipeline.json` 里 step 数 26 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **31 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down`；`pipeline.json` 里 step 数 27 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
@@ -1085,7 +1085,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | # | 缺什么 | 现状（诚实描述） | 验收方向 |
 |---|---|---|---|
 | D8 | 地图没有「我在哪」标记 | 玩家要自己猜当前楼；`current_building` 只用于算邻接 | **已还（2026-11-25）**：`CurrentBuilding` 四角闪烁角标；门禁 `travel_map` ⑭（见 §三十七） |
-| D9 | 体力归零没有后果 | `_health` 到 0 只是数字；不死亡、不结算、不结束 | 归零触发一次「倒下」结算（丢沉积 + 回安全屋） |
+| D9 | 体力归零没有后果 | `_health` 到 0 只是数字；不死亡、不结算、不结束 | **已还（2026-11-25）**：`DayCycle.down()` 沉积 -1 + 翻页 + 回学校 + 体力 0.3；门禁 `down`（见 §三十八） |
 | D10 | 敌人无寻路、无听觉 | `_noise` 只是 HUD 数字，敌人不会朝声源走 | 敌人对 ≥阈值噪声向声源移动 2 秒 |
 | D11 | 房间级状态缺失 | 三个区除墙外没区别：灯光/敌人/容器不按区 | 每个区独立 `light` 与容器池 |
 | D12 | 卡牌只在 headless 回放里跑 | `data/cards` 4000 行数据玩家看不到 | 每天开始抽 1 张并作用于 `world_state` |
@@ -1199,3 +1199,25 @@ TRAVEL_MAP_OK blocks=5 faces=3 shading=top>front>side depth_sort=ok roads=6 curr
 ```
 
 下一步：D9（体力归零后果）→ D10（敌人听声）→ D11/D12。
+
+---
+
+# 三十八、D9 · 体力归零的「倒下」结算（2026-11-25）
+
+> 附录 A2 第二条。之前 `_health` 到 0 只是个数字；现在真的会把这一天花掉。
+
+| 件 | 做法 |
+|---|---|
+| 结算 | `DayCycle.down()`：**沉积 -1（floor 0）**、天数 +1（第 30 天照样收束）、体力恢复到 0.3 |
+| 触发 | 走廊 `_process` 每帧检查 `_health <= 0`；敌人抓伤（`_on_enemy_attacked`）与 `advance_hours` 的伤口流血都汇到同一条路 |
+| 后果 | 回安全屋 `school`（routes.json 里唯一 safehouse）、回入口、行动次数按新一天恢复、`_persist_run()` 落盘、面板「你倒下了」 |
+| 一次性 | `_down_day` 记录结算后的天数 → 同一天不重复结算；`down_count()` 对外可读 |
+| 新门禁 | `game/tests/down.gd`：抓伤打空、同日不重复、跨天再倒、流血打空、存档一致 |
+
+验收：
+
+```text
+DOWN_OK damage=trigger same_day=once next_day=repeat blood_loss=trigger sediment=floor0 save=ok
+```
+
+下一步：D10（敌人听声）→ D11（房间级状态）/ D12（卡牌接玩法）。

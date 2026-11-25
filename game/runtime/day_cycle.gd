@@ -9,6 +9,9 @@ const MAX_DAY := 30
 const SEDIMENT_CAP := 40
 const EXTRACT_SEDIMENT := 1
 const LOST_SEDIMENT := 2
+## D9：倒下不是「离场」而是一次失败收工——丢沉积、翻到次日；回安全屋由场景负责。
+const DOWN_SEDIMENT_LOSS := 1
+const DOWN_HEALTH := 0.3
 
 var day := 0
 var sediment := 0
@@ -74,6 +77,34 @@ func settle(outcome: Dictionary) -> Dictionary:
 
 func settled_days() -> int:
 	return _settled_days
+
+
+## D9：体力归零的「倒下」结算。和 settle() 的区别：
+##   - 沉积是丢 1（floor 0），不是加 2；
+##   - 体力恢复固定到 DOWN_HEALTH（0.3），不是按睡觉算；
+##   - 天数同样 +1（世界时间前进才是真正的代价），30 天照样收束。
+## 返回结构与 settle() 对齐，场景只读 lines/health/next_day/finished。
+func down(health: float) -> Dictionary:
+	var before_day := day
+	var before_sediment := sediment
+	sediment = maxi(0, sediment - DOWN_SEDIMENT_LOSS)
+	var rested := clampf(maxf(0.0, health) + DOWN_HEALTH, 0.0, 1.0)
+	day = mini(MAX_DAY, day + 1)
+	_settled_days += 1
+	if day >= MAX_DAY:
+		finished = true
+	var lines: Array[String] = []
+	lines.append("第 %d 天结束（你倒下了）" % [before_day + 1])
+	lines.append("沉积 %d→%d · 醒来在学校 · 体力 %d" % [
+		before_sediment, sediment, int(round(rested * 100.0))])
+	return {
+		"day": before_day,
+		"next_day": day,
+		"sediment": sediment,
+		"health": rested,
+		"lines": lines,
+		"finished": finished,
+	}
 
 
 func day_label() -> String:
