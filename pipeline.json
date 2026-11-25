@@ -330,6 +330,13 @@
       "note": "数据门禁（脚本自带 --headless）"
     },
     {
+      "name": "touch-controls",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/touch_controls.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "手机触摸层：布局不越界不压 HUD / 安全区收得进 / 按住=动作状态 / 点按=合成事件 / 键码与 corridor.main_menu 的绑定一致。headless 可跑"
+    },
+    {
       "name": "traverse",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/traverse.gd",
       "gate": "hard",

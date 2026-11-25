@@ -37,6 +37,18 @@ replay-30d / shell / status），9 条失效（见 3.0 的 D24），其余上游
 - 带「需渲染」的门禁**不能加 `--headless`**，否则截图/光照断言拿不到
 - 跑全量大约 30 分钟；用 `-Only` 分批更实际
 
+发布侧（2026-11-26 已装好并**已登录**，细节见 `design/TAPTAP.md` §2/§2.1）：本机 Node 24.19.0 在但**没有 npm**，
+所以用便携 npm（`.tools\npm\package\bin\npm-cli.js`）装了 `@taptap/cli 2026.11.24` 到 `.tools\npm-global`。
+每个新 shell 先 `$env:Path = "D:\Downloads\残余信号\.tools\npm-global;$env:Path"`，再 `taptap-cli doctor`（应全绿）。
+厂商 `starxin的工作室` = `developerId 489018`；名下唯一游戏是 `感染之夜`（`appId 991852`，与本项目无关），
+**残余信号还没有 app**，要发就得先 `app create`（写操作，先 `--dry-run`）。
+
+手机侧（2026-11-26，细节见 [`MOBILE.md`](MOBILE.md)）：`export_presets.cfg` 已建（Windows + Android），
+模板 APK 路线打通，产出 `build/android/ResidualSignal-{debug,release}.apk`（arm64 / 已签名 / 51.4 & 49.6 MB）。
+触摸层 `game/ui/touch_controls.gd` + `game/runtime/mobile_support.gd` 已挂进走廊与主菜单，
+门禁 `touch-controls` 已登记（50 条）。导出用 **4.7.2** 引擎（模板只有 4.7.2），**跑门禁仍用 4.7**。
+**真机还没测过**（本机没有设备）；未做项与验收方式见 `MOBILE.md` §7。
+
 ---
 
 ## 3. 下一批活（按大小排）
@@ -73,7 +85,9 @@ replay-30d / shell / status），9 条失效（见 3.0 的 D24），其余上游
 
 - **D7 收尾**：`HANDOFF-STAGE2.md` 末尾「已知后续（D7 未完成部分）」列了剩余项（各楼专属 props/容器差异未全覆盖）
 - **D22 TapDB 文档对齐**：提交里有 TapDB 客户端直连，但欠账表仍标 TODO —— 先核对再决定是否打勾
-- **D23 发布管线**：TapTap CLI 文档已收束，实际打包/上传还没验证
+- **D23 发布管线**：CLI 已装好（`.tools\npm-global`，`2026.11.24`/contract 3，16 skills 内置），
+  `doctor` 只剩 `config`/`credentials`；下一步是登录 → Windows 导出预设 → 包体自测 → `upload-pc-package`。
+  命令名已按真实 `--help` 校正（`app create` / `app save-changes`，没有 `prepareChanges`），见 `design/TAPTAP.md`
 
 ### 3.3 大（多轮）
 

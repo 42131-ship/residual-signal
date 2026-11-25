@@ -27,6 +27,8 @@ var _run: RunState = RunState.ensure()
 var _book := EndingBook.new()
 var _item_root: Node2D
 var _body_root: Node2D
+## 手机触摸层（null = 桌面）。见 design/MOBILE.md
+var _mobile: TouchControls
 
 
 func _ready() -> void:
@@ -41,6 +43,8 @@ func _ready() -> void:
 	if Analytics.should_prompt_consent():
 		_view = "consent"
 		_index = 0
+	# 手机：菜单同样要能点。触摸层只补「上/下/确认/返回」四个键的事件（见 design/MOBILE.md）。
+	_mobile = MobileSupport.attach(self)
 	_render()
 
 

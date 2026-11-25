@@ -23,9 +23,13 @@ window/size/window_height_override=1080
 window/stretch/mode="viewport"
 window/stretch/aspect="keep"
 window/stretch/scale_mode="integer"
+; 手机：横屏（4 = SENSOR_LANDSCAPE，左右都能转）。见 design/MOBILE.md
+window/handheld/orientation=4
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
 environment/defaults/default_clear_color=Color(0.0117, 0.0196, 0.0392, 1)
+; 手机必须开 ETC2/ASTC，否则未压缩贴图会把低端机的显存吃爆
+textures/vram_compression/import_etc2_astc=true

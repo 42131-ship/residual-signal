@@ -135,7 +135,18 @@ python tools/theme_build.py
 > 事件/属性需先在 TapDB 后台登记；仅在导出构建且用户同意后上报。细节见 `design/ANALYTICS.md`。
 
 > **发布到 TapTap**：入口、CLI 安装、skills、PC 包上传/提审流程见 [`design/TAPTAP.md`](design/TAPTAP.md)；
-> 本机目前未安装 Node/CLI、没有 Windows 导出预设，也不具备开发者登录上下文。
+> CLI 已装好并已登录（`developerId 489018`，残余信号还没有 app）。
+>
+> **手机版（Android APK）**：导出链路、触摸操控、安全区/省电/压缩这些约定见 [`design/MOBILE.md`](design/MOBILE.md)。
+> 本机构建命令（模板 APK 路线，只需 JDK 17 + Android SDK）：
+>
+> ```powershell
+> $env:JAVA_HOME = 'D:\Downloads\残余信号\.tools\jdk17\jdk-17.0.21.1+2'
+> & .tools\Godot_v4.7.2-stable_win64_console.exe --headless --path . --import
+> & .tools\Godot_v4.7.2-stable_win64_console.exe --headless --path . --export-debug "Android" 'build/android/ResidualSignal-debug.apk'
+> # 触摸层门禁（headless，用 4.7 跑，保持既有基线）
+> & .tools\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/touch_controls.gd
+> ```
 
 ---
 
@@ -157,7 +168,8 @@ python tools/theme_build.py
 | D11 | 房间级状态（A/B/C 独立灯光、容器与敌人按区） | 已实现并通过 `room_light` 门禁 |
 | D7 | 五楼主题美术 v1（每楼独立 tileset/道具/标志物/环境亮度） | 已实现并通过 `building_theme` 门禁 |
 | TapDB | 客户端直连分析（同意门控 + 离线队列 + analytics 门禁） | 代码完成，待 ClientID/后台登记/导出实机验证 |
-| TapTap 发布 | PC 包路线 + CLI/Skills 文档收束（`design/TAPTAP.md`） | 文档完成；待 Node/CLI/导出预设/开发者登录 |
+| TapTap 发布 | PC 包路线 + CLI/Skills 文档收束（`design/TAPTAP.md`） | CLI 已装并登录；PC/Android 导出预设已建，APK 已出（见下两行） |
+| 手机版 | Android APK（arm64，debug/release 均签名）+ 触摸操控 + 安全区/省电/ETC2 | 已实现并通过 `touch-controls` 门禁；**待真机实测**（`design/MOBILE.md` §7） |
 | D15 | 字体图集覆盖门禁（792 字，卡牌/结局文案 + 结算标点入图集） | 已实现并通过 `font_build.py --check` |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |

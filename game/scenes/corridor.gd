@@ -83,6 +83,8 @@ var _inventory_layer: CanvasLayer
 var _inventory_panel_root: Node2D
 var _hud_stats_root: Node2D
 var _attack_visual: Polygon2D
+## 手机触摸层（null = 桌面，整条手机路径都不存在）。见 design/MOBILE.md
+var _mobile: TouchControls
 ## 门状态：{tile_x, center_x, leaf, shape, handle, open, locked}
 var _doors: Array[Dictionary] = []
 var _nearest_door := -1
@@ -250,6 +252,8 @@ func _ready() -> void:
 	_build_flashlight()
 	# D11：开局按所在区块初始化灯光，避免第一帧从 1.0 渐变造成闪一下。
 	_light_zone = ROOM_LIGHT_LEVELS[_current_room_index()] * _theme_ambient
+	# 手机：触摸层 + 生命周期；桌面返回 null，行为与之前完全一致（design/MOBILE.md）。
+	_mobile = MobileSupport.attach(self)
 	_refresh_hud_stats()
 	Analytics.track("run_enter", {"mode": "story", "day": int(_run.day), "building": _current_building})
 
