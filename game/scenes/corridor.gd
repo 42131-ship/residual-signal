@@ -41,6 +41,8 @@ const FIREARM_REACH := 320.0
 const ENEMY_DEPTH_TOLERANCE := 30.0
 ## 初始感染体位置（B 区 / C 区各一只）。
 const ENEMY_SPAWNS: Array[Vector2] = [Vector2(300, 168), Vector2(520, 160)]
+## D12：卡牌只写这五组非派生变量（time 由 day 派生，卡不许写）。
+const CARD_VARIABLE_KEYS: Array[String] = ["trust", "reputation", "supplies", "control", "knowledge"]
 ## D4：燃料是出行门槛，不是消耗池（见 data/travel/routes.json 注释）。
 ## 加油站是唯一补给点：到站 +1，上限 3。医院（需 1）/ 军事基地（需 2）按访问次数解锁。
 const FUEL_MAX := 3
@@ -98,6 +100,12 @@ var _health := 1.0
 var _down_day := -1
 var _down_count := 0
 var _downing := false
+## D12：卡牌引擎 + 「每天一张」的当日去重与文案记录。
+var _card: CardEngine
+var _card_day := -1
+var _cards_fired := 0
+var _last_card_id := ""
+var _last_card_text := ""
 var _noise := 0
 var _equipped := ""
 var _attacks := 0
@@ -195,6 +203,8 @@ func _ready() -> void:
 	_state = WorldState.new()
 	if _data.load_all() and _state.init_from(_data):
 		_state.set_var("supplies", _run.supplies)
+		# D12：卡牌效果写进 world_state 后要跨场景/重启保留。
+		_restore_world_vars()
 		_supplies_online = true
 	else:
 		_state = null
@@ -206,6 +216,13 @@ func _ready() -> void:
 	_health = _run.health
 	_day.day = _run.day
 	_day.sediment = _run.sediment
+	# D12：world_state 的世界日与 DayCycle 对齐，事件卡 trigger.day 才读得到正确天数。
+	_sync_world_day()
+	# D12：卡牌引擎接进走廊；每天开始抽 1 张 L 卡并作用于 world_state。
+	_card = CardEngine.new()
+	if _state != null and not _card.init_from(_data, _state):
+		_card = null
+		push_error("CARD_ENGINE_OFFLINE")
 	_travel = TravelService.new()
 	if not _travel.load_all():
 		push_error("TRAVEL_LOAD_FAILED: " + _travel.load_error())
@@ -1470,6 +1487,9 @@ func _trigger_down() -> void:
 		_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
 		_player.velocity = Vector2.ZERO
 	_run.actions_left = _travel.actions_per_day() if _travel != null else 1
+	# D12：倒下也翻到次日，同样抽一张事件卡。
+	_sync_world_day()
+	_fire_daily_card()
 	_persist_run()
 	_show_panel("你倒下了", result["lines"], "down")
 	_refresh_hud_stats()
@@ -1586,6 +1606,9 @@ func _depart_to(target: String) -> void:
 	_player.velocity = Vector2.ZERO
 	# D3：结算后是新的世界日，恢复当天的行动预算（一天一次外出）。
 	_run.actions_left = _travel.actions_per_day()
+	# D12：新的一天开始 → 抽 1 张事件卡（作用在 world_state 上，随存档保留）。
+	_sync_world_day()
+	_fire_daily_card()
 	_persist_run()
 	var lines: Array = result["lines"]
 	lines.append("明天在%s" % label)
@@ -1613,7 +1636,60 @@ func _persist_run() -> void:
 	_run.supplies = _get_supplies()
 	_run.health = _health
 	_run.visited = _visited.duplicate()
+	# D12：卡牌改过的 world_state 六组变量要跟着存档（旧档没有这个键也不影响）。
+	if _state != null:
+		var vars: Dictionary = {}
+		for key: String in CARD_VARIABLE_KEYS:
+			vars[key] = _state.var_of(key)
+		_run.world_vars = vars
 	_run.save()
+
+
+## D12：world_state 的世界日与 DayCycle 对齐（卡牌 trigger.day 依赖它）。
+func _sync_world_day() -> void:
+	if _state == null:
+		return
+	for _i in range(40):
+		if _state.day >= _day.day or _state.day >= 30:
+			return
+		_state.advance_day()
+
+
+## D12：把存档镜像里的六组变量恢复到 world_state（卡牌效果跨场景/重启保留）。
+func _restore_world_vars() -> void:
+	if _state == null or _run == null:
+		return
+	for key: String in CARD_VARIABLE_KEYS:
+		if _run.world_vars.has(key):
+			_state.set_var(key, float(_run.world_vars[key]))
+
+
+## D12：每天开始抽 1 张 L 卡并作用于 world_state；同一天只抽一次。
+func _fire_daily_card() -> Dictionary:
+	if _card == null or _state == null or _day == null or _card_day == _day.day:
+		return {"fired": false}
+	_card_day = _day.day
+	var result := _card.pick_and_fire(_current_room_node(), _day.day * 7 + 1)
+	if bool(result.get("fired", false)):
+		_cards_fired += 1
+		_last_card_id = str(result.get("card_id", ""))
+		_last_card_text = str(result.get("text", ""))
+		if not _last_card_text.is_empty():
+			_toast_combat("事件：" + _last_card_text)
+		_refresh_hud_stats()
+	return result
+
+
+func last_card_id() -> String:
+	return _last_card_id
+
+
+func last_card_text() -> String:
+	return _last_card_text
+
+
+func cards_fired() -> int:
+	return _cards_fired
 
 
 func current_building_id() -> String:

@@ -108,7 +108,7 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 | D9 | 体力归零没有后果 | corridor.gd / day_cycle.gd | ✅ 已还（2026-11-25）：`DayCycle.down()` 沉积 -1 + 翻页 + 回学校 + 体力 0.3；门禁 `down` | S |
 | D10 | 敌人无寻路、无听觉 | enemy.gd | ✅ 已还（2026-11-25）：≥3 噪声引向声源 2 秒、看见优先；门禁 `enemy_hearing` | M |
 | D11 | 房间级状态缺失（灯光/敌人/容器按区） | corridor.gd | 三个区除了墙没有区别 | M |
-| D12 | 卡牌只在 headless 回放里跑 | data/cards | 4000 行数据层玩家看不到 | L |
+| D12 | 卡牌只在 headless 回放里跑 | data/cards | ✅ 已还（2026-11-25）：每天抽 1 张写 world_state，`RunState.world_vars` 持久化；门禁 `card_day` | L |
 | D13 | `bond`/同伴未实现 | data/npcs | 「军队」「背弃」「替身」三个结局没有前置 | L |
 | D14 | 菜单「继续」只提示、不加载场景 | main_menu.gd | 读档进不去游戏 | S |
 

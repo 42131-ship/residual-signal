@@ -19,6 +19,8 @@ var supplies := 0.8
 var health := 1.0
 var fuel := 0
 var visited: Array[String] = ["school"]
+## D12：world_state 六组变量的存档镜像（卡牌效果跨场景/重启要保留；旧档没有这个键 → 空字典）。
+var world_vars: Dictionary = {}
 ## 同伴相关（M4 才会真的有人，但结局判定现在就要读它们）。
 var companions_alive := 0
 var companions_lost := 0
@@ -58,6 +60,7 @@ func new_run() -> void:
 	health = 1.0
 	fuel = 0
 	visited = ["school"]
+	world_vars = {}
 	companions_alive = 0
 	companions_lost = 0
 	bond = 0.0
@@ -121,6 +124,7 @@ func to_dict() -> Dictionary:
 		"health": health,
 		"fuel": fuel,
 		"visited": visited,
+		"world_vars": world_vars.duplicate(true),
 		"companions_alive": companions_alive,
 		"companions_lost": companions_lost,
 		"bond": bond,
@@ -145,6 +149,8 @@ func from_dict(data: Dictionary) -> bool:
 		visited.append(str(value))
 	if visited.is_empty():
 		visited.append(building)
+	var raw_vars: Variant = data.get("world_vars", {})
+	world_vars = (raw_vars as Dictionary).duplicate(true) if raw_vars is Dictionary else {}
 	companions_alive = maxi(0, int(data.get("companions_alive", 0)))
 	companions_lost = maxi(0, int(data.get("companions_lost", 0)))
 	bond = clampf(float(data.get("bond", 0.0)), 0.0, 1.0)

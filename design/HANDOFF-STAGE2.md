@@ -1037,7 +1037,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **32 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing`；`pipeline.json` 里 step 数 28 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **33 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day`；`pipeline.json` 里 step 数 29 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
@@ -1088,7 +1088,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | D9 | 体力归零没有后果 | `_health` 到 0 只是数字；不死亡、不结算、不结束 | **已还（2026-11-25）**：`DayCycle.down()` 沉积 -1 + 翻页 + 回学校 + 体力 0.3；门禁 `down`（见 §三十八） |
 | D10 | 敌人无寻路、无听觉 | `_noise` 只是 HUD 数字，敌人不会朝声源走 | **已还（2026-11-25）**：≥3 噪声把听程内敌人引向声源 2 秒，看见优先于听见；门禁 `enemy_hearing`（见 §三十九） |
 | D11 | 房间级状态缺失 | 三个区除墙外没区别：灯光/敌人/容器不按区 | 每个区独立 `light` 与容器池 |
-| D12 | 卡牌只在 headless 回放里跑 | `data/cards` 4000 行数据玩家看不到 | 每天开始抽 1 张并作用于 `world_state` |
+| D12 | 卡牌只在 headless 回放里跑 | `data/cards` 4000 行数据玩家看不到 | **已还（2026-11-25）**：每天开始抽 1 张并作用于 `world_state`，效果随存档保留；门禁 `card_day`（见 §四十） |
 | D13 | `bond` / 同伴未实现 | `RunState` 有字段但没人写；「军队」结局因此**不可达** | 至少 1 个 NPC 可招募、`bond` 随事件涨落 |
 | D19–21 | 原五阶段观感线（地面细节/前景遮挡/HUD 重构） | Stage 1–2 做完，3–5 未动 | 各自的像素门禁 + 截图基线 |
 
@@ -1243,3 +1243,28 @@ ENEMY_HEARING_OK quiet=ignored loud=alert range=320s move=toward stop=after2s si
 ```
 
 下一步：D11（房间级状态）或 D12（卡牌接玩法）——按目标先做不依赖新美术的。
+
+---
+
+# 四十、D12 · 事件卡接进玩家玩法（2026-11-25）
+
+> 附录 A2 第四条。之前 12 张 L 卡只在 headless 回放里跑；现在每天开始真的抽 1 张。
+
+| 件 | 做法 |
+|---|---|
+| 引擎接入 | 走廊 `_ready` 建 `CardEngine`（DataLayer + WorldState）；`_sync_world_day()` 让 `world_state.day` 对齐 DayCycle（卡 `trigger.day` 依赖它） |
+| 每天一张 | `_fire_daily_card()`：新的一天（`_depart_to` / `_trigger_down` 翻页后）抽 1 张并 `pick_and_fire(当前房间, day*7+1)`；`_card_day` 保证同日不重复 |
+| 作用 | 卡效果写 `world_state` 五组非派生变量；HUD toast 显示渲染后的卡文 |
+| 持久化 | `RunState.world_vars` 镜像六组变量（存档 v1 可选键，旧档缺省空字典）；`_restore_world_vars()` 在 `_ready` 恢复，跨场景/重启不丢 |
+| 新门禁 | `game/tests/card_day.gd`：Day0 不抽 / Day1 必抽 / 同日去重 / 效果改 world_state / 存档镜像 / 新场景恢复 |
+
+验收：
+
+```text
+CARD_DAY_OK day0=none day1=draw effect=world_state persist=run_state scene=restore dedupe=same_day
+```
+
+已知后续（记账）：
+1. `WorldState.init_from()` 仍从 0 起，`data/variables.json` 的 `initial`（trust 0.3 / knowledge 0.5）尚未加载 →
+   卡牌 `trigger.vars` 条件偏保守，等变量初始化补齐后卡池覆盖会变大。
+2. 卡文里有 `陌/儿` 等字不在 PF-02 图集（D15 字体图集重建）。
