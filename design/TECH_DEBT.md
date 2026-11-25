@@ -1,8 +1,9 @@
 # TECH_DEBT · M2a 方案与欠账清单
 
-> 状态：2026-11-24 整理；**同日 M2a 第 1 步已落地**（见下方「进度」）。
-> 数字都是当次实测，不是印象：`corridor.gd` 1819 行，`_supplies` 出现 7 次、`_health` 9 次、
-> `_noise` 4 次、`_fuel` 7 次；断言 `_supplies` 的门禁只有 `corridor_inventory` 两处。
+> 状态：2026-11-24 整理，2026-11-25 更新（D1/D2/D5/D6 已还）。
+> **接手先看 [`HANDOFF-STAGE2.md`](HANDOFF-STAGE2.md) 的「附录 A · 未完成清单」**——那份带验收方式，
+> 这份解释每条为什么是债。
+> 数字都是实测：`corridor.gd` 1900+ 行；断言 `_supplies` 的门禁只有 `corridor_inventory` 两处。
 
 ## 进度
 
