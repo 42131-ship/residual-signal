@@ -251,6 +251,7 @@ func _ready() -> void:
 	# D11：开局按所在区块初始化灯光，避免第一帧从 1.0 渐变造成闪一下。
 	_light_zone = ROOM_LIGHT_LEVELS[_current_room_index()] * _theme_ambient
 	_refresh_hud_stats()
+	Analytics.track("run_enter", {"mode": "story", "day": int(_run.day), "building": _current_building})
 
 
 func _place_tile(tile_name: String, tile_x: int, tile_y: int, from_x := 0, width := TILE_SIZE) -> void:
@@ -870,10 +871,18 @@ func _search_container(id: String) -> void:
 	# 剧情模式：容器搜过一次就永久为空（不按天刷新）。
 	var result: Dictionary = _loot.search(id, _world_day, 0, "story")
 	if not bool(result.get("ok", false)):
+		Analytics.track("loot_search", {
+			"container": id, "day": int(_world_day), "status": "again",
+			"items": 0, "rejected": 0,
+		})
 		_show_panel(_loot.label_of(id), ["已经搜过一次", "剧情模式不会刷新"], id)
 		return
 	var items: Array = result.get("items", [])
 	if items.is_empty():
+		Analytics.track("loot_search", {
+			"container": id, "day": int(_world_day), "status": "empty",
+			"items": 0, "rejected": 0,
+		})
 		_show_panel(_loot.label_of(id), ["里面是空的", "连灰都没有"], id)
 		return
 	var ids: Array = []
@@ -887,6 +896,10 @@ func _search_container(id: String) -> void:
 		lines[1] = "已放入背包（%d/%d）" % [_inventory.total(), _inventory.capacity]
 	else:
 		lines[1] = "背包满了，剩 %d 件没拿" % rejected.size()
+	Analytics.track("loot_search", {
+		"container": id, "day": int(_world_day), "status": "ok",
+		"items": added.size(), "rejected": rejected.size(),
+	})
 	_show_panel(_loot.label_of(id), lines, id)
 	_refresh_hud_stats()
 
@@ -1495,6 +1508,9 @@ func _on_enemy_attacked(damage: int) -> void:
 
 func _on_enemy_died(enemy: Enemy) -> void:
 	_enemies_killed += 1
+	Analytics.track("enemy_kill", {
+		"enemy": str(enemy.name), "day": int(_run.day), "kills": int(_enemies_killed),
+	})
 	_toast_combat("感染体倒下了")
 	# 不立刻 queue_free：保留节点（已停物理、停在倒地帧），门禁与调试仍能读到 dead。
 	_refresh_hud_stats()
@@ -1527,6 +1543,10 @@ func _trigger_down() -> void:
 	_sync_world_day()
 	_fire_daily_card()
 	_persist_run()
+	Analytics.track("player_down", {
+		"day": int(_run.day), "building": _current_building,
+		"down_count": int(_down_count), "mode": "story",
+	})
 	_show_panel("你倒下了", result["lines"], "down")
 	_refresh_hud_stats()
 	_downing = false
@@ -1611,8 +1631,14 @@ func _depart_to(target: String) -> void:
 	if _day == null or _travel == null:
 		return
 	# D3：行动次数取真源（RunState.actions_left），不再写死 1。
+	var from_building := _current_building
 	var verdict := _travel.can_travel(_current_building, target, {"fuel": _fuel, "actions_left": _run.actions_left, "hour": 12})
 	if not bool(verdict.get("ok", false)):
+		Analytics.track("travel_depart", {
+			"from": from_building, "to": target, "day": int(_run.day),
+			"fuel": int(_fuel), "actions_left": int(_run.actions_left),
+			"ok": 0, "reason": str(verdict.get("reason", "")),
+		})
 		_toast_combat("去不了：%s" % _reason_text(str(verdict.get("reason", ""))))
 		return
 	var label := _travel.label_of(target)
@@ -1654,6 +1680,19 @@ func _depart_to(target: String) -> void:
 	_refresh_hud_stats()
 	# D5：结算之后判定一次结局——够格就写进档案，回主界面的结局栏能看到。
 	_evaluate_ending()
+	Analytics.track("travel_depart", {
+		"from": from_building, "to": target, "day": int(_run.day),
+		"fuel": int(_fuel), "actions_left": int(_run.actions_left),
+		"ok": 1, "reason": "",
+	})
+	Analytics.track("day_end", {
+		"day": int(_run.day), "building": _current_building,
+		"sediment": int(_run.sediment), "supplies": float(_run.supplies),
+		"health": float(_health), "kills": int(_enemies_killed),
+		"fuel": int(_fuel), "finished": int(bool(result.get("finished", false))),
+		"mode": "story",
+	})
+	Analytics.track("travel_arrive", {"to": target, "day": int(_run.day)})
 	# 真切换：同一个走廊场景，但 RunState.building 已经变了，重新加载后读到新楼。
 	# 门禁/manual add 场景时 current_scene 为空，这种情况下只更新状态、不换场景。
 	var tree := get_tree()
@@ -1713,6 +1752,7 @@ func _fire_daily_card() -> Dictionary:
 		if not _last_card_text.is_empty():
 			_toast_combat("事件：" + _last_card_text)
 		_refresh_hud_stats()
+		Analytics.track("card_fire", {"card_id": _last_card_id, "day": int(_day.day)})
 	return result
 
 
@@ -1840,6 +1880,10 @@ func _evaluate_ending() -> String:
 		_book.unlock(ENDING_TEMPLATE, ending_id)
 		_run.unlock_ending(ENDING_TEMPLATE, ending_id)
 		_run.save()
+		Analytics.track("ending_unlock", {
+			"ending_id": ending_id, "day": int(_run.day),
+			"template": ENDING_TEMPLATE, "mode": "story",
+		})
 		_toast_combat("结局已记入档案")
 	return ending_id
 

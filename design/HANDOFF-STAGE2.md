@@ -1037,10 +1037,11 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **35 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light` / `building-theme`；`pipeline.json` 里 step 数 33 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **36 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light` / `building-theme` / `analytics`；`pipeline.json` 里 step 数 34 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
+| 发布路线 | PC Windows 包 + TapTap CLI/Skills；本机未安装 Node/CLI、无 `export_presets.cfg`、无开发者上下文；流程见 `design/TAPTAP.md` |
 
 ## A1. 立即该还（4 条已全部还清；其中 D7 美术主题为 v1，内容层后续见 §四十三）
 
@@ -1354,3 +1355,51 @@ FONT_COVERAGE required=792 glyphs=792 missing=0
 2. 容器/战利品表仍共用（`data/loot/containers.json` 三个容器），尚未按楼换池。
 3. 道具形状是「换色 + 4 件标志物」的 v1；若要每楼完全独立的 15 件造型，需要逐楼绘制配方。
 4. 回响层六项（用户附带的 `残余信号_回响层_落地提示词.md`）另行排期；该文档基线为 v0.5，落地前需先映射到当前 47 条规则体系。
+
+---
+
+# 四十四、TapDB 客户端直连（2026-11-25）
+
+> TapDB 官方客户端 SDK 只有 Android / iOS / Unity / UE5，Godot PC 无 SDK；
+> 按「服务端接入」HTTP 事件接口从客户端直连，匿名 ID + 隐私同意 + 离线队列。
+> 详细配置、事件表、实机验证见 `design/ANALYTICS.md`。
+
+| 件 | 做法 |
+|---|---|
+| 配置 | `config/analytics.example.json` 入库；`config/analytics.json` 本机填 ClientID（已 gitignore） |
+| 事件注册表 | `data/analytics/events.json`：15 个事件 + 属性类型 + PII 禁止键 + 同意文案；纯函数校验 |
+| 传输 | `game/runtime/tapdb_transport.gd`：`HTTPRequest` POST JSON，测试用 MockTransport |
+| 服务 | `game/runtime/tapdb_service.gd`（Autoload `TapDB`）：同意门控、匿名 device/user ID、队列/退避/去重、会话结束 |
+| 门面 | `game/runtime/analytics.gd`：游戏代码只调 `Analytics.track()`；Autoload 缺失时 no-op |
+| UI | 主菜单第 4 项「设置」+ 首次启动隐私同意页（`main_menu.gd`）；拒绝不收集、可随时撤销 |
+| 埋点 | `main_menu`（run_start/endings_view）、`corridor`（run_enter/travel_depart/day_end/travel_arrive/card_fire/loot_search/enemy_kill/player_down/ending_unlock） |
+| 门禁 | `game/tests/analytics.gd`（headless）：注册表/报文必填字段/同意门控/失败重试 uuid 稳定/撤销清队列 |
+| 隔离 | 编辑器、`--script` 门禁、headless 默认全静默；`RS_ANALYTICS=1` 才在编辑器调试 |
+
+验收：`ANALYTICS_OK registry=15 consent=gated retry=stable uuid=yes privacy=ok`；主菜单门禁更新为 4 项 + 设置页 `MENU_OK entries=4 ... settings=yes`。
+
+**待办（需要你提供/操作）**：TapDB ClientID；后台登记事件与属性；导出构建实机验证（同时确认 JSON body 格式与自定义事件名前缀这两个文档歧义点）。
+
+---
+
+# 四十五、TapTap 平台入口 / CLI / Skills 收束（2026-11-25）
+
+> 今晚三块工作（D7 五楼主题美术、TapDB 客户端直连、发布入口整理）到此收束：
+> README 只放入口，`design/TAPTAP.md` 放完整发布流程，`design/ANALYTICS.md` 放埋点细节，HANDOFF 只留决策与状态。
+
+| 件 | 结论 |
+|---|---|
+| 平台入口 | `agents.md`（AI 助手入口）+ `developer.taptap.cn/docs/llms.txt`（文档索引）；`agents.md` 以 octet-stream 返回，用 curl 读 |
+| 游戏形态 | Godot 4.7 PC Windows 包；不走 H5 / Tap 小游戏路线 |
+| CLI | `npm i -g @taptap/cli` → `auth login` → `skills list/read`；本机 **未安装 Node/CLI**，需先装 Node LTS |
+| Skills | 入口/路由、身份定位、创建游戏、资料与版本、资质、包体自测、测试计划、数据表现、素材库等；以 `taptap-cli skills list` 为准 |
+| 发布链路 | 定位身份 → 创建草稿 → Windows 导出与自测 → `upload-pc-package` → 补资料 → 测试计划 → `prepare-review-snapshot` / `precheck-review` / `submit-review` |
+| 写操作纪律 | 先 `--dry-run`，用户确认后 `--yes`；上传成功 ≠ 资料写入 ≠ 包体绑定 |
+| 本机阻塞 | 无 Node/npm/npx/`taptap-cli`；无 `export_presets.cfg`；无开发者登录上下文；未核查版号/资质 |
+| TapDB | 客户端直连代码 + 离线门禁已完成，待 ClientID / 后台事件登记 / 导出包实机验证 |
+
+**颗粒度约定**：以后新增平台能力，README 只加一行入口 + 一条可复制命令；细节写 `design/<capability>.md`；
+HANDOFF 只记「已还/未还 + 验收方式 + 日期」，不重复命令手册。
+
+**下一步顺序**（需要账号持有人参与）：装 Node/CLI → 登录并选游戏 → 配 Windows 导出与自测 → 填 ClientID 并登记事件 →
+导出包验证埋点 → 上传包体 → 资料/测试计划 → 提审三步 → 上线前替换隐私文案与资质核对。

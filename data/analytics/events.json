@@ -1,0 +1,42 @@
+{
+  "schema": "analytics-events.v1",
+  "version": 1,
+  "tapdb": {
+    "endpoint": "https://e.tapdb.net/v2/event",
+    "batch_endpoint": "https://e.tapdb.net/v2/batch",
+    "sdk_version": "tapdb-http-1.0",
+    "os": "Windows",
+    "network_unknown": "3"
+  },
+  "custom_event_prefix": "",
+  "custom_property_prefix": "#",
+  "events": {
+    "device_login": {"kind": "preset", "props": {}},
+    "user_login": {"kind": "preset", "props": {}},
+    "session_start": {"kind": "custom", "props": {"mode": "string", "day": "number", "building": "string"}},
+    "session_end": {"kind": "custom", "props": {"mode": "string", "day": "number", "building": "string", "duration_sec": "number"}},
+    "run_start": {"kind": "custom", "props": {"mode": "string", "from_save": "number", "day": "number"}},
+    "run_enter": {"kind": "custom", "props": {"mode": "string", "day": "number", "building": "string"}},
+    "travel_depart": {"kind": "custom", "props": {"from": "string", "to": "string", "day": "number", "fuel": "number", "actions_left": "number", "ok": "number", "reason": "string"}},
+    "travel_arrive": {"kind": "custom", "props": {"to": "string", "day": "number"}},
+    "day_end": {"kind": "custom", "props": {"day": "number", "building": "string", "sediment": "number", "supplies": "number", "health": "number", "kills": "number", "fuel": "number", "finished": "number", "mode": "string"}},
+    "card_fire": {"kind": "custom", "props": {"card_id": "string", "day": "number"}},
+    "loot_search": {"kind": "custom", "props": {"container": "string", "day": "number", "status": "string", "items": "number", "rejected": "number"}},
+    "enemy_kill": {"kind": "custom", "props": {"enemy": "string", "day": "number", "kills": "number"}},
+    "player_down": {"kind": "custom", "props": {"day": "number", "building": "string", "down_count": "number", "mode": "string"}},
+    "ending_unlock": {"kind": "custom", "props": {"ending_id": "string", "day": "number", "template": "string", "mode": "string"}},
+    "endings_view": {"kind": "custom", "props": {"unlocked": "number"}}
+  },
+  "forbidden_keys": [
+    "path", "file", "save", "inventory", "position", "x", "y",
+    "username", "hostname", "ip", "email", "steam_id"
+  ],
+  "privacy": {
+    "notice_version": 1,
+    "lines": [
+      "本作会匿名收集游玩数据（开局、出行、结算、结局等），用于改进游戏。",
+      "收集内容包括匿名设备/玩家 ID、系统版本、游戏版本与本局进度，不包含文件名、路径或账号信息。",
+      "你可以随时在「设置 → 分析数据」里关闭；关闭后不再上报，并清空尚未发送的队列。"
+    ]
+  }
+}

@@ -24,6 +24,9 @@ func _run() -> void:
 	if _actor == null:
 		_fail("player missing")
 		return
+	# D9 之后敌人抓伤会触发「倒下」（锁移动 + 传送回学校），会打断长距离可达性测试；
+	# 这张门禁不测战斗，让感染体只当画面元素。
+	_corridor.disarm_enemies()
 
 	# 可达目标：四角 + 中心 + 三个房间区块（A/B/C）各一个点（必须能穿过门洞）。
 	var waypoints := [

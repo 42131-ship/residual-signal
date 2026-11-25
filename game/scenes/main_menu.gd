@@ -11,16 +11,17 @@ const DIM := Color("#354b60")
 const FRAME := Color("#635e57")
 const BG := Color("#0b1119")
 
-const ITEMS := ["新游戏", "继续", "结局栏"]
+const ITEMS := ["新游戏", "继续", "结局栏", "设置"]
 const ENDING_TEMPLATE := "school"
 const BG_PATH := "res://art/generated_candidates/maps/menu_bg.png"
 ## 背景是生图量化来的，压一层暗罩保证文字对比度（这是 UI 罩层，不是资产，允许半透明）。
 const SCRIM := Color(0.043, 0.067, 0.098, 0.55)
 
 var _index := 0
-var _view := "root"          # root / endings
+var _view := "root"          # root / endings / settings / consent
 var _message := ""
 var _message_frames := 0
+## TapDB 首次启动同意界面：导出构建且未决策时才出现；编辑器/门禁不弹。
 ## 菜单与走廊共用同一个 RunState（静态引用），否则「新游戏」会丢掉结局档案。
 var _run: RunState = RunState.ensure()
 var _book := EndingBook.new()
@@ -36,6 +37,10 @@ func _ready() -> void:
 	_body_root = _node("Body")
 	if not _book.load_template(ENDING_TEMPLATE):
 		push_error("ENDING_BOOK_FAILED: " + _book.load_error())
+	# TapDB 合规：同意前不初始化收集；首次启动先让玩家选。
+	if Analytics.should_prompt_consent():
+		_view = "consent"
+		_index = 0
 	_render()
 
 
@@ -116,6 +121,12 @@ func _render() -> void:
 	if _view == "endings":
 		_render_endings()
 		return
+	if _view == "settings":
+		_render_settings()
+		return
+	if _view == "consent":
+		_render_consent()
+		return
 	_render_root()
 
 
@@ -132,6 +143,48 @@ func _render_root() -> void:
 		Vector2(16, 176), DIM)
 	if _message_frames > 0:
 		PixelFont.draw(_body_root, _message, Vector2(16, 194), BRIGHT)
+
+
+func _render_settings() -> void:
+	PixelFont.draw(_body_root, "设置 · 隐私", Vector2(16, 12), BRIGHT)
+	var status := "开启" if Analytics.has_consent() else "关闭"
+	var state_text := "分析数据：%s" % status
+	if not Analytics.is_available():
+		state_text += "（未配置）"
+	PixelFont.draw(_body_root, state_text, Vector2(16, 44), BRIGHT)
+	var y := 70.0
+	for line: String in Analytics.privacy_lines():
+		y = _draw_wrapped(_body_root, line, Vector2(16, y), INK, 25, 14.0)
+	PixelFont.draw(_body_root, "E 切换   Esc 返回", Vector2(16, 194), INK)
+
+
+func _render_consent() -> void:
+	PixelFont.draw(_body_root, "隐私与数据", Vector2(16, 12), BRIGHT)
+	var y := 40.0
+	for line: String in Analytics.privacy_lines():
+		y = _draw_wrapped(_body_root, line, Vector2(16, y), INK, 25, 14.0)
+	var options := ["允许并继续", "不允许"]
+	for index in range(options.size()):
+		var option_y := 154 + index * 20
+		if index == _index:
+			_add_rect(Vector2(12, option_y - 4), Vector2(160, 18), DIM)
+		PixelFont.draw(_item_root, options[index], Vector2(20, option_y),
+			BRIGHT if index == _index else INK)
+	PixelFont.draw(_body_root, "W/S 选择   E 确认", Vector2(16, 194), INK)
+
+
+## 按固定字宽折行（中文等宽，简单可靠；不做词边界）。
+func _draw_wrapped(canvas: Node2D, text: String, at: Vector2, color: Color,
+		max_chars: int, line_height: float) -> float:
+	var line := ""
+	var y := at.y
+	for index in range(text.length()):
+		line += text[index]
+		if line.length() >= max_chars or index == text.length() - 1:
+			PixelFont.draw(canvas, line, Vector2(at.x, y), color)
+			line = ""
+			y += line_height
+	return y
 
 
 func _render_endings() -> void:
@@ -183,8 +236,28 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or event.is_echo() or not event.is_pressed():
 		return
 	if event.is_action_pressed("menu_back"):
-		if _view == "endings":
+		if _view != "root":
+			# 同意界面按 Esc 视为「这次先不选」：不收集，下次启动再问。
 			_view = "root"
+			_index = 0
+			_render()
+		get_viewport().set_input_as_handled()
+		return
+	if _view == "consent":
+		if event.is_action_pressed("menu_up"):
+			move(-1)
+		elif event.is_action_pressed("menu_down"):
+			move(1)
+		elif event.is_action_pressed("menu_confirm"):
+			confirm()
+		get_viewport().set_input_as_handled()
+		return
+	if _view == "settings":
+		if event.is_action_pressed("menu_confirm"):
+			if Analytics.has_consent():
+				Analytics.revoke_consent()
+			else:
+				Analytics.grant_consent()
 			_render()
 		get_viewport().set_input_as_handled()
 		return
@@ -202,14 +275,37 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func move(delta: int) -> void:
+	if _view == "consent":
+		_index = clampi(_index + delta, 0, 1)
+		_render()
+		return
 	_index = wrapi(_index + delta, 0, ITEMS.size())
 	_render()
 
 
 func confirm() -> void:
+	if _view == "consent":
+		if _index == 0:
+			Analytics.grant_consent()
+		else:
+			Analytics.revoke_consent()
+		_view = "root"
+		_index = 0
+		_render()
+		return
+	if _view == "settings":
+		if Analytics.has_consent():
+			Analytics.revoke_consent()
+		else:
+			Analytics.grant_consent()
+		_render()
+		return
+	if _view != "root":
+		return
 	match _index:
 		0:
 			_run = RunState.start_new()
+			Analytics.track("run_start", {"mode": "story", "from_save": 0, "day": 0})
 			_flash("新的一天。")
 			_enter_game()
 		1:
@@ -220,10 +316,16 @@ func confirm() -> void:
 				# 继续时把菜单持有的引用也换成读回来的那局，否则后续解锁会写到旧对象上。
 				_run = saved
 				RunState.current = saved
+				Analytics.track("run_start", {"mode": "story", "from_save": 1, "day": int(saved.day)})
 				_flash("从第 %d 天继续。" % (saved.day + 1))
 				_enter_game()
 		2:
+			Analytics.track("endings_view", {"unlocked": _book.unlocked_count(ENDING_TEMPLATE)})
 			_view = "endings"
+			_render()
+		3:
+			_view = "settings"
+			_index = 0
 			_render()
 
 

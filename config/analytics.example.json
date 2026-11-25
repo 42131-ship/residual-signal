@@ -1,0 +1,9 @@
+{
+  "schema": "analytics-config.v1",
+  "client_id": "",
+  "endpoint": "https://e.tapdb.net/v2/event",
+  "channel": "dev",
+  "custom_event_prefix": "",
+  "custom_property_prefix": "#",
+  "enabled": true
+}

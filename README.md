@@ -65,7 +65,7 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 ## 校验与构建
 
 ```powershell
-# 静态规则（43 条）
+# 静态规则（47 条）
 python tools/validate.py
 
 # 规则自测
@@ -127,7 +127,15 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 # D7：五楼主题（每楼 tileset/道具场景/标志物/环境亮度）
 python tools/theme_build.py
 & $G --path . --fixed-fps 60 --script res://game/tests/building_theme.gd -- THEME
+# TapDB 分析门禁（headless；MockTransport，不联网）
+& $G --headless --path . --fixed-fps 60 --script res://game/tests/analytics.gd -- ANALYTICS
 ```
+
+> **TapDB（可选，客户端直连）**：复制 `config/analytics.example.json` 为 `config/analytics.json` 并填 ClientID；
+> 事件/属性需先在 TapDB 后台登记；仅在导出构建且用户同意后上报。细节见 `design/ANALYTICS.md`。
+
+> **发布到 TapTap**：入口、CLI 安装、skills、PC 包上传/提审流程见 [`design/TAPTAP.md`](design/TAPTAP.md)；
+> 本机目前未安装 Node/CLI、没有 Windows 导出预设，也不具备开发者登录上下文。
 
 ---
 
@@ -148,6 +156,8 @@ python tools/theme_build.py
 | D12 | 事件卡接玩法（每天 1 张写 world_state，效果随存档保留） | 已实现并通过 `card_day` 门禁 |
 | D11 | 房间级状态（A/B/C 独立灯光、容器与敌人按区） | 已实现并通过 `room_light` 门禁 |
 | D7 | 五楼主题美术 v1（每楼独立 tileset/道具/标志物/环境亮度） | 已实现并通过 `building_theme` 门禁 |
+| TapDB | 客户端直连分析（同意门控 + 离线队列 + analytics 门禁） | 代码完成，待 ClientID/后台登记/导出实机验证 |
+| TapTap 发布 | PC 包路线 + CLI/Skills 文档收束（`design/TAPTAP.md`） | 文档完成；待 Node/CLI/导出预设/开发者登录 |
 | D15 | 字体图集覆盖门禁（792 字，卡牌/结局文案 + 结算标点入图集） | 已实现并通过 `font_build.py --check` |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |

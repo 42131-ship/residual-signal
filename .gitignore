@@ -1,5 +1,6 @@
 # ── 密钥 / 本机模型配置（绝不入库）─────────────────────────────
 config/agents.json
+config/analytics.json
 config/*.local.json
 .env
 

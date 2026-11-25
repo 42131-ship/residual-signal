@@ -47,17 +47,19 @@ func _run() -> void:
 		_check(scrim.color.a > 0.3 and scrim.color.a < 0.8, "scrim alpha must stay in a readable range")
 	await _capture("%s_root" % _prefix)
 
-	# ① 选择项数量与顺序：新游戏 / 继续 / 结局栏
+	# ① 选择项数量与顺序：新游戏 / 继续 / 结局栏 / 设置
 	var items: Array = _menu.ITEMS
-	_check(items.size() == 3, "menu must hold 3 entries, got %d" % items.size())
-	_check(items[0] == "新游戏" and items[1] == "继续" and items[2] == "结局栏",
-		"entries must be 新游戏/继续/结局栏, got %s" % str(items))
+	_check(items.size() == 4, "menu must hold 4 entries, got %d" % items.size())
+	_check(items[0] == "新游戏" and items[1] == "继续" and items[2] == "结局栏" and items[3] == "设置",
+		"entries must be 新游戏/继续/结局栏/设置, got %s" % str(items))
 
-	# ② 上下移动是循环的
+	# ② 上下移动是循环的（四项目录）
 	_menu.move(1)
 	_check(_menu.current_index() == 1, "moving down must reach index 1")
 	_menu.move(1)
 	_check(_menu.current_index() == 2, "moving down must reach index 2")
+	_menu.move(1)
+	_check(_menu.current_index() == 3, "moving down must reach index 3")
 	_menu.move(1)
 	_check(_menu.current_index() == 0, "cursor must wrap back to 0")
 
@@ -103,13 +105,21 @@ func _run() -> void:
 	await process_frame
 	_check(_menu.view_name() == "root", "Esc must return to the root view")
 
+	# ⑦ 设置页可打开/返回（隐私开关本身在导出构建才生效）
+	_menu.move(3)
+	_menu.confirm()
+	_check(_menu.view_name() == "settings", "设置 must open")
+	_menu._unhandled_input(back)
+	await process_frame
+	_check(_menu.view_name() == "root", "Esc must leave 设置")
+
 	if not _failures.is_empty():
 		print("MENU_FAILED count=%d" % _failures.size())
 		for failure: String in _failures:
 			print("  - " + failure)
 		quit(1)
 		return
-	print("MENU_OK entries=3 wrap=yes endings_slots=4 masked=3 unlock=kept_on_new_game")
+	print("MENU_OK entries=4 wrap=yes endings_slots=4 masked=3 unlock=kept_on_new_game settings=yes")
 	quit(0)
 
 
