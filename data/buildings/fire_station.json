@@ -1,0 +1,27 @@
+{
+  "schema": "building-theme.v1",
+  "id": "fire_station",
+  "label": "消防站",
+  "tileset": "res://art/generated_candidates/themes/fire_station/tiles_fire_station.png",
+  "props_scene": "res://game/scenes/props_fire_station.tscn",
+  "ambient": 0.88,
+  "motif": "hazard",
+  "roles": {
+    "void": "c00_void", "wall": "c17_rust", "dado": "c02_dark", "floor": "c04_floor",
+    "lit": "c18_rust_lit", "top": "c18_rust_lit", "edge": "c07_edge",
+    "accent": "c16_dirt", "accent_lit": "c18_rust_lit", "wet": "c08_coldtone"
+  },
+  "role_map": {
+    "c03_wall": "c17_rust",
+    "c05_lit": "c18_rust_lit",
+    "c23_cloth": "c25_leather",
+    "c24_cloth_lit": "c22_grey_lit",
+    "c19_dried": "c17_rust"
+  },
+  "signature": [
+    {"id": "hose_reel", "kind": "hose_reel", "tile": [2, 9]},
+    {"id": "axe_board", "kind": "axe_board", "tile": [7, 11]},
+    {"id": "helmet_rack", "kind": "helmet_rack", "tile": [20, 11]},
+    {"id": "radio_relay", "kind": "relay", "tile": [27, 11]}
+  ]
+}

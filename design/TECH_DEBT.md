@@ -103,7 +103,7 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 
 | # | 欠账 | 位置 | 影响 | 量 |
 |---|---|---|---|---|
-| D7 | 所有楼共用同一套走廊美术 | corridor.tscn | 加油站和学校长得一样，「多楼」只是换名字 | L |
+| D7 | 所有楼共用同一套走廊美术 | corridor.tscn | ✅ 美术主题 v1 已还（2026-11-25）：每楼 tileset/道具场景/4 件标志物/环境亮度，门禁 `building_theme`；检查文本与容器池仍共用 | L |
 | D8 | 地图没有「我在哪」标记 | travel_map.gd | ✅ 已还（2026-11-25）：`CurrentBuilding` 闪烁角标 + `travel_map` 门禁 ⑭ | S |
 | D9 | 体力归零没有后果 | corridor.gd / day_cycle.gd | ✅ 已还（2026-11-25）：`DayCycle.down()` 沉积 -1 + 翻页 + 回学校 + 体力 0.3；门禁 `down` | S |
 | D10 | 敌人无寻路、无听觉 | enemy.gd | ✅ 已还（2026-11-25）：≥3 噪声引向声源 2 秒、看见优先；门禁 `enemy_hearing` | M |

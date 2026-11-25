@@ -1,0 +1,276 @@
+{
+  "schema": "building-theme-assets.v1",
+  "building": "military_base",
+  "tileset": "res://art/generated_candidates/themes/military_base/tiles_military_base.png",
+  "props_scene": "res://game/scenes/props_military_base.tscn",
+  "props": [
+    {
+      "name": "locker_bank",
+      "filename": "PROP-02_01_locker_bank.png",
+      "tile_position": [
+        4,
+        6
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_01_locker_bank.png",
+      "asset_id": "prop_military_base_locker_bank"
+    },
+    {
+      "name": "door_broken",
+      "filename": "PROP-02_02_door_broken.png",
+      "tile_position": [
+        14,
+        6
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_02_door_broken.png",
+      "asset_id": "prop_military_base_door_broken"
+    },
+    {
+      "name": "desk_flipped",
+      "filename": "PROP-02_03_desk_flipped.png",
+      "tile_position": [
+        11,
+        9
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_03_desk_flipped.png",
+      "asset_id": "prop_military_base_desk_flipped"
+    },
+    {
+      "name": "window_night",
+      "filename": "PROP-02_04_window_night.png",
+      "tile_position": [
+        17,
+        4
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_04_window_night.png",
+      "asset_id": "prop_military_base_window_night"
+    },
+    {
+      "name": "light_dead",
+      "filename": "PROP-02_05_light_dead.png",
+      "tile_position": [
+        20,
+        3
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_05_light_dead.png",
+      "asset_id": "prop_military_base_light_dead"
+    },
+    {
+      "name": "wall_clock_stopped",
+      "filename": "PROP-02_06_wall_clock_stopped.png",
+      "tile_position": [
+        4,
+        3
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_06_wall_clock_stopped.png",
+      "asset_id": "prop_military_base_wall_clock_stopped"
+    },
+    {
+      "name": "fire_extinguisher",
+      "filename": "PROP-02_07_fire_extinguisher.png",
+      "tile_position": [
+        22,
+        6
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_07_fire_extinguisher.png",
+      "asset_id": "prop_military_base_fire_extinguisher"
+    },
+    {
+      "name": "first_aid_cabinet",
+      "filename": "PROP-02_08_first_aid_cabinet.png",
+      "tile_position": [
+        25,
+        4
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_08_first_aid_cabinet.png",
+      "asset_id": "prop_military_base_first_aid_cabinet"
+    },
+    {
+      "name": "trash_bin",
+      "filename": "PROP-02_09_trash_bin.png",
+      "tile_position": [
+        23,
+        9
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_09_trash_bin.png",
+      "asset_id": "prop_military_base_trash_bin"
+    },
+    {
+      "name": "mop_bucket",
+      "filename": "PROP-02_10_mop_bucket.png",
+      "tile_position": [
+        29,
+        9
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_10_mop_bucket.png",
+      "asset_id": "prop_military_base_mop_bucket"
+    },
+    {
+      "name": "drinking_fountain",
+      "filename": "PROP-02_11_drinking_fountain.png",
+      "tile_position": [
+        32,
+        5
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_11_drinking_fountain.png",
+      "asset_id": "prop_military_base_drinking_fountain"
+    },
+    {
+      "name": "chair_toppled",
+      "filename": "PROP-02_12_chair_toppled.png",
+      "tile_position": [
+        17,
+        9
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_12_chair_toppled.png",
+      "asset_id": "prop_military_base_chair_toppled"
+    },
+    {
+      "name": "intercom_broken",
+      "filename": "PROP-02_13_intercom_broken.png",
+      "tile_position": [
+        31,
+        3
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_13_intercom_broken.png",
+      "asset_id": "prop_military_base_intercom_broken"
+    },
+    {
+      "name": "classroom_plaque",
+      "filename": "PROP-02_14_classroom_plaque.png",
+      "tile_position": [
+        12,
+        4
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_14_classroom_plaque.png",
+      "asset_id": "prop_military_base_classroom_plaque"
+    },
+    {
+      "name": "notice_board_torn",
+      "filename": "PROP-02_15_notice_board_torn.png",
+      "tile_position": [
+        33,
+        3
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/props/PROP-02_15_notice_board_torn.png",
+      "asset_id": "prop_military_base_notice_board_torn"
+    }
+  ],
+  "signature": [
+    {
+      "name": "sandbag_wall",
+      "filename": "sandbag_wall.png",
+      "tile_position": [
+        2,
+        9
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/signature/sandbag_wall.png",
+      "asset_id": "prop_military_base_sandbag_wall"
+    },
+    {
+      "name": "ammo_crate",
+      "filename": "ammo_crate.png",
+      "tile_position": [
+        7,
+        11
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/signature/ammo_crate.png",
+      "asset_id": "prop_military_base_ammo_crate"
+    },
+    {
+      "name": "barricade",
+      "filename": "barricade.png",
+      "tile_position": [
+        20,
+        11
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/signature/barricade.png",
+      "asset_id": "prop_military_base_barricade"
+    },
+    {
+      "name": "antenna",
+      "filename": "antenna.png",
+      "tile_position": [
+        27,
+        11
+      ],
+      "pivot": [
+        16,
+        16
+      ],
+      "texture": "res://art/generated_candidates/themes/military_base/signature/antenna.png",
+      "asset_id": "prop_military_base_antenna"
+    }
+  ]
+}

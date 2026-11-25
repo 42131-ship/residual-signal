@@ -1,0 +1,16 @@
+{
+  "schema": "building-theme.v1",
+  "id": "school",
+  "label": "学校",
+  "tileset": "res://art/generated_candidates/tiles/TL-04_corridor_v2.png",
+  "props_scene": "res://game/scenes/corridor_props.tscn",
+  "ambient": 1.0,
+  "motif": "chalk",
+  "roles": {
+    "void": "c00_void", "wall": "c03_wall", "dado": "c02_dark", "floor": "c04_floor",
+    "lit": "c05_lit", "top": "c06_top", "edge": "c07_edge",
+    "accent": "c17_rust", "accent_lit": "c18_rust_lit", "wet": "c08_coldtone"
+  },
+  "role_map": {},
+  "signature": []
+}

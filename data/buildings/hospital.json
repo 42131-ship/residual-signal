@@ -1,0 +1,29 @@
+{
+  "schema": "building-theme.v1",
+  "id": "hospital",
+  "label": "医院",
+  "tileset": "res://art/generated_candidates/themes/hospital/tiles_hospital.png",
+  "props_scene": "res://game/scenes/props_hospital.tscn",
+  "ambient": 0.95,
+  "motif": "tile_grid",
+  "roles": {
+    "void": "c00_void", "wall": "c07_edge", "dado": "c03_wall", "floor": "c05_lit",
+    "lit": "c10_coldhigh", "top": "c10_coldhigh", "edge": "c07_edge",
+    "accent": "c12_cyan", "accent_lit": "c11_cyan_dim", "wet": "c09_coldmid"
+  },
+  "role_map": {
+    "c03_wall": "c07_edge",
+    "c04_floor": "c05_lit",
+    "c05_lit": "c10_coldhigh",
+    "c02_dark": "c03_wall",
+    "c23_cloth": "c22_grey_lit",
+    "c24_cloth_lit": "c10_coldhigh",
+    "c19_dried": "c20_blood"
+  },
+  "signature": [
+    {"id": "gurney", "kind": "gurney", "tile": [2, 9]},
+    {"id": "iv_stand", "kind": "iv_stand", "tile": [7, 11]},
+    {"id": "wheelchair", "kind": "wheelchair", "tile": [20, 11]},
+    {"id": "medicine_cabinet", "kind": "med_cabinet", "tile": [27, 11]}
+  ]
+}

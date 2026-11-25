@@ -1,0 +1,28 @@
+{
+  "schema": "building-theme.v1",
+  "id": "military_base",
+  "label": "军事基地",
+  "tileset": "res://art/generated_candidates/themes/military_base/tiles_military_base.png",
+  "props_scene": "res://game/scenes/props_military_base.tscn",
+  "ambient": 0.8,
+  "motif": "sand",
+  "roles": {
+    "void": "c00_void", "wall": "c16_dirt", "dado": "c02_dark", "floor": "c17_rust",
+    "lit": "c24_cloth_lit", "top": "c24_cloth_lit", "edge": "c07_edge",
+    "accent": "c18_rust_lit", "accent_lit": "c22_grey_lit", "wet": "c08_coldtone"
+  },
+  "role_map": {
+    "c03_wall": "c16_dirt",
+    "c04_floor": "c17_rust",
+    "c05_lit": "c24_cloth_lit",
+    "c23_cloth": "c16_dirt",
+    "c24_cloth_lit": "c22_grey_lit",
+    "c19_dried": "c20_blood"
+  },
+  "signature": [
+    {"id": "sandbag_wall", "kind": "sandbag", "tile": [2, 9]},
+    {"id": "ammo_crate", "kind": "crate", "tile": [7, 11]},
+    {"id": "barricade", "kind": "barricade", "tile": [20, 11]},
+    {"id": "antenna", "kind": "antenna", "tile": [27, 11]}
+  ]
+}

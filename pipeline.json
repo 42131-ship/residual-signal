@@ -33,7 +33,9 @@
     {"name": "enemy-hearing", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/enemy_hearing.gd -- HEAR", "gate": "hard", "status": "ready", "note": "D10：≥3 噪声把听程内感染体引向声源 2 秒；小声不惊动、听程外不理、看见优先"},
     {"name": "card-day", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/card_day.gd -- CARD", "gate": "hard", "status": "ready", "note": "D12：每天开始抽 1 张事件卡写 world_state；同日去重、RunState.world_vars 跨场景恢复"},
     {"name": "room-light", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/room_light.gd -- ROOM", "gate": "hard", "status": "ready", "note": "D11：A/B/C 三区独立灯光档 + 平滑过渡；容器按区各一档、敌人只在 B/C"},
-    {"name": "font-coverage", "cmd": "python tools/font_build.py --check", "gate": "hard", "status": "ready", "note": "D15：只读门禁——PF-02 图集必须覆盖所有运行时会画的字（检查文本/战利品/状态/楼名/事件卡/结局/脚本字面量）"}
+    {"name": "font-coverage", "cmd": "python tools/font_build.py --check", "gate": "hard", "status": "ready", "note": "D15：只读门禁——PF-02 图集必须覆盖所有运行时会画的字（检查文本/战利品/状态/楼名/事件卡/结局/脚本字面量）"},
+    {"name": "theme-build", "cmd": "python tools/theme_build.py", "gate": "hard", "status": "ready", "note": "D7：按 data/buildings 主题重建四楼 tile 表/道具换色/标志物与 props 场景（学校沿用现资产）"},
+    {"name": "building-theme", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/building_theme.gd -- THEME", "gate": "hard", "status": "ready", "note": "D7：五楼主题互异（tileset/色集/道具场景/标志物/环境亮度），按 RunState.building 切换（需渲染）"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",

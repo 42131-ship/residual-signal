@@ -1,0 +1,27 @@
+{
+  "schema": "building-theme.v1",
+  "id": "gas_station",
+  "label": "加油站",
+  "tileset": "res://art/generated_candidates/themes/gas_station/tiles_gas_station.png",
+  "props_scene": "res://game/scenes/props_gas_station.tscn",
+  "ambient": 1.1,
+  "motif": "oil",
+  "roles": {
+    "void": "c00_void", "wall": "c04_floor", "dado": "c02_dark", "floor": "c03_wall",
+    "lit": "c05_lit", "top": "c06_top", "edge": "c07_edge",
+    "accent": "c17_rust", "accent_lit": "c18_rust_lit", "wet": "c08_coldtone"
+  },
+  "role_map": {
+    "c03_wall": "c04_floor",
+    "c04_floor": "c03_wall",
+    "c23_cloth": "c25_leather",
+    "c24_cloth_lit": "c22_grey_lit",
+    "c19_dried": "c17_rust"
+  },
+  "signature": [
+    {"id": "pump", "kind": "pump", "tile": [2, 9]},
+    {"id": "shelf", "kind": "shelf", "tile": [7, 11]},
+    {"id": "price_sign", "kind": "sign", "tile": [20, 11]},
+    {"id": "oil_drum", "kind": "drum", "tile": [27, 11]}
+  ]
+}

@@ -1037,12 +1037,12 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **34 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light`；`pipeline.json` 里 step 数 31 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **35 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light` / `building-theme`；`pipeline.json` 里 step 数 33 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
 
-## A1. 立即该还（原 4 条；D3 / D14 / D4 已于 2026-11-25 还清，剩 D7）
+## A1. 立即该还（4 条已全部还清；其中 D7 美术主题为 v1，内容层后续见 §四十三）
 
 ### D3 · `actions_left` 恒为 1、从未消耗 ✅（2026-11-25 已还）
 
@@ -1064,12 +1064,12 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 - **要定的设计**：加油站产燃料（走一趟 +1）还是 `data/loot` 里加燃料桶？**先定再写**
 - **验收**：门禁断言「在加油站取燃料后 `_fuel` 上升」，且地图可选集随之变大
 
-### D7 · 所有楼共用同一套走廊美术
+### D7 · 所有楼共用同一套走廊美术 ✅（2026-11-25 美术主题 v1 已还）
 
-- **位置**：`corridor.tscn` / `corridor.gd` 的 props 全是学校
-- **现状**：换到加油站/医院后，房间标签、容器、灯光仍是教室那套，只有 HUD 楼名变了
-- **做法建议**：把 props 表按 `building` 分组（`data/props/<building>.json`），走廊按 `RunState.building` 取
-- **验收**：门禁断言「加油站场景的 props 集合 ≠ 学校」，且至少 1 个容器 id 不同
+> 已还：`data/buildings/<id>.json` 主题数据 + `tools/theme_build.py` 程序化生成四楼 tile/道具/4 件专属标志物；
+> 走廊按 `RunState.building` 换 tileset 与 `props_<id>.tscn`，环境亮度乘进逐区灯光。
+> 门禁 `building_theme`（`BUILDING_THEME_OK`）。见 §四十三。
+> **未完成**：检查文本仍学校版、容器/战利品池仍共用、道具为「换色 + 标志物」v1（未逐楼重画 15 件造型）。
 
 ### D14 · 菜单「继续」不加载场景 ✅（2026-11-25 已还）
 
@@ -1175,7 +1175,8 @@ python tools/validate.py          # 47 条 ERROR 0 · WARN 0 · SKIP 0（本轮�
 
 ## 五、下一步
 
-A1 只剩 **D7（五楼共用学校美术）**——它依赖每栋楼的道具表与美术产出，先等美术或改成「同一批道具按楼换配色/摆位」的方案。
+~~A1 剩 D7~~ → 2026-11-25 已做 **D7 美术主题 v1**（主题数据 + 程序化生成 + 按楼切换 + 门禁）。
+剩余内容层：每楼检查文本、容器/战利品池、逐楼 15 件造型重画；以及回响层六项。
 下一步按附录 A2：**D8 地图「我在哪」标记 / D9 体力归零后果 / D10 敌人听声**，先做不依赖新美术的。
 
 ---
@@ -1317,3 +1318,39 @@ FONT_COVERAGE required=792 glyphs=792 missing=0
 ```
 
 后续：如果卡池继续加卡，先跑 `--check`，缺字再重建图集；`font_build.py` 的 3 个降采样字可另行微调 `CJK_MAX_INK_W/H`。
+
+---
+
+# 四十三、D7 · 五楼主题美术（2026-11-25）
+
+> 此前五栋楼共用学校走廊的同一套 tile/道具。本轮把「主题」变成数据，每楼有自己的
+> tile 表、道具换色版、专属标志物与环境亮度；学校保留现有资产，其余四楼由
+> `tools/theme_build.py` 程序化生成（不依赖联网生图）。
+
+| 件 | 做法 |
+|---|---|
+| 主题数据 | `data/buildings/<id>.json` ×5（schema `building-theme.v1`）：tileset / props_scene / ambient / motif / 调色板角色 / 道具换色映射 / 4 件专属标志物 |
+| 生成器 | `tools/theme_build.py`：按主题从 master.gpl 取色画 8 格 tile 表（与 `TILE_INDEX` 同序）、把学校 15 件道具按角色映射换色、程序化绘制 4 件标志物（加油机/病床/水带卷/沙袋墙…）、生成 `game/scenes/props_<id>.tscn` |
+| 运行时 | `corridor.gd`：`_ready` 先按 `RunState.building` 载入主题 → 替换 `Props` 场景 + 换 tile 表；环境亮度乘进逐区灯光公式；主题缺失时回退学校资产 |
+| 门禁 | 新 `game/tests/building_theme.gd`：五套 tileset 路径/尺寸/色集互异、道具场景按楼替换（15+4）、标志物带 `metadata/decor`、环境亮度按楼、开局灯光已乘主题——`BUILDING_THEME_OK` |
+| 像素门禁 | 80 个生成资产（5 sheet + 60 道具 + 16 标志物）全部 `pixelpipe gate` PASS |
+
+主题一览：
+
+| 楼 | 主题 | 视觉差异 |
+|---|---|---|
+| 学校 | 潮湿教室 | 沿用现有 TL-04 + 15 件学校道具（基准） |
+| 加油站 | 便利店 + 加油岛 | 混凝土墙、油渍/锈线、货架/加油机/价格牌/油桶 |
+| 医院 | 冷白病房 | 冷白瓷砖网格、青灯管、病床/输液架/轮椅/药柜 |
+| 消防站 | 红钢卷帘 | 锈红墙面 + 危险条纹、水带卷/消防斧板/头盔架/电台 |
+| 军事基地 | 军绿沙袋 | 土黄沙地、沙袋墙/弹药箱/路障/天线，环境最暗 |
+
+本机验证（2026-11-25）：`BUILDING_THEME_OK`、`python tools/theme_build.py` 可重复生成、
+`validate.py` 47 条不变、`selftest.py` 全过；全量渲染门禁见 CI。
+
+## 已知后续（D7 未完成部分）
+
+1. 检查文本仍是学校版（`data/prop_inspections.json` 的 15 条），在其他楼里语境不符 → 下一轮做每楼 inspection 覆盖。
+2. 容器/战利品表仍共用（`data/loot/containers.json` 三个容器），尚未按楼换池。
+3. 道具形状是「换色 + 4 件标志物」的 v1；若要每楼完全独立的 15 件造型，需要逐楼绘制配方。
+4. 回响层六项（用户附带的 `残余信号_回响层_落地提示词.md`）另行排期；该文档基线为 v0.5，落地前需先映射到当前 47 条规则体系。

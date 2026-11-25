@@ -1,6 +1,7 @@
 extends Node2D
 
-const SHEET := preload("res://art/generated_candidates/tiles/TL-04_corridor_v2.png")
+const SHEET_FALLBACK := preload("res://art/generated_candidates/tiles/TL-04_corridor_v2.png")
+const THEME_DIR := "res://data/buildings"
 const CHAR_PATH := "res://art/generated_candidates/characters/SPR-player_32x48.png"
 const INSPECTION_PATH := "res://data/prop_inspections.json"
 const TILE_SIZE := 16
@@ -182,11 +183,20 @@ var _attack_anim_t := 0.0
 var _panel_lines: Array = []
 ## 走廊 demo 的世界日（HUD 写死 DAY 3，等接入 WorldState 后替换）。
 var _world_day := 3
+## D7：当前楼的主题（data/buildings/<id>.json）与运行时资源。
+var _theme: Dictionary = {}
+var _theme_id := "school"
+var _theme_ambient := 1.0
+var _sheet: Texture2D = SHEET_FALLBACK
 
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_ensure_actions()
+	# D7：先确定当前楼并换上该楼主题（tile 表 + 道具场景），再搭走廊。
+	_run = RunState.ensure()
+	_current_building = _run.building
+	_apply_theme()
 	_build_corridor()
 	_build_actor()
 	_apply_depth_sort()
@@ -199,9 +209,6 @@ func _ready() -> void:
 		push_error("STATUS_LOAD_FAILED: " + _status.load_error())
 	_day = DayCycle.new()
 	_day.new_run()
-	# 跨场景状态：RunState 是唯一来源（静态引用，切场景不会丢）。
-	_run = RunState.ensure()
-	_current_building = _run.building
 	_visited = _run.visited.duplicate()
 	_fuel = _run.fuel
 	# M2a：把「物资」接到数据层的六组变量上。失败就退回镜像值，绝不静默变 0。
@@ -242,14 +249,14 @@ func _ready() -> void:
 	_build_attack_visual()
 	_build_flashlight()
 	# D11：开局按所在区块初始化灯光，避免第一帧从 1.0 渐变造成闪一下。
-	_light_zone = ROOM_LIGHT_LEVELS[_current_room_index()]
+	_light_zone = ROOM_LIGHT_LEVELS[_current_room_index()] * _theme_ambient
 	_refresh_hud_stats()
 
 
 func _place_tile(tile_name: String, tile_x: int, tile_y: int, from_x := 0, width := TILE_SIZE) -> void:
 	var tile_index: int = TILE_INDEX[tile_name]
 	var tile := Sprite2D.new()
-	tile.texture = SHEET
+	tile.texture = _sheet
 	tile.region_enabled = true
 	tile.region_rect = Rect2(tile_index * TILE_SIZE + from_x, 0, width, TILE_SIZE)
 	tile.centered = false
@@ -742,12 +749,24 @@ func _load_inspections() -> void:
 		seen[id] = true
 		_inspection_records[id] = record.duplicate(true)
 		_inspection_order.append(id)
-	if _inspection_order.size() != $Props.get_child_count():
+	if _inspection_order.size() != _inspectable_prop_count():
 		push_error("INSPECTION_PROP_COUNT_MISMATCH")
 		_inspection_records.clear()
 		_inspection_order.clear()
 		return
 	_inspection_range_x = float(range_value)
+
+
+## D7：主题道具场景里会额外挂 4 件「标志物」（metadata/decor = true），
+## 它们不参与检查交互，所以计数时排除。
+func _inspectable_prop_count() -> int:
+	var count := 0
+	for child: Node in $Props.get_children():
+		var sprite := child as Sprite2D
+		if sprite == null or sprite.has_meta("decor"):
+			continue
+		count += 1
+	return count
 
 
 func _nearest_inspection_id() -> String:
@@ -1709,8 +1728,55 @@ func cards_fired() -> int:
 	return _cards_fired
 
 
+## D7：按当前楼载入主题（tileset + 道具场景 + 环境亮度）。
+## 主题缺失时退回学校资产，绝不空白启动。
+func _apply_theme() -> void:
+	_theme_id = _current_building if not _current_building.is_empty() else "school"
+	var path := "%s/%s.json" % [THEME_DIR, _theme_id]
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+	if not raw is Dictionary:
+		push_error("THEME_MISSING: " + path)
+		_theme = {}
+		_theme_ambient = 1.0
+		_sheet = SHEET_FALLBACK
+		return
+	_theme = raw
+	_theme_ambient = clampf(float(_theme.get("ambient", 1.0)), 0.5, 1.5)
+	var tileset_path := str(_theme.get("tileset", ""))
+	_sheet = SHEET_FALLBACK
+	if not tileset_path.is_empty() and ResourceLoader.exists(tileset_path):
+		_sheet = load(tileset_path) as Texture2D
+	var props_path := str(_theme.get("props_scene", ""))
+	if props_path.is_empty() or not ResourceLoader.exists(props_path):
+		return
+	var packed := load(props_path) as PackedScene
+	if packed == null:
+		push_error("THEME_PROPS_SCENE_INVALID: " + props_path)
+		return
+	var themed := packed.instantiate()
+	themed.name = "Props"
+	var old := get_node_or_null("Props")
+	if old != null:
+		remove_child(old)
+		old.queue_free()
+	add_child(themed)
+
+
+func theme_id() -> String:
+	return _theme_id
+
+
+func theme_ambient() -> float:
+	return _theme_ambient
+
+
+func theme_tileset() -> Texture2D:
+	return _sheet
+
+
 func current_building_id() -> String:
 	return _current_building
+
 
 
 ## M2a 的唯一物资读口：在线走 world_state，离线退回 RunState 镜像。
@@ -2123,7 +2189,8 @@ func _update_flashlight() -> void:
 	# 归一化到 [0, 2π)：-PI 与 PI 指向同一个方向，但写进着色器前统一成正值更好读。
 	_light_material.set_shader_parameter("cone_dir", fposmod(_light_angle, TAU))
 	# D11：区块灯光。A 区靠窗更亮、C 区最深；16 帧左右平滑过渡，不硬切。
-	var zone_target: float = ROOM_LIGHT_LEVELS[_current_room_index()]
+	# D7：再乘上当前楼的整体环境亮度（加油站开阔更亮、军事基地更暗）。
+	var zone_target: float = ROOM_LIGHT_LEVELS[_current_room_index()] * _theme_ambient
 	_light_zone = lerpf(_light_zone, zone_target, 0.15)
 	var tint := LIGHT_OUTSIDE_BASE * _light_zone
 	_light_material.set_shader_parameter("outside_tint", Vector4(tint.x, tint.y, tint.z, 1.0))
