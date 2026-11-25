@@ -27,7 +27,8 @@
     {"name": "m2a-noise", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_noise.gd -- NOISE", "gate": "hard", "status": "ready", "note": "噪声唯一出口：三段映射 a/b/c、走廊计数=世界缩放增量、邻接传染、0/负值忽略"},
     {"name": "ending-unlock", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/ending_unlock.gd -- ENDING", "gate": "hard", "status": "ready", "note": "结局判定 -> RunState 解锁 -> 落盘 -> 结局栏显示；条件不足不许乱记"},
     {"name": "m2a-actions", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_actions.gd -- ACTIONS", "gate": "hard", "status": "ready", "note": "D3：一天一次外出的真消耗与跨天恢复；同日第二次出发被拒且世界状态不动"},
-    {"name": "menu-entry", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY", "gate": "hard", "status": "ready", "note": "D14：主菜单继续/新游戏真的切到走廊场景，RunState 读到存档（需渲染）"}
+    {"name": "menu-entry", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY", "gate": "hard", "status": "ready", "note": "D14：主菜单继续/新游戏真的切到走廊场景，RunState 读到存档（需渲染）"},
+    {"name": "travel-fuel", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_fuel.gd -- FUEL", "gate": "hard", "status": "ready", "note": "D4：燃料是门槛不消耗；到加油站 +1（上限 3），医院/军事基地按访问次数解锁"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",

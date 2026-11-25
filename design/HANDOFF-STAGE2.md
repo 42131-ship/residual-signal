@@ -1037,12 +1037,12 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **29 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry`；`pipeline.json` 里 step 数 25 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **30 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel`；`pipeline.json` 里 step 数 26 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
 
-## A1. 立即该还（原 4 条；D3 / D14 已于 2026-11-25 还清，剩 D4 / D7）
+## A1. 立即该还（原 4 条；D3 / D14 / D4 已于 2026-11-25 还清，剩 D7）
 
 ### D3 · `actions_left` 恒为 1、从未消耗 ✅（2026-11-25 已还）
 
@@ -1054,7 +1054,10 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 - **验收**：新门禁 `m2a_actions.gd` —— 同一天第二次出发必须被拒（`reason=no_action_left`），
   跨天后恢复；`RunState.actions_left` 在存档往返后仍正确
 
-### D4 · 燃料只减不增
+### D4 · 燃料只减不增 ✅（2026-11-25 已还）
+
+> 已还：燃料按 `data/travel/routes.json` 注释的「门槛不是消耗池」语义修——旅程不扣油，
+> 到 `gas_station` +1（上限 3）；新门禁 `game/tests/travel_fuel.gd`（`TRAVEL_FUEL_OK`）。见 §三十六。
 
 - **位置**：`corridor.gd` `_fuel = maxi(0, _fuel - spent)`；`routes.json` 的 `fuel` 字段
 - **现状**：没有任何地方补给燃料，加油站也不产；玩两天地图上限就死锁
@@ -1121,9 +1124,9 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 
 ---
 
-# 三十六、D14 + D3：菜单能进游戏了，行动次数真消耗（2026-11-25）
+# 三十六、D14 + D3 + D4：菜单能进游戏、行动次数真消耗、燃料补给（2026-11-25）
 
-> 本轮还掉附录 A1 的两条硬缺口。改动都在运行时 + 门禁，未改任何数据（47 条规则不变）。
+> 本轮还掉附录 A1 的三条硬缺口。改动都在运行时 + 门禁，未改任何数据（47 条规则不变）。
 
 ## 一、D14 · 菜单 → 走廊真切换
 
@@ -1143,20 +1146,34 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 存档 | `RunState.to_dict/from_dict` 已带 `actions_left`；新增往返断言（0 保留、负数夹 0） |
 | 新门禁 | `game/tests/m2a_actions.gd`：服务层 `no_action_left`、同日第二次出发被拒、跨天恢复、落盘/读回 |
 
-## 三、验收（本机 2026-11-25 实测）
+## 三、D4 · 燃料补给（门槛语义，不消耗）
+
+> 设计定案：`data/travel/routes.json` 的注释写的是「燃料是门槛不是消耗池（首版）」，
+> 所以按门槛修，而不是「继续扣油 + 加一个补给点」——后者会在医院 0 燃料时死锁。
+
+| 件 | 做法 |
+|---|---|
+| 不消耗 | 删掉 `_depart_to()` 的 `_fuel = maxi(0, _fuel - spent)`；`can_travel` 仍按 `context.fuel >= route.fuel` 判门槛 |
+| 补给 | 到站 `gas_station` → `_fuel + 1`，上限 `FUEL_MAX = 3`（医院需 1 / 军事基地需 2，按访问次数解锁） |
+| 落盘 | 补给后 `_persist_run()` 写回 `RunState.fuel`，重启/切场景一致 |
+| 门禁同步 | `scene_switch` 从「医院必须被挡」改为「到站补给后医院可选 + 燃料 0 时仍被挡（服务层直测）」 |
+| 新门禁 | `game/tests/travel_fuel.gd`：0 燃料门槛、到站 +1、旅程不扣、二次到站到 2 解锁军事基地、上限 3 |
+
+## 四、验收（本机 2026-11-25 实测）
 
 ```text
 MENU_OK ...                       # 既有主界面门禁不回归
 MENU_ENTRY_OK continue=corridor+save new_game=corridor+school
 M2A_ACTIONS_OK guard=no_action_left depart=consume restore=per_day save=roundtrip
-SCENE_SWITCH_OK ... / CORRIDOR_EXIT_OK ... / M2A_OK ... / M2A_NOISE_OK ... / ENDING_UNLOCK_OK ...
+TRAVEL_FUEL_OK start=0 refuel=+1 no_spend=yes cap=3 hospital_at_1=yes military_at_2=yes
+SCENE_SWITCH_OK ... refuel=1 / CORRIDOR_EXIT_OK ... / M2A_OK ... / M2A_NOISE_OK ... / ENDING_UNLOCK_OK ...
 SMOKE_OK ... / REPLAY_OK ...
 python tools/validate.py          # 47 条 ERROR 0 · WARN 0 · SKIP 0（本轮未改数据）
 ```
 
-两条新门禁已加入 `pipeline.json`（`gate: hard`）：`m2a-actions`、`menu-entry`。
+三条新门禁已加入 `pipeline.json`（`gate: hard`）：`m2a-actions`、`menu-entry`、`travel-fuel`。
 
-## 四、下一步
+## 五、下一步
 
-A1 还剩 **D4（燃料只减不增）** 与 **D7（五楼共用学校美术）**。
-D4 需要先定一条设计：加油站产油（走一趟 +1）还是 `data/loot` 里加燃料桶——定了再写。
+A1 只剩 **D7（五楼共用学校美术）**——它依赖每栋楼的道具表与美术产出，先等美术或改成「同一批道具按楼换配色/摆位」的方案。
+下一步按附录 A2：**D8 地图「我在哪」标记 / D9 体力归零后果 / D10 敌人听声**，先做不依赖新美术的。

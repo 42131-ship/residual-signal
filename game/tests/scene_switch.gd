@@ -76,7 +76,7 @@ func _run() -> void:
 	_check(second._visited.has("school"), "reloaded scene must keep the visit history")
 	_check(second.current_building_id() == "gas_station", "public accessor must agree")
 
-	# ④ 从加油站出发：能回学校、能去医院（无燃料时医院灰掉）
+	# ④ 从加油站出发：到站补给 +1 后，医院（需 1 燃料）从灰显变为可选；燃料是门槛不消耗
 	var actor2 := second.get_node_or_null("Player") as Player
 	actor2.global_position = Vector2(600.0, 128.0)
 	actor2.velocity = Vector2.ZERO
@@ -89,8 +89,14 @@ func _run() -> void:
 		var allowed: Array = second._map.selectable_ids()
 		_check("school" in neighbours, "gas_station must be adjacent to school")
 		_check("hospital" in neighbours, "gas_station must be adjacent to hospital")
-		_check("hospital" not in allowed, "hospital must be blocked without fuel")
+		_check(int(second._fuel) == 1, "arriving at gas_station must refuel +1, got %d" % second._fuel)
+		_check("hospital" in allowed, "hospital must become reachable after refueling at gas_station")
 		_check("school" in allowed, "school must stay reachable")
+		# 门槛仍有效：燃料归零时医院被挡（服务层直测，不依赖地图已算好的可选集）
+		var fuel_gate: Dictionary = second._travel.can_travel("gas_station", "hospital",
+			{"fuel": 0, "actions_left": 1, "hour": 12})
+		_check(not bool(fuel_gate.get("ok", true)) and str(fuel_gate.get("reason", "")) == "not_enough_fuel",
+			"zero fuel must still block hospital")
 	await _capture("%s_gas_station" % _prefix)
 	_finish()
 
@@ -126,7 +132,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("SCENE_SWITCH_OK school->gas_station day=1 saved=yes reload=gas_station neighbours=3 gated=1")
+		print("SCENE_SWITCH_OK school->gas_station day=1 saved=yes reload=gas_station neighbours=3 refuel=1")
 		quit(0)
 		return
 	print("SCENE_SWITCH_FAILED count=%d" % _failures.size())

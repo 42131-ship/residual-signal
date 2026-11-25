@@ -41,6 +41,9 @@ const FIREARM_REACH := 320.0
 const ENEMY_DEPTH_TOLERANCE := 30.0
 ## 初始感染体位置（B 区 / C 区各一只）。
 const ENEMY_SPAWNS: Array[Vector2] = [Vector2(300, 168), Vector2(520, 160)]
+## D4：燃料是出行门槛，不是消耗池（见 data/travel/routes.json 注释）。
+## 加油站是唯一补给点：到站 +1，上限 3。医院（需 1）/ 军事基地（需 2）按访问次数解锁。
+const FUEL_MAX := 3
 
 var _world: Node2D
 var _player: Player
@@ -1511,9 +1514,7 @@ func _depart_to(target: String) -> void:
 	if not bool(verdict.get("ok", false)):
 		_toast_combat("去不了：%s" % _reason_text(str(verdict.get("reason", ""))))
 		return
-	var route := _travel.route(_current_building, target)
 	var label := _travel.label_of(target)
-	var spent := int(route.get("fuel", 0))
 	# D3：出发即消耗当天这一次行动；结算跨天后在末尾恢复。
 	_run.actions_left = maxi(0, _run.actions_left - 1)
 	var supplies_before := _get_supplies()
@@ -1528,8 +1529,10 @@ func _depart_to(target: String) -> void:
 	# 这样即使同一天里别的系统改过物资，也不会被一次覆盖抹掉。
 	_add_supplies(float(result.get("supplies_delta", 0.0)))
 	_health = float(result["health"])
-	_fuel = maxi(0, _fuel - spent)
 	_current_building = target
+	# D4：燃料不随旅程消耗（门槛语义）；到加油站补给 +1，上限 3。
+	if target == "gas_station":
+		_fuel = mini(FUEL_MAX, _fuel + 1)
 	if not _visited.has(target):
 		_visited.append(target)
 	_close_travel_map()

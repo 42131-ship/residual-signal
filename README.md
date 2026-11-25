@@ -112,6 +112,8 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY
 # D3：一天一次外出的真消耗（同日第二次出发被拒 / 跨天恢复）
 & $G --path . --fixed-fps 60 --script res://game/tests/m2a_actions.gd -- ACTIONS
+# D4：燃料是门槛不消耗；到加油站 +1、上限 3，医院/军事基地按访问次数解锁
+& $G --path . --fixed-fps 60 --script res://game/tests/travel_fuel.gd -- FUEL
 ```
 
 ---
@@ -126,7 +128,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 | Stage 2.5–2.16 | 主角放大/纵深轴、三档速度、容器/背包/战斗/状态、20 帧动画、打击感、PSD 双向 | 已实现并通过门禁 |
 | Stage 3.0–3.7 | 五楼战役、出口结算、主界面壳+结局栏、旅行图、真场景切换、RunState 持久化 | 已实现并通过门禁 |
 | M2a / D5 / D6 | 物资真源=world_state、噪声唯一出口、结局解锁链路、校验器 47 条 | 已实现并通过门禁 |
-| D14 / D3 | 菜单 → 走廊真切换；`actions_left` 一天一次外出真消耗 | 已实现并通过门禁（`menu_entry` / `m2a_actions`） |
+| D14 / D3 / D4 | 菜单 → 走廊真切换；`actions_left` 一天一次真消耗；燃料门槛 + 加油站补给 | 已实现并通过门禁（`menu_entry` / `m2a_actions` / `travel_fuel`） |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |
