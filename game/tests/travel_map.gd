@@ -197,6 +197,46 @@ func _run() -> void:
 	if barrier != null:
 		_check(barrier.get_node_or_null("BarrierBoard0") != null, "barrier board missing")
 
+	# ⑭ D8：当前楼标记 —— 四角角标包住当前楼、会闪、切楼后跟着换
+	_map.setup("school", 0)
+	_check(_map.current_building_id() == "school", "current building must be school")
+	_check(_map.current_marker_visible(), "current-building marker must be visible")
+	var current_node := _map.get_node_or_null("CurrentBuilding") as Node2D
+	_check(current_node != null, "CurrentBuilding marker layer missing")
+	if current_node != null:
+		for corner in range(4):
+			_check(current_node.get_node_or_null("CurrentCorner%d_h" % corner) != null, "corner h %d missing" % corner)
+			_check(current_node.get_node_or_null("CurrentCorner%d_v" % corner) != null, "corner v %d missing" % corner)
+	var school_rect: Rect2 = _map.current_marker_rect()
+	var school_spec: Dictionary = _map.BLOCKS["school"]
+	var school_at: Vector2 = school_spec["at"]
+	var school_size: Vector2 = school_spec["size"]
+	var school_h: float = school_spec["height"]
+	_check(is_equal_approx(school_rect.position.x, school_at.x - 3.0)
+		and is_equal_approx(school_rect.position.y, school_at.y - school_h - school_size.y - 3.0),
+		"marker must hug school top-left, got %s" % str(school_rect.position))
+	_check(is_equal_approx(school_rect.end.x, school_at.x + school_size.x + school_size.y * 0.6 + 3.0),
+		"marker must hug school right edge")
+	# 闪烁：60 帧内必须同时看到「亮」和「灭」
+	var saw_on := false
+	var saw_off := false
+	for _i in range(60):
+		await process_frame
+		if _map.current_marker_visible():
+			saw_on = true
+		else:
+			saw_off = true
+	_check(saw_on and saw_off, "current-building marker must blink (on=%s off=%s)" % [saw_on, saw_off])
+	# 切到加油站后，标记矩形跟着换
+	_map.setup("gas_station", 0)
+	_check(_map.current_building_id() == "gas_station", "current building must follow setup")
+	var gas_rect: Rect2 = _map.current_marker_rect()
+	var gas_at: Vector2 = (_map.BLOCKS["gas_station"] as Dictionary)["at"]
+	_check(not is_equal_approx(gas_rect.position.x, school_rect.position.x)
+		or not is_equal_approx(gas_rect.position.y, school_rect.position.y),
+		"marker must move to the new current building")
+	_check(is_equal_approx(gas_rect.position.x, gas_at.x - 3.0), "marker must hug gas_station left edge")
+
 	_map.setup("school", 0)
 	await _capture("%s_topdown" % _prefix)
 	_finish()
@@ -221,7 +261,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("TRAVEL_MAP_OK blocks=5 faces=3 shading=top>front>side depth_sort=ok roads=%d" % _map.edge_count())
+		print("TRAVEL_MAP_OK blocks=5 faces=3 shading=top>front>side depth_sort=ok roads=%d current=marker" % _map.edge_count())
 		quit(0)
 		return
 	print("TRAVEL_MAP_FAILED count=%d" % _failures.size())

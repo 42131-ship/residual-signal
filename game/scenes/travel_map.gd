@@ -28,6 +28,9 @@ const WINDOW_DIM := Color("#4a3a26")
 const SIGN := Color("#8a4a3a")
 const OPENING := Color("#111a26")
 const METAL := Color("#5a6b78")
+## D8：当前所在楼的高亮角标（暖色，和灰蓝楼体拉开；每 30 帧闪一次）。
+const CURRENT_MARKER := Color("#d9b45a")
+const CURRENT_MARKER_BLINK_FRAMES := 30
 
 var current_building := "school"
 ## 作为走廊的叠加层时由走廊统一转发按键，地图自己不处理输入（避免两边抢键）。
@@ -46,6 +49,10 @@ var _selected := 0
 var _cursor: Node2D
 var _hint_root: Node2D
 var _marks_root: Node2D
+## D8：当前楼标记层：四角 3×3 角标，包住当前楼的 2.5D 轮廓，按帧闪烁。
+var _current_root: Node2D
+var _current_rect := Rect2()
+var _current_frames := 0
 var _detail_count: Dictionary = {}
 
 
@@ -63,6 +70,7 @@ func _ready() -> void:
 	_hint_root = _node("Hints")
 	_cursor = _node("Cursor")
 	_marks_root = _node("Marks")
+	_current_root = _node("CurrentBuilding")
 	PixelFont.draw(_hint_root, "W/S 选楼 · E 出发 · Esc 留下", Vector2(8, 202), LABEL)
 	setup(current_building)
 
@@ -366,6 +374,7 @@ func setup(from: String, fuel := 0, visited: Array[String] = []) -> void:
 	_refresh_reachability()
 	_refresh_cursor()
 	_refresh_marks()
+	_refresh_current_marker()
 
 
 func _refresh_reachability() -> void:
@@ -433,6 +442,70 @@ func _mark_rect(mark_name: String, at: Vector2, size: Vector2, color: Color) -> 
 	rect.size = size
 	rect.color = color
 	_marks_root.add_child(rect)
+
+
+## D8：当前所在楼 —— 四个 3×3 角标包住整栋楼的 2.5D 轮廓，并闪烁提示「你在这里」。
+func _refresh_current_marker() -> void:
+	if _current_root == null:
+		return
+	for child: Node in _current_root.get_children():
+		child.queue_free()
+	_current_rect = Rect2()
+	if not BLOCKS.has(current_building):
+		return
+	var spec: Dictionary = BLOCKS[current_building]
+	var at: Vector2 = spec["at"]
+	var size: Vector2 = spec["size"]
+	var height: float = spec["height"]
+	var top_left := Vector2(at.x - 3, at.y - height - size.y - 3)
+	var bottom_right := Vector2(at.x + size.x + size.y * 0.6 + 3, at.y + 3)
+	_current_rect = Rect2(top_left, bottom_right - top_left)
+	var corners := [
+		{"h": top_left, "v": top_left},
+		{"h": Vector2(bottom_right.x - 3, top_left.y), "v": Vector2(bottom_right.x - 1, top_left.y)},
+		{"h": Vector2(top_left.x, bottom_right.y - 1), "v": Vector2(top_left.x, bottom_right.y - 3)},
+		{"h": Vector2(bottom_right.x - 3, bottom_right.y - 1), "v": Vector2(bottom_right.x - 1, bottom_right.y - 3)},
+	]
+	for index in range(corners.size()):
+		var horizontal := ColorRect.new()
+		horizontal.name = "CurrentCorner%d_h" % index
+		horizontal.position = corners[index]["h"]
+		horizontal.size = Vector2(3, 1)
+		horizontal.color = CURRENT_MARKER
+		_current_root.add_child(horizontal)
+		var vertical := ColorRect.new()
+		vertical.name = "CurrentCorner%d_v" % index
+		vertical.position = corners[index]["v"]
+		vertical.size = Vector2(1, 3)
+		vertical.color = CURRENT_MARKER
+		_current_root.add_child(vertical)
+	_current_frames = 0
+	_current_root.visible = true
+
+
+## 闪烁：不靠透明度（像素风），整层可见性每 30 帧切换一次 15/15。
+func _process(delta: float) -> void:
+	if delta <= 0.0 or _current_root == null:
+		return
+	_current_frames += 1
+	_current_root.visible = (_current_frames % CURRENT_MARKER_BLINK_FRAMES) < CURRENT_MARKER_BLINK_FRAMES / 2
+
+
+## D8 门禁口。
+func current_marker_visible() -> bool:
+	return _current_root != null and _current_root.visible and _current_root.get_child_count() > 0
+
+
+func current_marker_rect() -> Rect2:
+	return _current_rect
+
+
+func current_marker_phase() -> int:
+	return _current_frames % CURRENT_MARKER_BLINK_FRAMES
+
+
+func current_building_id() -> String:
+	return current_building
 
 
 ## 供门禁读：这栋楼在地图上被标了什么。
