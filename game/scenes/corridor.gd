@@ -1095,8 +1095,15 @@ func _show_panel(title: String, lines: Array, id: String) -> void:
 	_inspection_panel_root.set_meta("inspection_id", id)
 	_inspection_panel_root.visible = true
 	_inspection_open = true
+	_dim_touch(true)
 	_player._movement_locked = true
 	_draw_inspection_prompt("")
+
+
+## 手机：面板打开时把触摸层压暗，别挡面板文字（桌面 _mobile 是 null，整个函数空转）
+func _dim_touch(value: bool) -> void:
+	if _mobile != null:
+		_mobile.set_dimmed(value)
 
 
 func _close_inspection() -> void:
@@ -1104,6 +1111,7 @@ func _close_inspection() -> void:
 		return
 	_inspection_open = false
 	_inspection_panel_root.visible = false
+	_dim_touch(false)
 	_player._movement_locked = false
 	_player._previous_global_position = _player.global_position
 	_inspection_target = ""
@@ -1267,12 +1275,14 @@ func _open_inventory() -> void:
 	_inventory_toast = ""
 	_player._movement_locked = true
 	_inventory_layer.visible = true
+	_dim_touch(true)
 	_render_inventory()
 
 
 func _close_inventory() -> void:
 	_inventory_open = false
 	_inventory_layer.visible = false
+	_dim_touch(false)
 	_player._movement_locked = false
 	_player._previous_global_position = _player.global_position
 
@@ -1612,6 +1622,7 @@ func _open_travel_map() -> void:
 	_map.cancelled.connect(_close_travel_map)
 	_map_layer.visible = true
 	_map_open = true
+	_dim_touch(true)
 	_player._movement_locked = true
 
 
@@ -1620,6 +1631,7 @@ func _close_travel_map() -> void:
 		return
 	_map_open = false
 	_map_layer.visible = false
+	_dim_touch(false)
 	if _map != null and is_instance_valid(_map):
 		_map.queue_free()
 	_map = null

@@ -97,6 +97,16 @@ func _run() -> void:
 	_check_keys_match(specs)
 	_check_actions_registered(specs)
 
+	# ⑦ 面板打开时压暗，但按钮仍然可点（不能直接 visible=false，否则关不掉面板）
+	_layer.set_dimmed(true)
+	_check(_layer.is_dimmed(), "set_dimmed(true) did not stick")
+	var root_node := _layer.get_node_or_null("Buttons") as Node2D
+	_check(root_node != null and root_node.modulate.a < 1.0, "dim must fade the button layer")
+	_layer.press("menu")
+	_check(_layer.last_emitted == "menu", "dimmed buttons must stay tappable")
+	_layer.set_dimmed(false)
+	_check(root_node != null and is_equal_approx(root_node.modulate.a, 1.0), "undim must restore alpha")
+
 	_finish()
 
 
@@ -172,7 +182,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _finish() -> void:
 	if _failures.is_empty():
-		print("TOUCH_OK buttons=%d layout=in_bounds hud=clear safe_area=clamped hold=state tap=event keys=matched" % _layer.button_ids().size())
+		print("TOUCH_OK buttons=%d layout=in_bounds hud=clear safe_area=clamped hold=state tap=event keys=matched panel=dim" % _layer.button_ids().size())
 		quit(0)
 		return
 	print("TOUCH_FAILED count=%d" % _failures.size())

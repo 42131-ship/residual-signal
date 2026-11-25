@@ -75,6 +75,8 @@ $env:GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD = '<见 .tools\keystore\signing.txt
 | 十字键「按住 + 补一次按键事件」 | 旅行图/背包/主菜单只认事件；没有这一下，手机上能走但打不开地图、选不了菜单 |
 | 步态改成**循环切换**（走→跑→蹲） | 手机上没法「按住 Shift 再按 Ctrl」；一键循环比并列两个修饰键可靠 |
 | 安全区用 `DisplayServer.get_display_safe_area()` 反算到 384 空间 | 横屏刘海会吃掉边缘；算出安全矩形后把越界按钮挪回去 |
+| 面板打开时触摸层压到 0.35 透明度（`set_dimmed`） | 检查/背包/旅行图是满宽的，按钮直接盖上去会挡字；压暗但保持可点，否则关不掉面板 |
+| 图标由 `tools/icon_build.py` 生成 | 手排 32×32（黑暗里的发光门 + 人影），整数倍放大，颜色只取 `master.gpl`，过像素门禁 |
 
 布局（384×216 原生坐标，全部避开左侧 HUD `x<130 & y<140`）：
 
@@ -132,7 +134,7 @@ python tools/font_build.py --check   # FONT_COVERAGE required=801 glyphs=801 mis
 | # | 项 | 为什么重要 | 怎么验 |
 |---|---|---|---|
 | M1 | **真机实跑**（本机无设备） | 触摸手感、刘海、横屏旋转、发热全都没在真机上看过 | `adb install -r build/android/ResidualSignal-release.apk` 后连玩三局：新游戏→搜刮→打一场→出门选楼→结算 |
-| M2 | 应用图标 | 现在是 Godot 默认图标；TapTap 审核会点名（见 `design/TAPTAP.md` §2.1 的 `DEFAULT_ICON` 警告） | 出 512×512 方图 → `launcher_icons/main_192x192` + adaptive 432 三件套 → 重打包 |
+| M2 | ~~应用图标~~ **已做（2026-11-26）** | `tools/icon_build.py` 生成 32×32 手排图标（×6/×8 + 自适应 432 三件套），`pixelpipe` 6 色 PASS | `project.godot:config/icon` + `export_presets.cfg:launcher_icons/*` 已接；导出不再报 `No project icon specified` |
 | M3 | 刘海/挖孔的实际收边 | 安全区只在门禁里用**注入的矩形**验过，没在真机读过 `get_display_safe_area()` | 真机开游戏，看右上「包/看/退」是否被吃掉 |
 | M4 | 19.5:9 的黑边 | 整数缩放 5× → 1920×1080，两侧各留 ~240px 黑边 | 要么接受黑边（像素最锐），要么做 `expand`（要重排房间宽度，代价大）；真机看完再定 |
 | M5 | 面板遮挡 | 检查面板/背包面板是满宽的，触摸按钮会压在上面 | 真机看「E 使用 Q 丢弃 TAB 关闭」那行是否被挡；必要时开面板时把右上按钮淡出 |

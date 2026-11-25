@@ -44,7 +44,11 @@ const SPECS := [
 var _buttons: Dictionary = {}      # id -> TouchScreenButton
 var _visuals: Dictionary = {}      # id -> Node2D（重绘标签用）
 var _spec_by_id: Dictionary = {}   # id -> Dictionary
+var _buttons_root: Node2D
 var _gait_index := 0
+var _dimmed := false
+## 面板（检查/背包/旅行图）打开时压到 0.35 透明度：还能点，但不挡字
+const DIM_ALPHA := 0.35
 var _safe_canvas := Rect2(0, 0, VIEW.x, VIEW.y)
 var last_emitted := ""
 ## 门禁可观测：最近一次合成出去的键 / 鼠标
@@ -62,6 +66,7 @@ func _build() -> void:
 	var root := Node2D.new()
 	root.name = "Buttons"
 	add_child(root)
+	_buttons_root = root
 	for raw: Dictionary in SPECS:
 		var spec: Dictionary = raw.duplicate(true)
 		var id := String(spec["id"])
@@ -366,3 +371,14 @@ func press(id: String) -> void:
 
 func release(id: String) -> void:
 	_on_released(id)
+
+
+## 面板打开时压透明度（不清空 visible：还要能点着关掉）
+func set_dimmed(value: bool) -> void:
+	_dimmed = value
+	if _buttons_root != null:
+		_buttons_root.modulate.a = DIM_ALPHA if value else 1.0
+
+
+func is_dimmed() -> bool:
+	return _dimmed
