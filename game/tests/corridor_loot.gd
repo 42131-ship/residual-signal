@@ -29,6 +29,8 @@ func _run() -> void:
 	_corridor = SCENE.instantiate() as Node2D
 	root.add_child(_corridor)
 	_actor = _corridor.get_node_or_null("Player") as Player
+	# D9 之后敌人抓伤会触发「倒下」；这张门禁不测战斗，让感染体只当画面元素。
+	_corridor.disarm_enemies()
 	await process_frame
 	await process_frame
 	if _actor == null:

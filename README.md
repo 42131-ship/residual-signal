@@ -120,6 +120,8 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/enemy_hearing.gd -- HEAR
 # D12：每天抽 1 张事件卡写 world_state，效果随存档保留
 & $G --path . --fixed-fps 60 --script res://game/tests/card_day.gd -- CARD
+# D11：A/B/C 三区独立灯光档与按区容器/敌人
+& $G --path . --fixed-fps 60 --script res://game/tests/room_light.gd -- ROOM
 ```
 
 ---
@@ -139,6 +141,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 | D9 | 体力归零「倒下」结算（丢沉积 + 回学校 + 翻页） | 已实现并通过 `down` 门禁 |
 | D10 | 敌人听声（≥3 噪声引向声源 2 秒，看见优先） | 已实现并通过 `enemy_hearing` 门禁 |
 | D12 | 事件卡接玩法（每天 1 张写 world_state，效果随存档保留） | 已实现并通过 `card_day` 门禁 |
+| D11 | 房间级状态（A/B/C 独立灯光、容器与敌人按区） | 已实现并通过 `room_light` 门禁 |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |

@@ -38,6 +38,11 @@ func tier_of(id: String) -> String:
 	return str(_containers.get(id, {}).get("tier", ""))
 
 
+## D11：这个容器属于哪个区块（A/B/C）。每区一个容器、档位不同，由数据决定。
+func room_of(id: String) -> String:
+	return str(_containers.get(id, {}).get("room", ""))
+
+
 ## 搜索这个容器要按住多久（秒）。数据在 containers.json 的 tiers[*].search_seconds。
 func search_seconds_of(id: String) -> float:
 	var tier: Dictionary = _tiers.get(tier_of(id), {})

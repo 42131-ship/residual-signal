@@ -31,6 +31,10 @@ const ROOM_LABELS: Array[String] = ["A 区", "B 区", "C 区"]
 ## 墙垛高度：门洞净空从 y=80 一直到地面，玩家 40px 身高（脚底 128..216）可以通过。
 const ROOM_LINTEL_Y := 80
 const ROOM_PARTITION_WIDTH := 32
+## D11：三个区块的灯光档（越靠里越暗；A 区靠窗，C 区最深）。
+## 数值是 outside_tint 的乘数：1.15 / 0.85 / 0.62；玩家换区时线性过渡，不硬切。
+const ROOM_LIGHT_LEVELS: Array[float] = [1.15, 0.85, 0.62]
+const LIGHT_OUTSIDE_BASE := Vector3(0.42, 0.46, 0.58)
 ## 门：E 开关；关闭时挡路；挂锁可锁；钥匙/近战武器可撬开。
 const DOOR_TOP := 80.0
 const DOOR_BOTTOM := 216.0
@@ -55,6 +59,8 @@ var _camera: Camera2D
 var _light_material: ShaderMaterial
 ## 光锥当前角度（弧度）：0 = 朝右，PI = 朝左。跟着朝向插值，避免转身硬切。
 var _light_angle := 0.0
+## D11：当前区块的灯光乘数（平滑过渡用；目标值来自 ROOM_LIGHT_LEVELS）。
+var _light_zone := 1.0
 var _last_step_was_running := false
 var _steps := 0
 var _flashlight_on := true
@@ -235,6 +241,8 @@ func _ready() -> void:
 	_build_door_prompt()
 	_build_attack_visual()
 	_build_flashlight()
+	# D11：开局按所在区块初始化灯光，避免第一帧从 1.0 渐变造成闪一下。
+	_light_zone = ROOM_LIGHT_LEVELS[_current_room_index()]
 	_refresh_hud_stats()
 
 
@@ -1072,6 +1080,15 @@ func set_inspection_ui_enabled(enabled: bool) -> void:
 		_inspection_prompt_layer.visible = enabled
 
 
+## 门禁/截图场景专用：感染体只当画面元素，不追不打。
+## D9 之后抓伤会把体力打到 0 触发「倒下」（锁移动 + 传送回学校），
+## 会打断与战斗无关的长流程门禁（门/搜索/背包/走查/灯光）。
+func disarm_enemies() -> void:
+	for enemy: Enemy in _enemies:
+		if enemy != null and is_instance_valid(enemy):
+			enemy.player = null
+
+
 func _add_ui_frame(parent: Node, at: Vector2, size: Vector2, color: Color) -> void:
 	var x := int(at.x)
 	var y := int(at.y)
@@ -1773,12 +1790,28 @@ const ROOM_NODE_IDS: Array[String] = ["school_corridor_a", "school_corridor_b", 
 func _current_room_node() -> String:
 	if _player == null:
 		return ROOM_NODE_IDS[0]
+	return ROOM_NODE_IDS[_current_room_index()]
+
+
+## D11：玩家所在区块索引（0=A / 1=B / 2=C），和 ROOM_PARTITION_TILES 同一判据。
+func _current_room_index() -> int:
+	if _player == null:
+		return 0
 	var tile_x := _player.global_position.x / float(TILE_SIZE)
 	if tile_x < float(ROOM_PARTITION_TILES[0]):
-		return ROOM_NODE_IDS[0]
+		return 0
 	if tile_x < float(ROOM_PARTITION_TILES[1]):
-		return ROOM_NODE_IDS[1]
-	return ROOM_NODE_IDS[2]
+		return 1
+	return 2
+
+
+## D11 门禁口：当前平滑后的灯光乘数 / 区块索引。
+func room_light_factor() -> float:
+	return _light_zone
+
+
+func current_room_index() -> int:
+	return _current_room_index()
 
 
 func _emit_noise(base: int) -> int:
@@ -2089,6 +2122,11 @@ func _update_flashlight() -> void:
 		_light_angle = target_angle
 	# 归一化到 [0, 2π)：-PI 与 PI 指向同一个方向，但写进着色器前统一成正值更好读。
 	_light_material.set_shader_parameter("cone_dir", fposmod(_light_angle, TAU))
+	# D11：区块灯光。A 区靠窗更亮、C 区最深；16 帧左右平滑过渡，不硬切。
+	var zone_target: float = ROOM_LIGHT_LEVELS[_current_room_index()]
+	_light_zone = lerpf(_light_zone, zone_target, 0.15)
+	var tint := LIGHT_OUTSIDE_BASE * _light_zone
+	_light_material.set_shader_parameter("outside_tint", Vector4(tint.x, tint.y, tint.z, 1.0))
 
 
 ## 两个角度之间的最短夹角（弧度，取绝对值）。

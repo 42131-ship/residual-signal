@@ -48,6 +48,9 @@ func _run() -> void:
 	_corridor = SCENE.instantiate() as Node2D
 	root.add_child(_corridor)
 	_actor = _corridor.get_node_or_null("Player") as Player
+	# D9 之后敌人抓伤会把体力打到 0 触发「倒下」（锁移动 + 传送回学校）。
+	# 这张门禁只做走查/截图回归，不测死亡：让感染体只当画面元素（仍留在画面里）。
+	_corridor.disarm_enemies()
 	_props = _corridor.get_node_or_null("Props") as Node2D
 	var hud := _corridor.get_node_or_null("HUD") as CanvasLayer
 	var light := _corridor.get_node_or_null("Flashlight/Mask") as ColorRect

@@ -38,6 +38,8 @@ func _run() -> void:
 	if _actor == null:
 		_check(false, "player missing")
 		return _finish()
+	# D9 之后敌人抓伤会触发「倒下」；这张门禁不测战斗，让感染体只当画面元素。
+	_corridor.disarm_enemies()
 	await process_frame
 	await process_frame
 
