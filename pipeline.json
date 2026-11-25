@@ -29,7 +29,8 @@
     {"name": "m2a-actions", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/m2a_actions.gd -- ACTIONS", "gate": "hard", "status": "ready", "note": "D3：一天一次外出的真消耗与跨天恢复；同日第二次出发被拒且世界状态不动"},
     {"name": "menu-entry", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY", "gate": "hard", "status": "ready", "note": "D14：主菜单继续/新游戏真的切到走廊场景，RunState 读到存档（需渲染）"},
     {"name": "travel-fuel", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/travel_fuel.gd -- FUEL", "gate": "hard", "status": "ready", "note": "D4：燃料是门槛不消耗；到加油站 +1（上限 3），医院/军事基地按访问次数解锁"},
-    {"name": "down", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/down.gd -- DOWN", "gate": "hard", "status": "ready", "note": "D9：体力归零触发一次「倒下」结算（沉积 -1、翻页、回学校、体力 0.3）；同日不重复"}
+    {"name": "down", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/down.gd -- DOWN", "gate": "hard", "status": "ready", "note": "D9：体力归零触发一次「倒下」结算（沉积 -1、翻页、回学校、体力 0.3）；同日不重复"},
+    {"name": "enemy-hearing", "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/enemy_hearing.gd -- HEAR", "gate": "hard", "status": "ready", "note": "D10：≥3 噪声把听程内感染体引向声源 2 秒；小声不惊动、听程外不理、看见优先"}
   ],
   "forbidden": [
     "把 style-drift 设成 gate: hard",

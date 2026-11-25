@@ -10,6 +10,11 @@ signal died(enemy: Enemy)
 const CHASE_RANGE := 240.0
 const ATTACK_RANGE := 22.0
 const ATTACK_COOLDOWN := 1.2
+## D10：听声。>= 阈值的声音（枪声 3 / 噪声道具 2–3）会把它引向声源 2 秒；
+## 潜行的意义由此成立——不发出 ≥3 的声音就不会暴露位置。
+const HEAR_RANGE := 320.0
+const HEAR_SECONDS := 2.0
+const HEAR_SPEED_FACTOR := 0.85
 const WALK_TOP := 128.0
 const WALK_BOTTOM := 216.0
 const CHAR_PATH := "res://art/generated_candidates/characters/SPR-student_infected_32.png"
@@ -24,6 +29,9 @@ var _cooldown := 0.0
 var _sprite: Sprite2D
 var _anim_time := 0.0
 var _chasing := false
+## D10：剩余循声时间与声源坐标；>0 表示正在调查。
+var hearing_time := 0.0
+var _hearing_target := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -48,8 +56,21 @@ func _physics_process(delta: float) -> void:
 	var distance := to_player.length()
 	if distance > CHASE_RANGE:
 		_chasing = false
+		# D10：没看见玩家时，循声走向声源；2 秒后停在原地。
+		if hearing_time > 0.0:
+			hearing_time = maxf(0.0, hearing_time - delta)
+			var to_sound := _hearing_target - global_position
+			if to_sound.length() > 6.0:
+				global_position += to_sound.normalized() * speed * HEAR_SPEED_FACTOR * delta
+				global_position.y = clampf(global_position.y, WALK_TOP, WALK_BOTTOM)
+				if _sprite != null:
+					_sprite.flip_h = to_sound.x < 0.0
+				_chasing = true
+		z_index = int(global_position.y)
 		_advance_anim(delta)
 		return
+	# 玩家进入追击范围：看见优先于听见。
+	hearing_time = 0.0
 	if distance > ATTACK_RANGE:
 		global_position += to_player.normalized() * speed * delta
 		global_position.y = clampf(global_position.y, WALK_TOP, WALK_BOTTOM)
@@ -61,6 +82,25 @@ func _physics_process(delta: float) -> void:
 		attacked.emit(damage)
 	z_index = int(global_position.y)
 	_advance_anim(delta)
+
+
+## D10：走廊发出 ≥阈值噪声时调用。声源超出听程返回 false（远处的敌人不受影响）。
+func hear(source: Vector2) -> bool:
+	if dead:
+		return false
+	if global_position.distance_to(source) > HEAR_RANGE:
+		return false
+	_hearing_target = source
+	hearing_time = HEAR_SECONDS
+	return true
+
+
+func is_investigating() -> bool:
+	return hearing_time > 0.0
+
+
+func hearing_target() -> Vector2:
+	return _hearing_target
 
 
 ## 追人时播 walk，站着播 idle；死亡那帧由 take_damage 直接切。

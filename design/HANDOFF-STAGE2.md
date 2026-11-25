@@ -1037,7 +1037,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **31 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down`；`pipeline.json` 里 step 数 27 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **32 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing`；`pipeline.json` 里 step 数 28 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
@@ -1086,7 +1086,7 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 |---|---|---|---|
 | D8 | 地图没有「我在哪」标记 | 玩家要自己猜当前楼；`current_building` 只用于算邻接 | **已还（2026-11-25）**：`CurrentBuilding` 四角闪烁角标；门禁 `travel_map` ⑭（见 §三十七） |
 | D9 | 体力归零没有后果 | `_health` 到 0 只是数字；不死亡、不结算、不结束 | **已还（2026-11-25）**：`DayCycle.down()` 沉积 -1 + 翻页 + 回学校 + 体力 0.3；门禁 `down`（见 §三十八） |
-| D10 | 敌人无寻路、无听觉 | `_noise` 只是 HUD 数字，敌人不会朝声源走 | 敌人对 ≥阈值噪声向声源移动 2 秒 |
+| D10 | 敌人无寻路、无听觉 | `_noise` 只是 HUD 数字，敌人不会朝声源走 | **已还（2026-11-25）**：≥3 噪声把听程内敌人引向声源 2 秒，看见优先于听见；门禁 `enemy_hearing`（见 §三十九） |
 | D11 | 房间级状态缺失 | 三个区除墙外没区别：灯光/敌人/容器不按区 | 每个区独立 `light` 与容器池 |
 | D12 | 卡牌只在 headless 回放里跑 | `data/cards` 4000 行数据玩家看不到 | 每天开始抽 1 张并作用于 `world_state` |
 | D13 | `bond` / 同伴未实现 | `RunState` 有字段但没人写；「军队」结局因此**不可达** | 至少 1 个 NPC 可招募、`bond` 随事件涨落 |
@@ -1221,3 +1221,25 @@ DOWN_OK damage=trigger same_day=once next_day=repeat blood_loss=trigger sediment
 ```
 
 下一步：D10（敌人听声）→ D11（房间级状态）/ D12（卡牌接玩法）。
+
+---
+
+# 三十九、D10 · 敌人听声（2026-11-25）
+
+> 附录 A2 第三条。潜行/枪声从此真的影响敌人，噪声不再只是 HUD 数字。
+
+| 件 | 做法 |
+|---|---|
+| 听声参数 | `enemy.gd`：`HEAR_RANGE = 320`、`HEAR_SECONDS = 2.0`、`HEAR_SPEED_FACTOR = 0.85` |
+| 阈值 | 走廊 `NOISE_HEAR_THRESHOLD = 3`：枪声 3 / 噪声道具 2–3 会惊动；近战 1 不会 |
+| 行为 | 玩家在追击范围外时朝声源走 2 秒后停下；进入追击范围则「看见优先于听见」（清 hearing_time） |
+| 接口 | `Enemy.hear(source)` / `is_investigating()` / `hearing_target()`；走廊 `_emit_noise()` 统一派发到听程内敌人 |
+| 新门禁 | `game/tests/enemy_hearing.gd`：小声不惊动 / 枪声惊动 / 听程外不理 / 朝声源移动 / 2 秒后停下 / 看见优先 |
+
+验收：
+
+```text
+ENEMY_HEARING_OK quiet=ignored loud=alert range=320s move=toward stop=after2s sight=wins
+```
+
+下一步：D11（房间级状态）或 D12（卡牌接玩法）——按目标先做不依赖新美术的。

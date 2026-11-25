@@ -44,6 +44,8 @@ const ENEMY_SPAWNS: Array[Vector2] = [Vector2(300, 168), Vector2(520, 160)]
 ## D4：燃料是出行门槛，不是消耗池（见 data/travel/routes.json 注释）。
 ## 加油站是唯一补给点：到站 +1，上限 3。医院（需 1）/ 军事基地（需 2）按访问次数解锁。
 const FUEL_MAX := 3
+## D10：噪声 ≥ 这个数才会把感染体引向声源（枪声 3 / 噪声道具 2–3；近战 1 不会）。
+const NOISE_HEAR_THRESHOLD := 3
 
 var _world: Node2D
 var _player: Player
@@ -1713,6 +1715,12 @@ func _emit_noise(base: int) -> int:
 		_noise += int(result.get("self", base))
 	else:
 		_noise += base
+	# D10：≥阈值的噪声把听程内的感染体引向声源（2 秒）；近战 1 不触发。
+	if base >= NOISE_HEAR_THRESHOLD:
+		var source := _player.global_position if _player != null else Vector2.ZERO
+		for enemy: Enemy in _enemies:
+			if enemy != null and is_instance_valid(enemy) and not enemy.dead:
+				enemy.hear(source)
 	return _noise
 
 

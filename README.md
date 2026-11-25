@@ -116,6 +116,8 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/travel_fuel.gd -- FUEL
 # D9：体力归零触发「倒下」结算（沉积 -1 / 翻页 / 回学校）
 & $G --path . --fixed-fps 60 --script res://game/tests/down.gd -- DOWN
+# D10：≥3 噪声把敌人引向声源 2 秒（小声不惊动 / 听程外不理 / 看见优先）
+& $G --path . --fixed-fps 60 --script res://game/tests/enemy_hearing.gd -- HEAR
 ```
 
 ---
@@ -133,6 +135,7 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 | D14 / D3 / D4 | 菜单 → 走廊真切换；`actions_left` 一天一次真消耗；燃料门槛 + 加油站补给 | 已实现并通过门禁（`menu_entry` / `m2a_actions` / `travel_fuel`） |
 | D8 | 旅行图「我在哪」闪烁角标 | 已实现并通过 `travel_map` 门禁 ⑭ |
 | D9 | 体力归零「倒下」结算（丢沉积 + 回学校 + 翻页） | 已实现并通过 `down` 门禁 |
+| D10 | 敌人听声（≥3 噪声引向声源 2 秒，看见优先） | 已实现并通过 `enemy_hearing` 门禁 |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |
