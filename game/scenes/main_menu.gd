@@ -211,6 +211,7 @@ func confirm() -> void:
 		0:
 			_run = RunState.start_new()
 			_flash("新的一天。")
+			_enter_game()
 		1:
 			var saved := RunState.load_saved()
 			if saved == null:
@@ -220,9 +221,20 @@ func confirm() -> void:
 				_run = saved
 				RunState.current = saved
 				_flash("从第 %d 天继续。" % (saved.day + 1))
+				_enter_game()
 		2:
 			_view = "endings"
 			_render()
+
+
+## D14：菜单 → 走廊的真切换。
+## 门禁/手动 add 的实例里 current_scene 不是自己（测试用 root.add_child），
+## 这种情况下只让状态生效、不换场景，保证既有门禁可直接调 confirm() 做断言。
+func _enter_game() -> void:
+	var tree := get_tree()
+	if tree == null or tree.current_scene != self:
+		return
+	tree.change_scene_to_file("res://game/scenes/corridor.tscn")
 
 
 func _flash(text: String) -> void:

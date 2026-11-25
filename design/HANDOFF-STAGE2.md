@@ -1037,14 +1037,17 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **27 条**，全绿（`pipeline.json` 里 step 数 23 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **29 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry`；`pipeline.json` 里 step 数 25 + 4 条 headless 数据门禁在别处） |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
 
-## A1. 立即该还（4 条，都是「数据说一套、代码做一套」）
+## A1. 立即该还（原 4 条；D3 / D14 已于 2026-11-25 还清，剩 D4 / D7）
 
-### D3 · `actions_left` 恒为 1、从未消耗
+### D3 · `actions_left` 恒为 1、从未消耗 ✅（2026-11-25 已还）
+
+> 已还：`corridor.gd:_depart_to()` 改读 `RunState.actions_left` 并在出发时消耗、结算跨天后恢复；
+> 新门禁 `game/tests/m2a_actions.gd`（`M2A_ACTIONS_OK`）。见 §三十六。
 
 - **位置**：`corridor.gd` `_depart_to()` 里 `can_travel(..., {"actions_left": 1, ...})` —— 那个 `1` 是写死的
 - **现状**：连走五栋楼也不会被挡；「一天只能出门一次」只存在于 `routes.json` 的注释里
@@ -1065,7 +1068,10 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 - **做法建议**：把 props 表按 `building` 分组（`data/props/<building>.json`），走廊按 `RunState.building` 取
 - **验收**：门禁断言「加油站场景的 props 集合 ≠ 学校」，且至少 1 个容器 id 不同
 
-### D14 · 菜单「继续」不加载场景
+### D14 · 菜单「继续」不加载场景 ✅（2026-11-25 已还）
+
+> 已还：`main_menu.gd:confirm()` 新游戏/继续成功后调 `_enter_game()` → `change_scene_to_file("res://game/scenes/corridor.tscn")`；
+> 新门禁 `game/tests/menu_entry.gd`（`MENU_ENTRY_OK`）。见 §三十六。
 
 - **位置**：`main_menu.gd` 的 `confirm()` 分支 1
 - **现状**：读档只弹一行提示，不 `change_scene_to_file`
@@ -1113,11 +1119,44 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 | 未类型化数组传 `Array[String]` 参数 | 运行时抛错会中断协程、进程挂住；门禁里显式声明类型 |
 | 新样式/新数据 | 先写规则再写数据；规则必须用 `selftest.py` 的坏夹具证明**会开火** |
 
+---
 
+# 三十六、D14 + D3：菜单能进游戏了，行动次数真消耗（2026-11-25）
 
+> 本轮还掉附录 A1 的两条硬缺口。改动都在运行时 + 门禁，未改任何数据（47 条规则不变）。
 
+## 一、D14 · 菜单 → 走廊真切换
 
+| 件 | 做法 |
+|---|---|
+| 主菜单 | `main_menu.gd` 新增 `_enter_game()`：`新游戏` / `继续` 成功后 `change_scene_to_file("res://game/scenes/corridor.tscn")` |
+| 门禁兼容 | 门禁用 `root.add_child(menu)` 手动挂载，`current_scene` 不是菜单 → `_enter_game()` 直接返回，只让 RunState 生效；既有 `main_menu` 断言不破 |
+| 新门禁 | `game/tests/menu_entry.gd`：造存档 → 进菜单 → 「继续」→ 断言 `current_scene` 是 corridor 且读到 `gas_station` / Day 3；回菜单 → 「新游戏」→ 断言 corridor + `school` / Day 0 |
 
+## 二、D3 · `actions_left` 真消耗
 
+| 件 | 做法 |
+|---|---|
+| 出发门槛 | `_depart_to()` 的 `can_travel(..., {"actions_left": _run.actions_left, ...})`，不再写死 1 |
+| 消耗与恢复 | 出发成功先 `-1`；`DayCycle.settle()` 跨天后恢复为 `TravelService.actions_per_day()`（=1） |
+| 拒绝路径 | 行动次数为 0 时 `_depart_to` 拒绝（toast「今天已经出去过了」），天数/楼/行动数都不动 |
+| 存档 | `RunState.to_dict/from_dict` 已带 `actions_left`；新增往返断言（0 保留、负数夹 0） |
+| 新门禁 | `game/tests/m2a_actions.gd`：服务层 `no_action_left`、同日第二次出发被拒、跨天恢复、落盘/读回 |
 
+## 三、验收（本机 2026-11-25 实测）
 
+```text
+MENU_OK ...                       # 既有主界面门禁不回归
+MENU_ENTRY_OK continue=corridor+save new_game=corridor+school
+M2A_ACTIONS_OK guard=no_action_left depart=consume restore=per_day save=roundtrip
+SCENE_SWITCH_OK ... / CORRIDOR_EXIT_OK ... / M2A_OK ... / M2A_NOISE_OK ... / ENDING_UNLOCK_OK ...
+SMOKE_OK ... / REPLAY_OK ...
+python tools/validate.py          # 47 条 ERROR 0 · WARN 0 · SKIP 0（本轮未改数据）
+```
+
+两条新门禁已加入 `pipeline.json`（`gate: hard`）：`m2a-actions`、`menu-entry`。
+
+## 四、下一步
+
+A1 还剩 **D4（燃料只减不增）** 与 **D7（五楼共用学校美术）**。
+D4 需要先定一条设计：加油站产油（走一趟 +1）还是 `data/loot` 里加燃料桶——定了再写。

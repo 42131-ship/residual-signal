@@ -1506,13 +1506,16 @@ func _on_map_chosen(target: String) -> void:
 func _depart_to(target: String) -> void:
 	if _day == null or _travel == null:
 		return
-	var verdict := _travel.can_travel(_current_building, target, {"fuel": _fuel, "actions_left": 1, "hour": 12})
+	# D3：行动次数取真源（RunState.actions_left），不再写死 1。
+	var verdict := _travel.can_travel(_current_building, target, {"fuel": _fuel, "actions_left": _run.actions_left, "hour": 12})
 	if not bool(verdict.get("ok", false)):
 		_toast_combat("去不了：%s" % _reason_text(str(verdict.get("reason", ""))))
 		return
 	var route := _travel.route(_current_building, target)
 	var label := _travel.label_of(target)
 	var spent := int(route.get("fuel", 0))
+	# D3：出发即消耗当天这一次行动；结算跨天后在末尾恢复。
+	_run.actions_left = maxi(0, _run.actions_left - 1)
 	var supplies_before := _get_supplies()
 	var result := _day.settle({
 		"extracted": true,
@@ -1533,6 +1536,8 @@ func _depart_to(target: String) -> void:
 	_at_exit = false
 	_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
 	_player.velocity = Vector2.ZERO
+	# D3：结算后是新的世界日，恢复当天的行动预算（一天一次外出）。
+	_run.actions_left = _travel.actions_per_day()
 	_persist_run()
 	var lines: Array = result["lines"]
 	lines.append("明天在%s" % label)

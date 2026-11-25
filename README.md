@@ -20,7 +20,7 @@ Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线�
 .tools/Godot_v4.7-stable_win64.exe --path .
 ```
 
-主场景是 `game/scenes/corridor.tscn`。走廊分成 **A 区 / B 区 / C 区** 三个房间区块（带可开关/上锁的门）；
+主场景是 `game/scenes/main_menu.tscn`（`新游戏` / `继续` 都会切到 `game/scenes/corridor.tscn`）。走廊分成 **A 区 / B 区 / C 区** 三个房间区块（带可开关/上锁的门）；
 玩家实际看到的是 **1920×1080**（原生 384×216 的 5× 整数最近邻放大，见 `game/tests/display.gd`）。
 完整键位见 [`design/CONTROLS.md`](design/CONTROLS.md)：
 
@@ -106,6 +106,12 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 & $G --path . --fixed-fps 60 --script res://game/tests/corridor_combat.gd -- CORRIDOR-COMBAT
 # 呈现尺寸门禁（真窗口：1920×1080 = 5× 整数放大）
 & $G --path . --script res://game/tests/display.gd
+# 主界面壳 + 结局栏
+& $G --path . --fixed-fps 60 --script res://game/tests/main_menu.gd -- MENU
+# D14：菜单继续/新游戏真的切到走廊
+& $G --path . --fixed-fps 60 --script res://game/tests/menu_entry.gd -- MENU-ENTRY
+# D3：一天一次外出的真消耗（同日第二次出发被拒 / 跨天恢复）
+& $G --path . --fixed-fps 60 --script res://game/tests/m2a_actions.gd -- ACTIONS
 ```
 
 ---
@@ -114,9 +120,13 @@ $G = ".tools/Godot_v4.7-stable_win64_console.exe"
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
-| — | 数据层 / 43 条规则 / 资产管线 | 已通过 |
+| — | 数据层 / 47 条规则 / 资产管线 | 已通过 |
 | Stage 1 | 15 件学校环境物件、走廊几何、相机与手电 | 已签核 |
 | Stage 2 | 道具细节、24px 角色可读、检查文本框、移动速度 | 已实现并通过门禁（角色已放大到 32×48 / W/S 纵深） |
+| Stage 2.5–2.16 | 主角放大/纵深轴、三档速度、容器/背包/战斗/状态、20 帧动画、打击感、PSD 双向 | 已实现并通过门禁 |
+| Stage 3.0–3.7 | 五楼战役、出口结算、主界面壳+结局栏、旅行图、真场景切换、RunState 持久化 | 已实现并通过门禁 |
+| M2a / D5 / D6 | 物资真源=world_state、噪声唯一出口、结局解锁链路、校验器 47 条 | 已实现并通过门禁 |
+| D14 / D3 | 菜单 → 走廊真切换；`actions_left` 一天一次外出真消耗 | 已实现并通过门禁（`menu_entry` / `m2a_actions`） |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |

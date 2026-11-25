@@ -22,6 +22,10 @@
 `RunState.supplies` 只在存档时同步。门禁 `m2a-state` 断言：
 `M2A_OK source=world_state mirror=run_state drink=rises settle=in_sync clamp=0..1`。
 
+**2026-11-25 追加**：D3（`actions_left` 真消耗）与 D14（菜单 → 走廊真切换）已还清，
+各配一条新门禁 `m2a-actions` / `menu-entry`，详见 [`HANDOFF-STAGE2.md`](HANDOFF-STAGE2.md) §三十六。
+A1 剩余：**D4（燃料只减不增）**、**D7（五楼共用学校美术）**。
+
 ---
 
 # 一、M2a：把 `supplies` 交给 `world_state`
