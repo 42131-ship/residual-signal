@@ -366,7 +366,7 @@ func _build_room_partitions() -> void:
 		])
 		threshold.color = Color("#354b60")
 		_world.add_child(threshold)
-		_build_door(tile_x)
+		_build_door(tile_x, index)
 		# 区块标签（A 区 / B 区 / C 区），标在下一段墙面上
 	# 标签放在每个房间起点：A 区最左，B/C 区在各自门洞后两格
 	var label_tiles: Array[int] = [
@@ -378,8 +378,13 @@ func _build_room_partitions() -> void:
 		PixelFont.draw(_world, ROOM_LABELS[index], Vector2(label_tiles[index] * TILE_SIZE, 44), Color("#354b60"))
 
 
-func _build_door(tile_x: int) -> void:
+func _build_door(tile_x: int, index: int) -> void:
 	var center_x := float(tile_x * TILE_SIZE + ROOM_PARTITION_WIDTH / 2)
+	# W1/EntityRegistry：门身份 = 「哪两个区之间的门」，不用数组下标、也不用 tile_x。
+	# 存档/回响层以后都引用这个 id（见 game/runtime/entity_registry.gd）。
+	var door_id := EntityRegistry.door_id(_current_building, index, index + 1)
+	if door_id.is_empty():
+		push_error("DOOR_ID_FAILED: index=%d" % index)
 	# 门板（关闭时可见）：整块门洞高度的板子 + 一个暖色门把手
 	var leaf := Polygon2D.new()
 	leaf.name = "DoorLeaf_%d" % tile_x
@@ -413,6 +418,7 @@ func _build_door(tile_x: int) -> void:
 	body.add_child(shape)
 	add_child(body)
 	_doors.append({
+		"id": door_id,
 		"tile_x": tile_x,
 		"center_x": center_x,
 		"leaf": leaf,

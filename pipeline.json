@@ -253,6 +253,13 @@
       "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
+      "name": "entity-registry",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/entity_registry.gd -- ENTITY",
+      "gate": "hard",
+      "status": "ready",
+      "note": "W1：门/容器/道具/拓扑/敌人的稳定 ID（kind:template:local，不含下标）"
+    },
+    {
       "name": "corridor-inspect",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT",
       "gate": "hard",

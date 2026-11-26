@@ -40,7 +40,7 @@ c7c3b9d docs(handoff): 本轮状态对齐（D24 复测 / 手机线与引导 / �
 | 4 | 多点触控 / 横屏 | partial | **partial 60%** | `game/ui/touch_controls.gd` **384 行** + `TOUCH_OK buttons=12` 通过；缺统一 InputAction（手柄/自适应）、色盲与震动开关 |
 | 5 | 存档 SaveState v1 | not_started | **done 100%（W1 第一步，2026-11-26）** | `game/runtime/save_store.gd` 三槽原子写（TMP > MAIN > BAK）+ 回读校验 + 自愈提升；`RunState` 迁移 v0/v1→v2；门禁 `save-atomic`、`save-interrupt`（7 相位 × 50 轮，**lost=0**） |
 | 6 | 模式内核 | not_started | **not_started 0%** | `data/mode_profile.json` 已有 `story/endless/shared` 三档**数据**；`RunState` 无 `mode` 字段、无 `ModePolicy` 类、菜单无选择 |
-| 7 | EntityRegistry | not_started | **not_started 0%** | 全仓库 `EntityRegistry` / `stable_id` 零命中 |
+| 7 | EntityRegistry | not_started | **done 100%（W1 第三步，2026-11-26）** | `game/runtime/entity_registry.gd`：`kind:template:local`；门 ID = `door:school:a_b`（哪两个区之间，**不是下标也不是 tile_x**）、容器/道具/拓扑/敌人同规则；门禁 `entity-registry`（重载稳定、打乱数组仍跟随实体、纯数字 local 拒收） |
 | 8 | L0 Fact / Assertion | not_started | **not_started 0%** | 只有 `L0/events.jsonl`（append-only），无 fact/assertion 分离、无 `branch_id`。**注意**：`schema/migrations/save_v1|v2_day09.json` 已有世界快照迁移样本（sediment `int → {amount,last_noise_day}`），但 `WorldState` 侧没有迁移代码——样本不能当实现 |
 | 9 | 回响层三项 | not_started | **not_started 0%** | `RunState` 无 door 持久化、无 `transfer_log`、时钟未模糊 |
 | 10 | 消防站开场切片 | not_started | **partial 20%** | `data/templates/fire_station.json` + `props_fire_station.tscn`（主题美术 v1）已在；**可玩切片没有** |
@@ -74,7 +74,7 @@ $PY = "C:\Users\Administrator\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies
 
 & $PY tools/validate.py     # 期望：共 47 条规则：ERROR 0 · WARN 0 · SKIP 0
 & $PY tools/selftest.py     # 期望：25 个 [PASS]，0 个 [FAIL]
-powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (40)，约 145 秒
+powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (41)，约 148 秒
 ```
 
 改模块状态时**只改 `progress.json`**，不要改这份对照表（它是 2026-11-26 的快照 + 证据）。
@@ -84,9 +84,9 @@ powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (40)，约
 
 ## 五、下一步（与 HTML §05 对齐）
 
-**W1（进行中）**：~~`SaveState v1`（原子双槽 + `.bak` + schema 迁移 + 50 次杀进程/断电门禁）~~ **已落地 2026-11-26**
-（`save-atomic` / `save-interrupt` 两条门禁，7 相位 × 50 轮 lost=0）→ 下一步 `EntityRegistry`（stable ID）
-→ `mode` 字段 + `ModePolicy`（数据档案已有）→ `L0` Fact/Assertion 分离 + `branch_id`。
+**W1（进行中，2/4 已落地）**：~~`SaveState v1`~~ **已落地 2026-11-26**（`save-atomic` / `save-interrupt`，7 相位 × 50 轮 lost=0）；
+~~`EntityRegistry`~~ **已落地 2026-11-26**（`entity-registry`，稳定 ID 不含下标）→ 下一步 `mode` 字段 + `ModePolicy`
+（数据档案已有）→ `L0` Fact/Assertion 分离 + `branch_id`。
 
 **W2**：回响层三项（门状态/物品轨迹/时间可见度）→ 消防站开场切片 → Android arm64 可复现构建 + 10 台烟测。
 **W3**：统一 InputAction / 自适应触控 → 6 音效 → 崩溃 opt-in → 两开场教学漏斗。

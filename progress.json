@@ -4,8 +4,8 @@
   "decisions_source": "残余信号 v0.7.1 进度对照版 §04（P1–P10，不可推翻）",
   "schema_version": 1,
   "updated_at": "2026-11-26",
-  "overall_percent": 53,
-  "overall_note": "HTML 基线记 48%；本机实测上调 4 个模块（设置页+隐私、Android 预设、触控、消防站素材），加 W1 存档内核落地，净增到 53。距 v0.7 全做完（~72%）还差 W1 余下三步 + W2–W4。",
+  "overall_percent": 57,
+  "overall_note": "HTML 基线 48%；实测上调 4 个模块 + W1 存档内核与 EntityRegistry 落地，约 57。距 v0.7 全做完（~72%）还差 W1 余下两步（mode/ModePolicy、L0 分离）+ W2–W4。",
   "modules": {
     "vertical_slice": {
       "status": "done",
@@ -38,9 +38,9 @@
       "evidence": "data/mode_profile.json 已有 story/endless/shared 三档档案；RunState 无 mode 字段，无 ModePolicy 类，菜单无模式选择"
     },
     "entity_registry": {
-      "status": "not_started",
-      "pct": 0,
-      "evidence": "全仓库 grep EntityRegistry / stable_id 零命中；现用数组下标与中文标签做键"
+      "status": "done",
+      "pct": 100,
+      "evidence": "W1 第三步（2026-11-26）：game/runtime/entity_registry.gd 统一 kind:template:local；门/容器/道具/拓扑/敌人全部有稳定 ID，门 ID 为「哪两个区之间」而不是下标/tile_x；门禁 entity-registry（重载稳定、打乱下标仍跟随实体、纯数字 local 拒收）"
     },
     "l0_fact_assertion": {
       "status": "not_started",
@@ -74,12 +74,12 @@
     }
   },
   "gates": {
-    "pipeline_steps": 53,
-    "godot_gates": 40,
-    "green": 40,
+    "pipeline_steps": 54,
+    "godot_gates": 41,
+    "green": 41,
     "broken": [],
     "last_run": "2026-11-26",
-    "wall_clock_seconds": 146
+    "wall_clock_seconds": 148
   },
   "taptap": {
     "cli": "2026.11.25",
@@ -92,5 +92,5 @@
   "rules_ci_green": true,
   "rules_ci_note": "2026-11-26 首跑即绿（.github/workflows/rules.yml：validate 47 条 + selftest 25 夹具 + gd_sanity 结构）；badge = passing",
   "interruption_test_pass": true,
-  "next_focus": "W1 余下：EntityRegistry（stable ID）→ mode 字段 + ModePolicy → L0 Fact/Assertion + branch_id"
+  "next_focus": "W1 余下：mode 字段 + ModePolicy（无尽快照不写档）→ L0 Fact/Assertion 分离 + branch_id（含世界快照 sediment 迁移）"
 }
