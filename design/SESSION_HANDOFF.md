@@ -24,14 +24,14 @@
 python tools/validate.py     # 期望：共 47 条规则：ERROR 0 · WARN 0 · SKIP 0
 python tools/selftest.py     # 期望：全部通过（含 R44-R47 的坏夹具）
 
-# 门禁（36 条已登记；渲染/无头参数由脚本从 pipeline.json 读，别手抄）
+# 门禁（51 条已登记；渲染/无头参数由脚本从 pipeline.json 读，别手抄）
 powershell -NoProfile -File tools\run_gates.ps1
 powershell -NoProfile -File tools\run_gates.ps1 -Only corridor   # 只跑名字含 corridor 的
 ```
 
-**当前不全绿，这是已知状态**：上次实测 6 条新登记的直接通过（display / inventory / loot /
-replay-30d / shell / status），9 条失效（见 3.0 的 D24），其余上游已登记项本轮未逐条复跑。
-所以先看 `pipeline.json` 里 `status` 字段：`ready` 表示该条最近验证过，`broken` 表示已知失效。
+**当前不全绿，这是已知状态**：2026-11-26 复测到的是 —— `traverse` **已恢复**（`TRAVERSE_OK`），
+`animation` 与 `corridor-status` **仍然挂死**（>2.5min / >5min 无任何结论），其余 6 条未复跑（见 3.0 的 D24）。
+所以先看 `pipeline.json` 里 `status`：`ready` = 最近验证过，`broken` = 已知失效。**但 `traverse` 那条的 `broken` 是陈旧的**。
 
 - `.tools/register_gates.py` 可自动补登记缺失的门禁；新门禁必须登记，否则跑不全还看着绿
 - 带「需渲染」的门禁**不能加 `--headless`**，否则截图/光照断言拿不到
@@ -46,8 +46,12 @@ replay-30d / shell / status），9 条失效（见 3.0 的 D24），其余上游
 手机侧（2026-11-26，细节见 [`MOBILE.md`](MOBILE.md)）：`export_presets.cfg` 已建（Windows + Android），
 模板 APK 路线打通，产出 `build/android/ResidualSignal-{debug,release}.apk`（arm64 / 已签名 / 51.4 & 49.6 MB）。
 触摸层 `game/ui/touch_controls.gd` + `game/runtime/mobile_support.gd` 已挂进走廊与主菜单，
-门禁 `touch-controls` 已登记（50 条）。导出用 **4.7.2** 引擎（模板只有 4.7.2），**跑门禁仍用 4.7**。
+门禁 `touch-controls` 已登记（现在共 51 条）。导出用 **4.7.2** 引擎（模板只有 4.7.2），**跑门禁仍用 4.7**。
 **真机还没测过**（本机没有设备）；未做项与验收方式见 `MOBILE.md` §7。
+
+引导（2026-11-26）：`game/runtime/tutorial.gd` 三步（走 → 搜 → 出门），只由玩法事件推进，
+状态存 `RunState.tutorial_step`（老档缺键当 0）；门禁 `tutorial`。
+新档第一次进走廊会在 HUD 顶部显示一行提示，走完 6 步 → 搜一次 → 出一次门后自动消失。
 
 发行与方向（2026-11-26 新增两份文档，先看它们再排活）：
 [`RELEASE_FEASIBILITY.md`](RELEASE_FEASIBILITY.md) —— 服务端实测：在「离线单机 + 免费 + 无内购」这组事实下
@@ -61,23 +65,23 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 
 ### 3.0 先修安全网：D24（第一步就该做）
 
-上一轮我把 15 条没登记的门禁补进 `pipeline.json` 后**实测**，发现旧门禁在 `ebe33e7` 上已经失效：
+上一轮把 15 条没登记的门禁补进 `pipeline.json` 后实测，发现旧门禁在 `ebe33e7` 上失效。
+**2026-11-26 复测后的真实状态**（别照抄老表）：
 
-| 门禁 | 症状 |
-|---|---|
-| `animation` | `ANIMATION_FAILED count=1` |
-| `corridor-combat` | `CORRIDOR_COMBAT_FAILED count=1` |
-| `corridor-inspect` | `CORRIDOR_INSPECT_FAILED count=1` |
-| `corridor-status` | `CORRIDOR_STATUS_FAILED count=1` |
-| `traverse` | `TRAVERSE_FAIL player missing` |
-| `corridor-preview` / `-doors` / `-inventory` / `-loot` | **卡死 >300s 无任何结论**（不是慢，是真的不退出） |
+| 门禁 | 2026-11-26 实测 | 下一步 |
+|---|---|---|
+| `traverse` | **已恢复**：`TRAVERSE_OK waypoints=8 bounds=588x88 corners=4 center=1 leaks=0` | 把 `pipeline.json` 的 `status` 从 `broken` 改回 `ready` |
+| `animation` | 复跑**挂死** >150s，无任何结论 | 找等待点：不是断言失败，是永不触发的信号 |
+| `corridor-status` | 复跑**挂死** >5min，无任何结论 | 同上；先看它 `await` 了什么 |
+| `corridor-combat` / `-inspect` | 未复跑（上轮记 `CORRIDOR_*_FAILED count=1`） | 真跑一次再判断 |
+| `corridor-preview` / `-doors` / `-inventory` / `-loot` | 未复跑（上轮记卡死 >300s） | 真跑一次再判断 |
 
-这几条守着搜刮/战斗/状态/走廊渲染 —— 它们坏了就等于**没有安全网**。
-`pipeline.json` 里已把这 9 条标成 `"status": "broken"`（跑 `run_gates.ps1` 仍会跑到，方便边修边验）。
+这几条守着搜刮/战斗/状态/走廊渲染 —— 坏了就等于**没有安全网**。
+`pipeline.json` 里仍是 `"status": "broken"`（`run_gates.ps1` 照跑，方便边修边验），但**`traverse` 那条已经过期**。
 
-**怀疑方向**（未证实，别当结论）：`traverse` 的 `player missing` 与卡死都指向
-「场景里 `Player` 节点的生命周期/名字被上游改动动过」（D9 倒下、D11 逐区灯光的改动都碰过 corridor）。
-先看 `corridor.tscn` 的节点名与 `corridor.gd` 的 `_ready()` 顺序，再看卡死门禁是不是在等一个永不触发的信号。
+**怀疑方向**（部分已被推翻）：`traverse` 不是节点改名问题——它现在直接过。
+剩下两条挂死的更像「协程在等一个不会发生的信号」：D9 倒下会打断长流程，
+`disarm_enemies()` 只解决了「敌人打死玩家」这一路，不解决「等结算面板/等翻页」这一路。
 
 ### 3.1 小（每条半天内）
 
@@ -91,9 +95,10 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 
 - **D7 收尾**：`HANDOFF-STAGE2.md` 末尾「已知后续（D7 未完成部分）」列了剩余项（各楼专属 props/容器差异未全覆盖）
 - **D22 TapDB 文档对齐**：提交里有 TapDB 客户端直连，但欠账表仍标 TODO —— 先核对再决定是否打勾
-- **D23 发布管线**：CLI 已装好（`.tools\npm-global`，`2026.11.24`/contract 3，16 skills 内置），
-  `doctor` 只剩 `config`/`credentials`；下一步是登录 → Windows 导出预设 → 包体自测 → `upload-pc-package`。
-  命令名已按真实 `--help` 校正（`app create` / `app save-changes`，没有 `prepareChanges`），见 `design/TAPTAP.md`
+- **D23 发布管线**：CLI 已装并**已登录**（`developerId 489018`）；`export_presets.cfg` 有 Windows + Android 两条，
+  两类包体都已产出（PC exe 132MB / APK 49.6MB，release 已签名）；图标已做（`tools/icon_build.py`）。
+  **还没做的只有**：给「残余信号」建 app draft（要账号持有人点头）、上传包体、补资料、提审。
+  命令名已按真实 `--help` 校正（`app create` / `app save-changes` / `upload-apk`），见 `design/TAPTAP.md`
 
 ### 3.3 大（多轮）
 
@@ -103,7 +108,7 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 
 ---
 
-## 4. 六个坑与规矩（都真踩过）
+## 4. 七个坑与规矩（都真踩过）
 
 | 坑 | 规矩 |
 |---|---|
@@ -113,6 +118,7 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 | 判断「远端有没有我的提交」 | 比**树哈希**（`git rev-parse HEAD^{tree}` vs API `commit.tree.sha`），不信 `origin/main` |
 | 未类型化数组传给 `Array[String]` 参数 | 运行时抛错会中断协程 → 进程挂着像卡死；门禁里显式声明类型 |
 | 门禁写了没登记 | `run_gates.ps1` 只跑登记过的；新增门禁必须登记并确认条数 |
+| `font_build.py` 重建图集后没重新导入 | 表现**不是缺字而是整屏乱码**（区域坐标与旧 PNG 对不上）；重建后必须再跑一次 `--import` |
 
 两条工程纪律：
 

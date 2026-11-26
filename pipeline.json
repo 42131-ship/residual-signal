@@ -340,8 +340,8 @@
       "name": "traverse",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/traverse.gd",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 复测通过（TRAVERSE_OK）；此前 broken 是陈旧标记"
     },
     {
       "name": "tutorial",

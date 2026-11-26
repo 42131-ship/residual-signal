@@ -100,6 +100,25 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 | ~~D5~~ | ~~结局只有判定函数，没有解锁写入~~ | — | **已还（D5）**：判定 → `RunState.unlocked` → 落盘 → 结局栏解锁 | ✅ |
 | ~~D6~~ | ~~校验器不覆盖 `data/travel`、`data/endings`、`data/systems`、`data/loot`~~ | — | **已还（D6）**：新增 R44–R47；`selftest.py` 埋坏数据证明四条都会开火 | ✅ |
 
+**D24 复测（2026-11-26，实测口径）**：
+
+- `traverse` **已恢复**：`TRAVERSE_OK waypoints=8 bounds=588x88 corners=4 center=1 leaks=0`。
+  `ebe33e7` 那笔提交本身就是「修复 traverse 被 D9 打断」，`pipeline.json` 里还写着 `broken` 是**陈旧的**，应改回 `ready`。
+- `animation`、`corridor-status` 复跑仍**挂死**：前者 >150s、后者 >5min，都没有任何结论输出
+  —— 是「在等一个永不触发的信号」，不是慢。这两条要按「找等待点」的思路查，别再等它自己结束。
+- 其余 6 条（corridor-combat / -inspect / -preview / -doors / -inventory / -loot）**本轮没有复跑**，
+  状态以 `pipeline.json` 为准，别当成已经好了。
+
+## 手机线的新欠账（2026-11-26）
+
+| # | 欠账 | 位置 | 为什么算债 | 量 |
+|---|---|---|---|---|
+| **D25** | **真机没跑过**：APK 只产出了，没在任何安卓设备上装过 | `build/android/*.apk` | 触摸手感、刘海、横屏旋转、发热全没验；`MOBILE.md` §7 的 M1 就是它 | S（有设备的话） |
+| **D26** | **双引擎**：跑门禁用 4.7、导出包用 4.7.2（模板只有 4.7.2） | `.tools/Godot_v4.7*`、`pipeline.json` | 两套解释器/导出器会让「门禁绿」与「包能跑」之间出现缝隙 | M |
+| **D27** | 触摸层靠**合成键事件**驱动一次性动作 | `game/ui/touch_controls.gd` | 对引擎来说与真键盘无异；如果将来要做手柄/重映射，这层得换成正统的 InputEventAction + 放宽 `_unhandled_input` 的类型判据 | M |
+| **D28** | release keystore 只在本机 `.tools/keystore/` | 同上 | `.tools/` 不入库；丢了就发不出更新包 | S（备份一次即可） |
+
+
 ## 接着该还（影响体验/可玩性）
 
 | # | 欠账 | 位置 | 影响 | 量 |

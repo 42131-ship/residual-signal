@@ -129,6 +129,10 @@ python tools/theme_build.py
 & $G --path . --fixed-fps 60 --script res://game/tests/building_theme.gd -- THEME
 # TapDB 分析门禁（headless；MockTransport，不联网）
 & $G --headless --path . --fixed-fps 60 --script res://game/tests/analytics.gd -- ANALYTICS
+# 手机触摸层门禁（headless；布局/安全区/按住=状态/点按=事件/键码与绑定一致）
+& $G --headless --path . --script res://game/tests/touch_controls.gd
+# 首 10 分钟引导门禁（headless；三步顺序/双文案/存档往返/hook 已接）
+& $G --headless --path . --script res://game/tests/tutorial.gd
 ```
 
 > **TapDB（可选，客户端直连）**：复制 `config/analytics.example.json` 为 `config/analytics.json` 并填 ClientID；
@@ -170,6 +174,7 @@ python tools/theme_build.py
 | TapDB | 客户端直连分析（同意门控 + 离线队列 + analytics 门禁） | 代码完成，待 ClientID/后台登记/导出实机验证 |
 | TapTap 发布 | PC 包路线 + CLI/Skills 文档收束（`design/TAPTAP.md`） | CLI 已装并登录；PC/Android 导出预设已建，APK 已出（见下两行） |
 | 手机版 | Android APK（arm64，debug/release 均签名）+ 触摸操控 + 安全区/省电/ETC2 | 已实现并通过 `touch-controls` 门禁；**待真机实测**（`design/MOBILE.md` §7） |
+| P0-4 引导 | 首 10 分钟引导（走 → 搜 → 出门），HUD 一行字，状态存 `RunState.tutorial_step` | 已实现并通过 `tutorial` 门禁（`design/NEXT.md`） |
 | D15 | 字体图集覆盖门禁（792 字，卡牌/结局文案 + 结算标点入图集） | 已实现并通过 `font_build.py --check` |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |

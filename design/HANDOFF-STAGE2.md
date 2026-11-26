@@ -1403,3 +1403,31 @@ HANDOFF 只记「已还/未还 + 验收方式 + 日期」，不重复命令手�
 
 **下一步顺序**（需要账号持有人参与）：装 Node/CLI → 登录并选游戏 → 配 Windows 导出与自测 → 填 ClientID 并登记事件 →
 导出包验证埋点 → 上传包体 → 资料/测试计划 → 提审三步 → 上线前替换隐私文案与资质核对。
+
+---
+
+# 四十六、手机版打通 + 首 10 分钟引导 + 发行可行性（2026-11-26）
+
+> 本轮把「只在桌面上跑的原型」变成「手机能装、能玩、能发」的三件事一次做完：
+> Android 包体链路、触摸操控与手机约束、发行资质的实测口径。
+> 颗粒度约定照 §四十五：细节进 `design/MOBILE.md` / `RELEASE_FEASIBILITY.md` / `NEXT.md`，这里只记状态与验收。
+
+| 件 | 做法 | 验收 |
+|---|---|---|
+| Android 导出 | `export_presets.cfg` 入库（Windows + Android 两条）；模板 APK 路线（不装 Gradle）；便携 JDK 17 在 `.tools/jdk17` | `ResidualSignal-{debug,release}.apk` 产出且 `apksigner verify` 通过（CN=starxin） |
+| 触摸操控 | `game/ui/touch_controls.gd`：12 颗按钮、多点触控、按住=动作状态、点按=合成键事件；`game/runtime/mobile_support.gd`：判定 + 切后台降帧 + 返回键当 Esc | `TOUCH_OK buttons=12 layout=in_bounds hud=clear safe_area=clamped hold=state tap=event keys=matched panel=dim` |
+| 手机约束 | 横屏 SENSOR_LANDSCAPE、安全区收边、ETC2/ASTC、后台 `max_fps=1` | 同上门禁 + `SMOKE_OK`（`RS_TOUCH=1` 下也过） |
+| 面板降暗 | 检查/背包/旅行图打开时触摸层压到 0.35，仍可点 | `touch-controls` 第 ⑦ 项 |
+| 应用图标 | `tools/icon_build.py`：32×32 手排 → 192/256/自适应 432 三件套 | `pixelpipe` 6 色 PASS；导出不再报 `No project icon specified` |
+| 首 10 分钟引导 | `game/runtime/tutorial.gd` 三步（走 → 搜 → 出门），只由玩法事件推进；状态存 `RunState.tutorial_step` | `TUTORIAL_OK steps=3 move=6 order=strict prompts=pc/touch persist=run_state legacy=0 clamp=ok hooks=wired` |
+| 发行可行性 | `qualification preview-assessment` 按「离线单机 + 免费 + 无内购」事实试算：版号 **optional**，必交隐私/防沉迷/AI 声明/适龄 | 见 `RELEASE_FEASIBILITY.md`；`app create --dry-run` 通过 |
+| 方向 | 手机优先、PC 为同内容第二平台；P0 手感 → P1 内容 → P2 工程安全 | `NEXT.md` |
+
+**门禁登记**：新增 `touch-controls`、`tutorial` 两条（pipeline 49 → 51）。
+
+**这一轮暴露的两个坑**（已写进各自文档）：
+
+1. **重建字体图集后必须再 `--import`**，否则 PNG 导入缓存与 JSON 区域对不上，运行时是整屏乱码而不是缺字（`MOBILE.md` §6）。
+2. **本机到 `github.com:443` 间歇性 reset**，`git push` 会失败；走 `.tools/push_files.py`（API）推，之后**比树哈希**确认，不要 `reset --hard`。
+
+**仍未做**：真机三局（本机无设备）、19.5:9 黑边 vs `expand` 决策、每楼检查文本/容器池、D13 同伴。
