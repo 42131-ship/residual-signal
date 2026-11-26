@@ -921,6 +921,10 @@ func _draw_inspection_prompt(id: String) -> void:
 		title = _loot.label_of(id)
 		key_text = "E"
 		verb = "搜索"
+	# 手机上没有 V / E 这两个字母键：提示改成触控键名（搜），别让玩家在屏幕上找键盘。
+	if InputHints.touch_mode():
+		key_text = ""
+		verb = "搜 · " + verb
 	var width := 44 + PixelFont.width_of(title) + maxi(0, PixelFont.width_of(verb) - 12)
 	var x := clampf(_player.position.x - _camera.position.x + VIEW_SIZE.x / 2.0 - width / 2.0, 4.0, VIEW_SIZE.x - width - 4.0)
 	var y := 20.0

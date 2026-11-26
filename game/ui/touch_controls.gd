@@ -26,7 +26,8 @@ const KEYS := {
 	"attack": {"size_mm": 11.0, "label": "攻击", "kind": "tap", "key": -1, "action": "attack"},
 	"search": {"size_mm": 10.0, "label": "搜", "kind": "tap", "key": 69, "action": "pickup"},
 	"lamp": {"size_mm": 11.0, "label": "手电筒", "kind": "tap", "key": 70, "action": "toggle_light"},
-	"run": {"size_mm": 11.0, "label": "走", "kind": "gait", "key": 0, "action": ""},
+	"run": {"size_mm": 11.0, "label": "奔跑", "kind": "toggle", "key": 0, "action": "sprint"},
+	"crouch": {"size_mm": 11.0, "label": "蹲下", "kind": "toggle", "key": 0, "action": "crouch"},
 	"bag": {"size_mm": 11.0, "label": "背包", "kind": "tap", "key": 4194306, "action": "inventory"},
 	"menu": {"size_mm": 11.0, "label": "", "kind": "menu", "key": 0, "action": ""},
 }
@@ -143,10 +144,13 @@ func rects() -> Dictionary:
 		attack.position.y - search_gap - s, s, s)
 	out["search"] = search
 	# 打左侧：跑；灯在跑左边（两颗小键同一排，和「打」物理隔开）
+	# 一排：手电筒 / 奔跑 / 攻击；蹲下单独放在手电筒上方（三颗各管一件事，不再循环）
 	var run := Rect2(attack.position.x - g - m, attack.position.y + a - m, m, m)
 	var lamp := Rect2(run.position.x - g - m, run.position.y, m, m)
+	var crouch := Rect2(lamp.position.x, lamp.position.y - g - m, m, m)
 	out["run"] = run
 	out["lamp"] = lamp
+	out["crouch"] = crouch
 	# 右上：包 + ≡（两格，右对齐）
 	var menu := Rect2(w - r - EDGE - m, t + EDGE, m, m)
 	var bag := Rect2(menu.position.x - g - m, t + EDGE, m, m)
@@ -253,8 +257,7 @@ func _draw_visual(node: Node2D, id: String, rect: Rect2) -> void:
 	holder.name = "Label"
 	node.add_child(holder)
 	var text := label
-	if id == "run":
-		text = GAITS[_gait_index]
+
 	var width := PixelFont.width_of(text)
 	var at := Vector2(
 		rect.position.x + int((rect.size.x - width) * 0.5),
@@ -266,6 +269,8 @@ func _draw_visual(node: Node2D, id: String, rect: Rect2) -> void:
 func _is_hot(id: String) -> bool:
 	if id == "run":
 		return _run_on
+	if id == "crouch":
+		return Input.is_action_pressed(&"crouch")
 	if id == "search":
 		return _search_available
 	return _held.has(id)
@@ -511,7 +516,9 @@ func _on_pressed(id: String) -> void:
 	elif id == "lamp":
 		_tap_key(70, "toggle_light")
 	elif id == "run":
-		_cycle_gait()
+		_toggle_run()
+	elif id == "crouch":
+		_toggle_crouch()
 	elif id == "bag":
 		_tap_key(4194306, "inventory")
 	last_emitted = id

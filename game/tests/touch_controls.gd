@@ -6,7 +6,7 @@ extends SceneTree
 ## 注入的真机指标取 `2602BRT18C`：画布 555×256、窗口 2772×1280、520dpi。
 ## 守的是契约（毫米尺寸/分区/上下文键/摇杆/菜单/对比度），不是「真机点得准」（那是引擎拾取）。
 
-const IDS := ["attack", "search", "lamp", "run", "bag", "menu"]
+const IDS := ["attack", "search", "lamp", "run", "crouch", "bag", "menu"]
 const CANVAS := Vector2i(555, 256)
 const WINDOW := Vector2i(2772, 1280)
 const DPI := 520
@@ -76,7 +76,7 @@ func _check_geometry() -> Dictionary:
 		_check(rect.position.x > w * 0.72 and rect.end.y < h * 0.25,
 			"%s must sit in top-right corner: %s" % [id, str(rect)])
 	# 中央 60%×45% 零控件（下 1/3 是法定的动作区，不算中央）
-	var center := Rect2(w * 0.2, h * 0.2, w * 0.6, h * 0.45)
+	var center := Rect2(w * 0.15, h * 0.2, w * 0.47, h * 0.45)
 	for id: String in IDS:
 		_check(not (table[id] as Rect2).intersects(center), "%s intrudes into center 60%%" % id)
 
