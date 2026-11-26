@@ -266,9 +266,13 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
-		if touch.pressed and not (_mobile != null and _mobile.hits_any(touch.position)):
-			_handle_tap(touch.position)
-			get_viewport().set_input_as_handled()
+		if not touch.pressed:
+			return
+		if _mobile != null and _mobile.hits_any(touch.position):
+			return
+		# 先消费再处理：_handle_tap 可能触发换场景，之后 viewport 已不是原来那个。
+		_consume_input()
+		call_deferred("_handle_tap", touch.position)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -417,7 +421,9 @@ func _enter_game() -> void:
 	var tree := get_tree()
 	if tree == null or tree.current_scene != self:
 		return
-	tree.change_scene_to_file("res://game/scenes/corridor.tscn")
+	# 必须 deferred：触屏/按键是在输入分发的调用栈里进来的，
+	# 当场 change_scene 会把正在处理的节点连同 viewport 一起换掉 → 真机闪退。
+	tree.call_deferred("change_scene_to_file", "res://game/scenes/corridor.tscn")
 
 
 func _flash(text: String) -> void:
