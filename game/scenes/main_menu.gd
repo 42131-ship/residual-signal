@@ -260,13 +260,19 @@ func _process(delta: float) -> void:
 
 # ── 输入（供门禁直接调用的同时，也接受真按键）─────────────
 
-func _unhandled_input(event: InputEvent) -> void:
-	# 触屏：点哪一项就选中并确认。手机上没有光标，不能要求玩家先「移动焦点」再确认。
+## 触屏点选走 `_input` 而不是 `_unhandled_input`：
+## 主菜单背景/色带都是 ColorRect，默认 mouse_filter=STOP，会把触摸当 GUI 事件吃掉，
+## 导致 `_unhandled_input` 根本收不到——真机表现就是「点新游戏没反应」（只能用硬件键进游戏）。
+func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
-		if touch.pressed:
+		if touch.pressed and not (_mobile != null and _mobile.hits_any(touch.position)):
 			_handle_tap(touch.position)
-		return
+			get_viewport().set_input_as_handled()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# 触屏已在 _input 处理，这里只接键盘。
 	if not event is InputEventKey or event.is_echo() or not event.is_pressed():
 		return
 	if event.is_action_pressed("menu_back"):

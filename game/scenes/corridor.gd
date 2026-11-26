@@ -1089,8 +1089,11 @@ func _refresh_status_fx() -> void:
 			thickness = candidate
 			tint = STATUS_FX_COLORS.get(id, Color("#3a2028"))
 	_status_fx_thickness = thickness
-	var width := float(VIEW_SIZE.x)
-	var height := float(VIEW_SIZE.y)
+	# 状态边框必须贴着**屏幕**四边：手机画布是 555×256，如果还按设计空间 384×216 画，
+	# 就会变成「从左上角围出一个大方框」——真机截图里那块红框就是它（伤口 3 时出现）。
+	var canvas := ScreenLayout.canvas_of(self)
+	var width := float(canvas.x)
+	var height := float(canvas.y)
 	var t := float(thickness)
 	var rects := [
 		[Vector2.ZERO, Vector2(width, t)],
