@@ -6,6 +6,24 @@
 
 ---
 
+## 0. 文档地图（谁管什么，别在错的文件里找）
+
+| 想知道 | 看这份 | 说明 |
+|---|---|---|
+| **进度数字**（百分比/模块/门禁/设备） | [`../progress.json`](../progress.json) | **机器可读真源**；其它文档只引用，不复制数字 |
+| 怎么立刻开工 | 本文件 | 验一遍 → 排活 → 坑表 |
+| 环境怎么装、哪些数是真的 | [`TAKEOVER-2026-11-26.md`](TAKEOVER-2026-11-26.md) | 换机器必读；含代理、JDK、SDK、真机 |
+| 欠账与验收口径 | [`TECH_DEBT.md`](TECH_DEBT.md) | D 编号的唯一出处 |
+| 手机（导出/触摸/适配） | [`MOBILE.md`](MOBILE.md) | 契约与未做项 |
+| 真机评审（玩家 vs 开发者双视角） | [`MOBILE-REVIEW.md`](MOBILE-REVIEW.md) | 待改善清单按 P0/P1/P2 |
+| 能不能发、卡在哪 | [`RELEASE_FEASIBILITY.md`](RELEASE_FEASIBILITY.md) | 资质清单是服务端算的 |
+| 平台操作（CLI/上传/提审） | [`TAPTAP.md`](TAPTAP.md) | 命令手册 |
+| 下一阶段方向、做成什么样 | [`NEXT.md`](NEXT.md) | 手机优先 / PC 第二平台 |
+| 历史流水（每轮做了什么） | [`HANDOFF-STAGE2.md`](HANDOFF-STAGE2.md) | 只追加，不改旧节 |
+| 2026-11-23 的队列快照 | [`BACKLOG.md`](BACKLOG.md) | **历史**，不是当前待办 |
+
+---
+
 ## 1. 一句话现状
 
 384×216 像素风 30 天生存叙事（Godot 4.7 / GL Compatibility）。
