@@ -164,9 +164,11 @@ func _render_root() -> void:
 		if index == _index:
 			_add_rect(Vector2(12, y - 4), Vector2(140, 20), DIM)
 		PixelFont.draw(_item_root, ITEMS[index], Vector2(20, y), BRIGHT if index == _index else INK)
+	var has_key_hint := InputHints.has_hint("menu_list")
 	_draw_hint("menu_list", Vector2(16, 158), INK)
+	# 触屏没有提示行，把天数/沉积上提到 158：否则会被左下方向键压住（真机反馈）。
 	PixelFont.draw(_body_root, "第 %d / %d 天 · 沉积 %d" % [_run.day + 1, RunState.MAX_DAY, _run.sediment],
-		Vector2(16, 176), DIM)
+		Vector2(16, 176 if has_key_hint else 158), DIM)
 	if _message_frames > 0:
 		PixelFont.draw(_body_root, _message, Vector2(16, 194), BRIGHT)
 
@@ -267,7 +269,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_view = "root"
 			_index = 0
 			_render()
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	if _view == "consent":
 		if event.is_action_pressed("menu_up"):
@@ -276,7 +278,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			move(1)
 		elif event.is_action_pressed("menu_confirm"):
 			confirm()
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	if _view == "settings":
 		if event.is_action_pressed("menu_confirm"):
@@ -285,11 +287,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				Analytics.grant_consent()
 			_render()
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	if _view != "root":
 		if event.is_action_pressed("menu_confirm"):
-			get_viewport().set_input_as_handled()
+			_consume_input()
 		return
 	if event.is_action_pressed("menu_up"):
 		move(-1)
@@ -297,7 +299,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		move(1)
 	elif event.is_action_pressed("menu_confirm"):
 		confirm()
-	get_viewport().set_input_as_handled()
+	_consume_input()
 
 
 func move(delta: int) -> void:
@@ -385,3 +387,13 @@ func run_state() -> RunState:
 
 func ending_book() -> EndingBook:
 	return _book
+
+## 输入消费的安全包装：切场景/节点已出树时 get_viewport() 会是 null，
+## 直接调用会抛「Cannot call method 'set_input_as_handled' on a null value」并中断该次输入处理
+## （真机 logcat 抓到过）。所有 _unhandled_input 里都改走这里。
+func _consume_input() -> void:
+	if not is_inside_tree():
+		return
+	var viewport := get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()

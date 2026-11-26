@@ -52,6 +52,9 @@ var _spec_by_id: Dictionary = {}   # id -> Dictionary
 var _buttons_root: Node2D
 var _gait_index := 0
 var _dimmed := false
+## 按住中的触屏按钮：id -> action。合成键的 release 会在下一帧清掉 action，
+## 所以按住期间每帧重申一次（真机实测必需，否则人物不动）。
+var _held: Dictionary = {}
 ## 面板（检查/背包/旅行图）打开时压到 0.35 透明度：还能点，但不挡字
 const DIM_ALPHA := 0.35
 var _safe_canvas := Rect2(0, 0, VIEW.x, VIEW.y)
@@ -251,11 +254,16 @@ func _on_pressed(id: String) -> void:
 		_cycle_gait()
 		_light_up(id, true)
 	elif spec["kind"] == "hold":
-		# 顺序要紧：先发键事件、再压动作状态。反过来会被合成键的 release 立刻清掉。
+		# 键事件只给「只认事件」的地方（菜单/旅行图/背包）；移动靠 action 状态。
+		# 注意：Input.parse_input_event 是**下一帧**才 flush 的，合成的 KEY_x release
+		# 会把刚压下的 action 清掉（真机实测：按住方向键人物不动）。
+		# 所以按住期间每帧重申一次，见 _process 里的 _held。
 		var key := int(spec.get("key", -1))
 		if key >= 0:
 			_send_key(key)
-		Input.action_press(StringName(spec["action"]))
+		var action := StringName(spec["action"])
+		Input.action_press(action)
+		_held[id] = action
 		_light_up(id, true)
 	else:
 		_tap(spec)
@@ -270,6 +278,7 @@ func _on_released(id: String) -> void:
 		return
 	if spec["kind"] == "hold":
 		Input.action_release(StringName(spec["action"]))
+		_held.erase(id)
 	_light_up(id, false)
 
 
@@ -423,3 +432,7 @@ func set_dimmed(value: bool) -> void:
 
 func is_dimmed() -> bool:
 	return _dimmed
+
+func _process(_delta: float) -> void:
+	for id: String in _held:
+		Input.action_press(_held[id])

@@ -573,7 +573,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		confirm()
 	elif event.is_action_pressed("menu_back"):
 		cancel()
-	get_viewport().set_input_as_handled()
+	_consume_input()
 
 
 func block_ids() -> Array[String]:
@@ -601,3 +601,13 @@ func _draw_hint(key: String, at: Vector2, color: Color) -> void:
 	if text.is_empty():
 		return
 	PixelFont.draw(_hint_root, text, at, color)
+
+## 输入消费的安全包装：切场景/节点已出树时 get_viewport() 会是 null，
+## 直接调用会抛「Cannot call method 'set_input_as_handled' on a null value」并中断该次输入处理
+## （真机 logcat 抓到过）。所有 _unhandled_input 里都改走这里。
+func _consume_input() -> void:
+	if not is_inside_tree():
+		return
+	var viewport := get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()

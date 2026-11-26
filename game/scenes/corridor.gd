@@ -2186,14 +2186,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				_map.confirm()
 			elif event.is_action_pressed("menu_back"):
 				_close_travel_map()
-			get_viewport().set_input_as_handled()
+			_consume_input()
 		return
 	# 左键攻击：背包/检查面板打开时不响应。
 	if event is InputEventMouseButton:
 		var mouse := event as InputEventMouseButton
 		if mouse.button_index == MOUSE_BUTTON_LEFT and mouse.pressed and not _inventory_open and not _inspection_open:
 			_perform_attack()
-			get_viewport().set_input_as_handled()
+			_consume_input()
 		return
 	if not event is InputEventKey or event.is_echo() or not event.is_pressed():
 		return
@@ -2209,27 +2209,27 @@ func _unhandled_input(event: InputEvent) -> void:
 			_drop_selected_item()
 		elif event.is_action_pressed("inventory") or event.is_action_pressed("cancel_inspect") or event.is_action_pressed("view"):
 			_close_inventory()
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	# 手电开关（F）：面板打开时不响应，避免和交互抢键。
 	if event.is_action_pressed("toggle_light") and not _inspection_open:
 		_set_flashlight(not _flashlight_on)
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	if event.is_action_pressed("inventory") and not _inspection_open:
 		_open_inventory()
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	# R = 装填（当前装备是枪械时）。
 	if event.is_action_pressed("reload") and not _inspection_open and not _inventory_open:
 		_reload_weapon()
-		get_viewport().set_input_as_handled()
+		_consume_input()
 		return
 	if _inspection_open:
 		# 面板打开时：V/E/Esc 都关掉（E 是上下文交互键，顺手关面板）。
 		if event.is_action("view") or event.is_action("pickup") or event.is_action("cancel_inspect"):
 			_close_inspection()
-			get_viewport().set_input_as_handled()
+			_consume_input()
 		return
 	if event.is_action("cancel_inspect"):
 		return
@@ -2238,15 +2238,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		var pickup_target := _nearest_inspection_id()
 		if not pickup_target.is_empty() and _loot != null and _loot.has_container(pickup_target):
 			_begin_search(pickup_target)
-			get_viewport().set_input_as_handled()
+			_consume_input()
 			return
 		if _at_exit:
 			_leave_building()
-			get_viewport().set_input_as_handled()
+			_consume_input()
 			return
 		if _nearest_door >= 0:
 			_toggle_door(_nearest_door)
-			get_viewport().set_input_as_handled()
+			_consume_input()
 		return
 	# V = 查看文本（检查框）。
 	if event.is_action_pressed("view"):
@@ -2256,7 +2256,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_inspection_target = target
 		_draw_inspection_prompt(target)
 		_show_inspection(target)
-		get_viewport().set_input_as_handled()
+		_consume_input()
 
 
 func _follow_player() -> void:
@@ -2316,3 +2316,13 @@ func _draw_hint(parent: Node, key: String, at: Vector2, color: Color) -> void:
 	if text.is_empty():
 		return
 	PixelFont.draw(parent, text, at, color)
+
+## 输入消费的安全包装：切场景/节点已出树时 get_viewport() 会是 null，
+## 直接调用会抛「Cannot call method 'set_input_as_handled' on a null value」并中断该次输入处理
+## （真机 logcat 抓到过）。所有 _unhandled_input 里都改走这里。
+func _consume_input() -> void:
+	if not is_inside_tree():
+		return
+	var viewport := get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()

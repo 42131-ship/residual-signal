@@ -63,10 +63,22 @@ static func apply_fill_screen(host: Node) -> void:
 	var win := host.get_window()
 	if win == null:
 		return
-	win.content_scale_size = Vector2i(384, 216)
+	# 不能用「expand + 整数缩放」：Godot 会把视口锁在 384×216 / 按高度算，
+	# 结果 2772×1280 上只剩 467×216，左右各 218px 黑边（真机日志实证）。
+	# 自己算：scale = floor(min(w/384, h/216))，视口 = ceil(窗口/scale)。
+	# 于是视口变成 555×256（设计空间仍是 384×216，内容居中），
+	# 纵向正好 5.0×、横向 4.995×（差 0.1%，肉眼不可见），屏幕填满不裁剪。
+	var window_size := DisplayServer.window_get_size()
+	var base := Vector2i(384, 216)
+	var scale := maxi(1, mini(int(window_size.x / base.x), int(window_size.y / base.y)))
+	var viewport := Vector2i(
+		int(ceili(float(window_size.x) / float(scale))),
+		int(ceili(float(window_size.y) / float(scale))))
+	win.content_scale_size = viewport
 	win.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
-	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
-	win.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_INTEGER
+	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+	# 分数缩放：视口已经等于「窗口/整数倍」，缩放比只差零点几个百分点，像素不糊。
+	win.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
 
 
 ## 手机生命周期：切后台把帧率压到 1（省电、别让 SoC 烤手），回前台恢复；
