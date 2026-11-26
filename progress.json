@@ -1,0 +1,88 @@
+{
+  "baseline_commit": "d192703",
+  "baseline_note": "v0.7.1 执行基线 HTML 的审计快照是 9758e3c（2026-11-25）；本文件由 Agent 在 d192703（2026-11-26）按仓库实测刷新。P1–P10 决策不变，只刷进度数字。",
+  "decisions_source": "残余信号 v0.7.1 进度对照版 §04（P1–P10，不可推翻）",
+  "schema_version": 1,
+  "updated_at": "2026-11-26",
+  "overall_percent": 50,
+  "overall_note": "HTML 基线记 48%；本机实测把 4 个模块从 0/部分上调（设置页+隐私同意、Android 预设、触控原型、消防站素材），净增约 2 个点。距 v0.7 全做完（~72%）仍差 W1–W4 四轮。",
+  "modules": {
+    "vertical_slice": {
+      "status": "done",
+      "pct": 100,
+      "evidence": "学校走廊可玩闭环；38 条 Godot 门禁全绿（2026-11-26，144 秒）"
+    },
+    "data_rules_gate": {
+      "status": "done",
+      "pct": 100,
+      "evidence": "tools/validate.py 47 条 ERROR 0 · WARN 0 · SKIP 0；tools/selftest.py 25 个坏夹具全开火"
+    },
+    "pixel_font_pipeline": {
+      "status": "done",
+      "pct": 100,
+      "evidence": "PF-02 CJK 图集 802 字（不是旧文档写的 792）；tools/font_build.py --check 覆盖门禁绿"
+    },
+    "touch_wide": {
+      "status": "partial",
+      "pct": 60,
+      "evidence": "game/ui/touch_controls.gd 384 行 + touch-controls 门禁 TOUCH_OK 通过；缺统一 InputAction（手柄/自适应）、色盲与震动开关"
+    },
+    "savestate_v1": {
+      "status": "not_started",
+      "pct": 0,
+      "evidence": "run_state.gd:save() 直接 FileAccess.WRITE 写 user://run.json，无 tmp/rename/备份/校验；门/容器/背包/敌人/NPC 记忆不进档"
+    },
+    "mode_kernel": {
+      "status": "not_started",
+      "pct": 0,
+      "evidence": "data/mode_profile.json 已有 story/endless/shared 三档档案；RunState 无 mode 字段，无 ModePolicy 类，菜单无模式选择"
+    },
+    "entity_registry": {
+      "status": "not_started",
+      "pct": 0,
+      "evidence": "全仓库 grep EntityRegistry / stable_id 零命中；现用数组下标与中文标签做键"
+    },
+    "l0_fact_assertion": {
+      "status": "not_started",
+      "pct": 0,
+      "evidence": "只有 L0/events.jsonl（append-only）；无 Fact/Assertion 分离、无 branch_id，读档冲突未解"
+    },
+    "echo_door_item_time": {
+      "status": "not_started",
+      "pct": 0,
+      "evidence": "RunState 无 door 状态持久化、无 transfer_log、旅行图时钟未做可见度模糊"
+    },
+    "opening_firestation": {
+      "status": "partial",
+      "pct": 20,
+      "evidence": "data/templates/fire_station.json 与 game/scenes/props_fire_station.tscn（主题美术 v1）已存在；无可玩的开场切片"
+    },
+    "android_arm64_build": {
+      "status": "partial",
+      "pct": 30,
+      "evidence": "export_presets.cfg 已有 Windows + Android 两条预设；旧机产出过 49.6MB 已签名 arm64 APK；本机无构建产物、无真机烟测、无 10 台矩阵"
+    },
+    "settings_privacy_audio": {
+      "status": "partial",
+      "pct": 40,
+      "evidence": "main_menu.gd 已有设置页 + 隐私同意（MENU_OK settings=yes）；缺崩溃 opt-in（grep crash 零命中）与 6 音效（sounds.json 有 20 个事件定义、0 播放代码、0 音频文件）"
+    },
+    "closed_test_package": {
+      "status": "not_started",
+      "pct": 0,
+      "evidence": "2026-11-26 刚补 LICENSE / NOTICE（代码 MIT、资产专有）；CI 首跑待绿；封测包、10–20 人受邀流程未开始"
+    }
+  },
+  "gates": {
+    "pipeline_steps": 51,
+    "godot_gates": 38,
+    "green": 38,
+    "broken": [],
+    "last_run": "2026-11-26",
+    "wall_clock_seconds": 144
+  },
+  "rules_ci_green": false,
+  "rules_ci_note": "workflow 已加（.github/workflows/rules.yml：validate + selftest），等首次 Actions 跑绿后翻 true",
+  "interruption_test_pass": false,
+  "next_focus": "W1: SaveState v1（原子双槽+备份+schema 迁移+杀进程门禁）→ EntityRegistry → mode 字段 + ModePolicy → L0 Fact/Assertion + branch_id"
+}

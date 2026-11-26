@@ -1,0 +1,39 @@
+# NOTICE · 授权与来源声明
+
+> 本文件与 `LICENSE`、`THIRD_PARTY_LICENSES.json`、`AI_LEDGER.json` 共同构成发行前的授权台账。
+> 机读版本以 `THIRD_PARTY_LICENSES.json` 为准；本文件解释范围与待办。
+
+## 1. 代码 · MIT
+
+`game/**`（GDScript）、`tools/**`（Python）、`schema/**`、仓库根的 `*.cfg` / `*.godot` / `*.json` 配置：
+**MIT**，全文见 [`LICENSE`](LICENSE)。
+
+## 2. 资产 · 保留所有权利（P2）
+
+`art/**` 下的精灵、图集、地图、调色板、预览图；`data/**` 下的文本内容（卡牌/NPC/道具/检查文本）；
+`design/**` 与各 `*.html` 设计文档：**不随 MIT 授权**，保留所有权利。
+
+- 允许：作为本仓库与官方发行包的一部分被分发、被本项目的构建工具读取。
+- 不允许：再分发、商用二次开发、作为生成式模型的训练或风格参考输入。
+
+## 3. AI 生成内容 · 必须如实申报（P2 + 平台合规）
+
+本项目背景图/地图等走生图模型 + 量化（`design/prompts/*`、`tools/imagegen.py`、`tools/quantize_map.py`）。
+逐件 provenance 记录在 [`AI_LEDGER.json`](AI_LEDGER.json)（含 prompt id、模型、日期、人工修改）。
+TapTap 申报事实里 `has_ai_content = true`（见 `design/RELEASE_FEASIBILITY.md` §2），**不得瞒报**。
+
+## 4. 第三方
+
+| 件 | 授权 | 全文 |
+|---|---|---|
+| Godot Engine 4.x | MIT | 随引擎分发 |
+| Noto Sans SC（PF-02 点阵的构建输入） | SIL OFL 1.1 | [`art/fonts/NOTOSANS-SC-OFL.txt`](art/fonts/NOTOSANS-SC-OFL.txt) |
+| 凤凰点阵体 Vonwaon / 缝合像素 Fusion | CC0-1.0 / OFL-1.1（**未核验**） | 见 [`art/fonts/NOTICE.md`](art/fonts/NOTICE.md) 待办 |
+
+## 5. 发行前必须清掉的四条
+
+1. `THIRD_PARTY_LICENSES.json` 里两款点阵字体的 `verified` 仍是 `false` —— 发行包不得带 `verified: false` 的字体。
+2. **这两款字体目前并未被 `tools/font_build.py` 使用**（PF-01 是程序生成，PF-02 用 NotoSansSC）。
+   要么真正接入，要么从台账移除——不能"声明了却没用"或"用了却没声明"。
+3. `art/fonts/NOTICE.md` 待办：把两款字体的 LICENSE 原文各复制一份到 `art/fonts/`。
+4. 隐私政策、防沉迷配置、AI 声明、适龄 16 四项平台必交材料尚未准备（`design/RELEASE_FEASIBILITY.md` §3）。

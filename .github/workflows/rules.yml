@@ -1,0 +1,34 @@
+name: rules
+
+# P6：47 条数据规则 + 25 个坏夹具自测进 CI。
+# 为什么只跑这两条：它们纯标准库（不依赖 Pillow/psd-tools），也不会拉起引擎；
+# Godot 的 38 条门禁需要真渲染（部分测试不能加 --headless），留给本机 run_gates.ps1。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: validate · 47 条规则（期望 ERROR 0 · WARN 0 · SKIP 0）
+        working-directory: ${{ github.workspace }}
+        run: python tools/validate.py
+
+      - name: selftest · 25 个坏夹具必须全部开火
+        working-directory: ${{ github.workspace }}
+        run: python tools/selftest.py
+
+      - name: structure · GDScript 结构检查（不编译）
+        working-directory: ${{ github.workspace }}
+        run: |
+          python tools/gd_sanity.py game/runtime/*.gd game/scenes/*.gd game/ui/*.gd
