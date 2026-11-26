@@ -28,6 +28,8 @@ const PC := {
 	"door_pry": "E 撬开",
 }
 
+## 触屏一套：**只出现触控键与图标，不出现任何 PC 键字母**（V/E/F/G/W/S 一律不写）。
+## 「搜」是上下文键：贴近可搜索物或出口才出现，所以文案里只提「搜」。
 const TOUCH := {
 	"menu_list": "",
 	"menu_toggle": "",
@@ -36,13 +38,13 @@ const TOUCH := {
 	"inspect_close": "退",
 	"inventory_actions": "",
 	"inventory_move": "",
-	"reload_toast": "没有子弹，点「填」装填",
-	"search_hold": "按住「E」搜索",
-	"leave": "点「E」离场",
-	"door_open": "点「E」开门",
-	"door_close": "点「E」关门",
-	"door_lock": "点「E」锁门",
-	"door_pry": "点「E」撬开",
+	"reload_toast": "没有子弹，点「≡」装填",
+	"search_hold": "按住「搜」",
+	"leave": "点「搜」离场",
+	"door_open": "点「搜」开门",
+	"door_close": "点「搜」关门",
+	"door_lock": "点「搜」锁门",
+	"door_pry": "点「搜」撬开",
 }
 
 

@@ -1,102 +1,154 @@
 extends CanvasLayer
 class_name TouchControls
 
-## 手机触摸层 v1（2026-11-26）。只在手机 / RS_TOUCH=1 时由 MobileSupport 挂上，桌面不受影响。
+## 手机触摸层 v2（2026-11-26 重排，目标：手机玩家舒适圈）。
 ##
-## 为什么不用 Control 按钮：Control 走「触摸 → 鼠标仿真」，多指会被合并成单指针；
-## 而这个游戏必须能「左手走路 + 右手攻击」同时进行。所以命中用 TouchScreenButton
-## （引擎原生多点触控），外观自己画（项目风格：程序绘制，不引外部贴图）。
+## 屏幕分区（唯一合法布局）：
+##   左上 = 信息（只读，HUD 自己画，本层不放按钮）
+##   右上 = 次要动作，最多两格：包 + ≡
+##   左下 = 移动：浮动摇杆（按下才出现，松手归位）
+##   右下 = 主动作：打（主）+ 搜（上下文，贴近可搜索物才出现）+ 灯/跑（上排小键）
+##   中央 60% = 纯世界，零控件
 ##
-## 一次性动作（E/V/F/Tab/R/Esc/攻击）不能只改动作状态：走廊与菜单的输入都走事件，
-## 所以这里额外合成一个 InputEventKey / InputEventMouseButton 交给 Input.parse_input_event()。
-## 这是有意选择的「桥」——不改 corridor.gd / main_menu.gd 里的热路径，风险最小；
-## 代价是事件对引擎来说与真键盘无异（桌面按住这些键时也会被当成同一个动作，无副作用）。
+## 尺寸用**毫米**换算，不写死像素：`_mm()` 取屏幕 DPI 与当前画布缩放，
+## 于是 11mm 在 520dpi/5× 的手机上是 45 画布像素，在桌面（96dpi）上是 8 —— 桌面本就不挂这一层。
+##
+## 为什么命中用 TouchScreenButton：Control 走「触摸→鼠标仿真」，多指会被合并成单指针，
+## 而这个游戏要「左手走 + 右手打」同时成立。
 
 signal emitted(id: String)
 
-const VIEW := Vector2i(384, 216)
-const INK := Color("#9fb2bd")
-const HOT := Color("#f6f6f0")
+const DESIGN := Vector2i(384, 216)
+
+## 触控键表。id / 动作 / 尺寸(mm) / 语义 / 合成的键
+## kind: hold=按住即动作状态；tap=发一次事件；toggle=开关（跑）
+const KEYS := {
+	"attack": {"size_mm": 11.0, "label": "打", "kind": "tap", "key": -1, "action": "attack"},
+	"search": {"size_mm": 10.0, "label": "搜", "kind": "tap", "key": 69, "action": "pickup"},
+	"lamp": {"size_mm": 8.0, "label": "灯", "kind": "tap", "key": 70, "action": "toggle_light"},
+	"run": {"size_mm": 8.0, "label": "跑", "kind": "toggle", "key": 0, "action": "sprint"},
+	"bag": {"size_mm": 8.0, "label": "包", "kind": "tap", "key": 4194306, "action": "inventory"},
+	"menu": {"size_mm": 8.0, "label": "", "kind": "menu", "key": 0, "action": ""},
+}
+
+## 边距（画布像素，按 384 基准；手机按 _mm 再放大一档）
+const GAP := 6
+const EDGE := 10
+
+const INK := Color("#e8e4d8")
 const FILL := Color(0.043, 0.067, 0.098, 0.62)
-const FILL_HOT := Color(0.129, 0.208, 0.278, 0.85)
-const EDGE := Color("#354b60")
-const GAITS := ["走", "跑", "蹲"]
+const FILL_HOT := Color(0.129, 0.208, 0.278, 0.9)
+const EDGE_COLOR := Color("#354b60")
+const GHOST := Color(0.91, 0.89, 0.85, 0.30)
 
-## 按键表：kind = hold（按住即动作状态）/ tap（补一个合成事件）
-## rect 是 384×216 原生坐标；所有按钮都躲开左侧 HUD（x < 130 且 y < 140 那块是 HUD 文字）。
-## 十字键同时发一个合成按键事件：走廊的旅行图/背包、主菜单的选项都只认事件不认状态，
-## 没有这一下，手机上「能走但打不开地图、选不了菜单」。按住的状态仍然只由 action_press 维持。
-const SPECS := [
-	{"id": "left", "action": "move_left", "rect": [14, 164, 28, 28], "label": "", "arrow": "left", "kind": "hold", "key": 65},
-	{"id": "right", "action": "move_right", "rect": [70, 164, 28, 28], "label": "", "arrow": "right", "kind": "hold", "key": 68},
-	{"id": "up", "action": "move_up", "rect": [42, 142, 28, 28], "label": "", "arrow": "up", "kind": "hold", "key": 87},
-	{"id": "down", "action": "move_down", "rect": [42, 186, 28, 28], "label": "", "arrow": "down", "kind": "hold", "key": 83},
-	{"id": "gait", "action": "", "rect": [282, 138, 34, 34], "label": "走", "kind": "gait"},
-	{"id": "light", "action": "toggle_light", "rect": [326, 138, 34, 34], "label": "灯", "kind": "tap", "key": 70},
-	{"id": "attack", "action": "attack", "rect": [282, 176, 34, 34], "label": "打", "kind": "tap", "key": -1},
-	{"id": "pickup", "action": "pickup", "rect": [326, 176, 34, 34], "label": "E", "kind": "tap", "key": 69},
-	{"id": "reload", "action": "reload", "rect": [238, 138, 34, 34], "label": "填", "kind": "tap", "key": 82},
-	{"id": "bag", "action": "inventory", "rect": [272, 10, 32, 24], "label": "包", "kind": "tap", "key": 4194306},
-	{"id": "look", "action": "view", "rect": [308, 10, 32, 24], "label": "看", "kind": "tap", "key": 86},
-	{"id": "menu", "action": "cancel_inspect", "rect": [344, 10, 32, 24], "label": "退", "kind": "tap", "key": 4194305},
-]
-
-## expand（手机填满屏幕）后视口更大：右侧/底部按钮跟着视口边缘平移。
-## 桌面与门禁跑在 384×216，偏移恒为 (0,0)，行为与以前完全一致。
-const ANCHOR_RIGHT := ["gait", "light", "attack", "pickup", "reload", "bag", "look", "menu"]
-const ANCHOR_BOTTOM := ["left", "right", "up", "down", "gait", "light", "attack", "pickup", "reload"]
-
-var _buttons: Dictionary = {}      # id -> TouchScreenButton
-var _visuals: Dictionary = {}      # id -> Node2D（重绘标签用）
-var _spec_by_id: Dictionary = {}   # id -> Dictionary
+var _buttons: Dictionary = {}
+var _visuals: Dictionary = {}
 var _buttons_root: Node2D
-var _gait_index := 0
+var _canvas := Vector2i(DESIGN)
+var _inset := Vector4(0, 0, 0, 0)     # 安全区（左/上/右/下）
 var _dimmed := false
-## 按住中的触屏按钮：id -> action。合成键的 release 会在下一帧清掉 action，
-## 所以按住期间每帧重申一次（真机实测必需，否则人物不动）。
+var _menu_open := false
+var _menu_index := 0
+var _menu_layer: Node2D
+var _search_available := false
+var _run_on := false
 var _held: Dictionary = {}
-## 面板（检查/背包/旅行图）打开时压到 0.35 透明度：还能点，但不挡字
-const DIM_ALPHA := 0.35
-var _safe_canvas := Rect2(0, 0, VIEW.x, VIEW.y)
-var _expand := Vector2i.ZERO
+
+# 浮动摇杆
+var _stick: Node2D
+var _stick_base := Vector2.ZERO
+var _stick_touch := -1
+var _stick_dir := Vector2.ZERO
+var _stick_active := false
+
+# 门禁可观测
 var last_emitted := ""
-## 门禁可观测：最近一次合成出去的键 / 鼠标
 var last_key := -1
 var last_mouse := false
+var _test_canvas: Vector2i = Vector2i.ZERO
+var _test_window: Vector2i = Vector2i.ZERO
+var _test_dpi: int = 0
+
+const MENU_ITEMS := ["继续", "暂停", "装填", "查看", "蹲下", "退出"]
 
 
 func _ready() -> void:
 	layer = 20
+	_canvas = ScreenLayout.canvas_of(self)
 	_build()
 	apply_safe_area()
-	# 手机 expand 填满屏幕后视口是 555×256 而不是 384×216，要等一帧才更新；
-	# 重排一次让右侧/底部按钮贴边。桌面与门禁在 384×216 下偏移为 0，不会重排。
 	await get_tree().process_frame
-	if _sync_expand_offset() != Vector2i.ZERO:
+	var canvas := ScreenLayout.canvas_of(self)
+	if canvas != _canvas:
+		_canvas = canvas
 		_rebuild()
 
 
-## 视口比原生大出来的部分（expand 后 = 555-384, 256-216）。桌面恒为 (0,0)。
-var _canvas := Vector2i(VIEW.x, VIEW.y)
+# ── 尺寸与几何 ─────────────────────────────────────────────
+
+## 毫米 → 画布像素。桌面/门禁可用 set_metrics_for_test 注入固定值，保证断言可复现。
+func _mm(mm_value: float) -> int:
+	var dpi := float(_test_dpi if _test_dpi > 0 else maxi(160, DisplayServer.screen_get_dpi()))
+	var win := float(_test_window.x if _test_window.x > 0 else maxi(1, DisplayServer.window_get_size().x))
+	var scale := win / float(maxi(1, _canvas.x))
+	if scale <= 0.0:
+		scale = 1.0
+	return int(round(mm_value / 25.4 * dpi / scale))
 
 
-func _sync_expand_offset() -> Vector2i:
-	# CanvasLayer 没有 get_viewport_rect()（那是 CanvasItem 的），走 Viewport.get_visible_rect()。
-	var visible := get_viewport().get_visible_rect().size
-	var size := Vector2i(int(visible.x), int(visible.y))
-	_canvas = Vector2i(maxi(VIEW.x, size.x), maxi(VIEW.y, size.y))
-	_expand = _canvas - Vector2i(VIEW)
-	return _expand
+func set_metrics_for_test(canvas: Vector2i, window: Vector2i, dpi: int) -> void:
+	_test_canvas = canvas
+	_test_window = window
+	_test_dpi = dpi
+	_canvas = canvas
+	_rebuild()
 
 
-func _rebuild() -> void:
-	if _buttons_root != null:
-		_buttons_root.queue_free()
-	_buttons.clear()
-	_visuals.clear()
-	_spec_by_id.clear()
-	_build()
-	apply_safe_area()
+## 主键边长（画布像素）
+func attack_size() -> int:
+	return maxi(24, _mm(11.0))
+
+
+func search_size() -> int:
+	return maxi(22, _mm(10.0))
+
+
+func small_size() -> int:
+	return maxi(18, _mm(8.0))
+
+
+## 六颗常驻/上下文控件的矩形（全部从画布右下角与右上角推出来）
+func rects() -> Dictionary:
+	var w := float(_canvas.x)
+	var h := float(_canvas.y)
+	var r := _inset.z
+	var b := _inset.w
+	var t := _inset.y
+	var a := float(attack_size())
+	var s := float(search_size())
+	var m := float(small_size())
+	var g := float(maxi(GAP, _mm(2.0)))
+
+	var out := {}
+	# 右下：打
+	var attack := Rect2(w - r - EDGE - a, h - b - EDGE - a, a, a)
+	out["attack"] = attack
+	# 打正上方：搜（上下文）。中心距 = (a+s)/2 + 间隙，必须 ≥ 14mm
+	var search_gap := maxf(g, float(_mm(4.0)))
+	var search := Rect2(attack.get_center().x - s * 0.5,
+		attack.position.y - search_gap - s, s, s)
+	out["search"] = search
+	# 打左侧：跑；跑上方：灯（与打物理隔开）
+	var run := Rect2(attack.position.x - g - m, attack.position.y + a - m, m, m)
+	var lamp := Rect2(run.position.x, run.position.y - g - m, m, m)
+	out["run"] = run
+	out["lamp"] = lamp
+	# 右上：包 + ≡（两格，右对齐）
+	var menu := Rect2(w - r - EDGE - m, t + EDGE, m, m)
+	var bag := Rect2(menu.position.x - g - m, t + EDGE, m, m)
+	out["bag"] = bag
+	out["menu"] = menu
+	return out
 
 
 func _build() -> void:
@@ -104,47 +156,69 @@ func _build() -> void:
 	root.name = "Buttons"
 	add_child(root)
 	_buttons_root = root
-	for raw: Dictionary in SPECS:
-		var spec: Dictionary = raw.duplicate(true)
-		var id := String(spec["id"])
-		_spec_by_id[id] = spec
-		var rect := _rect_of(spec)
+	for id: String in KEYS.keys():
+		var spec: Dictionary = KEYS[id]
 		var button := TouchScreenButton.new()
 		button.name = "T_" + id
-		button.position = rect.position
 		var shape := RectangleShape2D.new()
-		shape.size = Vector2(rect.size)
+		shape.size = Vector2.ONE
 		button.shape = shape
 		button.passby_press = false
 		button.pressed.connect(_on_pressed.bind(id))
 		button.released.connect(_on_released.bind(id))
 		root.add_child(button)
 		_buttons[id] = button
-		_visuals[id] = _build_visual(root, id, rect, String(spec["label"]), String(spec.get("arrow", "")))
+		_visuals[id] = _build_visual(root, id)
+	_apply_rects()
+	_build_stick()
+	_build_menu()
 
 
-func _rect_of(spec: Dictionary) -> Rect2i:
-	var r: Array = spec["rect"]
-	var rect := Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3]))
-	var id := String(spec.get("id", ""))
-	if ANCHOR_RIGHT.has(id):
-		rect.position.x += _expand.x
-	if ANCHOR_BOTTOM.has(id):
-		rect.position.y += _expand.y
-	return rect
+func _rebuild() -> void:
+	if _buttons_root != null:
+		_buttons_root.queue_free()
+	_buttons.clear()
+	_visuals.clear()
+	_menu_layer = null
+	_stick = null
+	_build()
+	apply_safe_area()
 
 
-## 一个按钮的外观：底 + 1px 边 + 居中标签（或点阵箭头）。全部 ColorRect / 点阵字，天然过像素门禁。
-func _build_visual(parent: Node2D, id: String, rect: Rect2i, label: String, arrow: String) -> Node2D:
+## 把矩形写回按钮与外观（外观按当前矩形重画）
+func _apply_rects() -> void:
+	var table := rects()
+	for id: String in table.keys():
+		var rect: Rect2 = table[id]
+		var button: TouchScreenButton = _buttons[id]
+		button.position = rect.position
+		button.shape.size = rect.size
+		if id == "menu":
+			button.visible = not _menu_open
+		elif id == "search":
+			button.visible = _search_available
+		var visual: Node2D = _visuals[id]
+		_draw_visual(visual, id, rect)
+		visual.visible = button.visible
+
+
+func _build_visual(parent: Node2D, id: String) -> Node2D:
 	var node := Node2D.new()
 	node.name = "V_" + id
 	parent.add_child(node)
+	return node
+
+
+## 外观：底 + 1px 边 + 居中标签。色值只取调色板里的 UI 色（#e8e4d8 正文、#354b60 边）。
+func _draw_visual(node: Node2D, id: String, rect: Rect2) -> void:
+	for child: Node in node.get_children():
+		child.queue_free()
 	var fill := ColorRect.new()
 	fill.name = "Fill"
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fill.color = FILL
-	fill.position = Vector2(rect.position)
-	fill.size = Vector2(rect.size)
+	fill.color = FILL_HOT if _is_hot(id) else FILL
+	fill.position = rect.position
+	fill.size = rect.size
 	node.add_child(fill)
 	for edge: Array in [
 		[rect.position, Vector2(rect.size.x, 1)],
@@ -154,154 +228,349 @@ func _build_visual(parent: Node2D, id: String, rect: Rect2i, label: String, arro
 	]:
 		var line := ColorRect.new()
 		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		line.color = EDGE
+		line.color = EDGE_COLOR if not (_menu_open and id == "menu") else INK
 		line.position = Vector2(edge[0])
 		line.size = Vector2(edge[1])
 		node.add_child(line)
-	if arrow.is_empty():
-		_set_label(node, rect, label)
-	else:
-		_draw_arrow(node, rect, arrow)
-	return node
-
-
-## 方向键箭头：不依赖字体（图集里没有 ←↑↓），直接按 7×7 点阵画，格子放大 2 倍。
-const ARROWS := {
-	"left": [
-		"...#...",
-		"..##...",
-		".####..",
-		"#######",
-		".####..",
-		"..##...",
-		"...#...",
-	],
-	"right": [
-		"...#...",
-		"...##..",
-		"..####.",
-		"#######",
-		"..####.",
-		"...##..",
-		"...#...",
-	],
-	"up": [
-		"...#...",
-		"..###..",
-		".#####.",
-		"#######",
-		"...#...",
-		"...#...",
-		"...#...",
-	],
-	"down": [
-		"...#...",
-		"...#...",
-		"...#...",
-		"#######",
-		".#####.",
-		"..###..",
-		"...#...",
-	],
-}
-const ARROW_CELL := 2
-
-
-func _draw_arrow(node: Node2D, rect: Rect2i, direction: String) -> void:
-	var rows: Array = ARROWS.get(direction, [])
-	if rows.is_empty():
+	var label := String(KEYS[id].get("label", ""))
+	if id == "menu":
+		# ≡ 用三条 1px 横线画（图集里没有 ≡，也不该为它加字形）
+		for index in range(3):
+			var bar := ColorRect.new()
+			bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			bar.color = INK
+			bar.size = Vector2(rect.size.x * 0.5, 1)
+			bar.position = rect.position + Vector2(rect.size.x * 0.25, rect.size.y * 0.5 - 3 + index * 3)
+			node.add_child(bar)
 		return
-	var cells := rows.size()
-	var span := cells * ARROW_CELL
-	var origin := Vector2(
-		rect.position.x + int((rect.size.x - span) * 0.5),
-		rect.position.y + int((rect.size.y - span) * 0.5),
-	)
-	for row in range(cells):
-		var line := String(rows[row])
-		for col in range(line.length()):
-			if line[col] != "#":
-				continue
-			var pixel := ColorRect.new()
-			pixel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			pixel.color = INK
-			pixel.position = origin + Vector2(col * ARROW_CELL, row * ARROW_CELL)
-			pixel.size = Vector2(ARROW_CELL, ARROW_CELL)
-			node.add_child(pixel)
-
-
-func _set_label(node: Node2D, rect: Rect2i, label: String) -> void:
-	var old := node.get_node_or_null("Label")
-	if old != null:
-		old.queue_free()
+	if label.is_empty():
+		return
 	var holder := Node2D.new()
 	holder.name = "Label"
 	node.add_child(holder)
-	var width := PixelFont.width_of(label)
-	var glyph_h := 12 if not PixelFont.ORDER.contains(label.substr(0, 1)) else 8
+	var text := label
+	if id == "run":
+		text = "跑" if not _run_on else "停"
+	var width := PixelFont.width_of(text)
 	var at := Vector2(
 		rect.position.x + int((rect.size.x - width) * 0.5),
-		rect.position.y + int((rect.size.y - glyph_h) * 0.5),
+		rect.position.y + int((rect.size.y - 12) * 0.5),
 	)
-	PixelFont.draw(holder, label, at, HOT)
+	PixelFont.draw(holder, text, at, INK)
+
+
+func _is_hot(id: String) -> bool:
+	if id == "run":
+		return _run_on
+	if id == "search":
+		return _search_available
+	return _held.has(id)
+
+
+# ── 浮动摇杆 ───────────────────────────────────────────────
+
+func _build_stick() -> void:
+	_stick = Node2D.new()
+	_stick.name = "Stick"
+	_stick.visible = false
+	add_child(_stick)
+
+
+## 按下即出现在触点，松手归位；只在左下象限生效（不抢右侧动作区）。
+func _stick_begin(pos: Vector2, index: int) -> void:
+	if _menu_open:
+		return
+	if pos.x > _canvas.x * 0.55 or pos.y < _canvas.y * 0.5:
+		return
+	_stick_touch = index
+	_stick_active = true
+	_stick_base = pos
+	_stick_dir = Vector2.ZERO
+	_stick.visible = true
+	_stick.position = pos
+	_draw_stick()
+
+
+func _stick_move(pos: Vector2) -> void:
+	if not _stick_active:
+		return
+	var radius := float(maxi(20, _mm(12.0)))
+	var delta := pos - _stick_base
+	if delta.length() > radius:
+		_stick_base = pos - delta.normalized() * radius
+		delta = delta.normalized() * radius
+	var dead := radius * 0.25
+	_stick_dir = Vector2.ZERO if delta.length() < dead else (delta / radius)
+	_apply_stick_actions()
+	_draw_stick()
+
+
+func _stick_end() -> void:
+	_stick_active = false
+	_stick_touch = -1
+	_stick_dir = Vector2.ZERO
+	_stick.visible = false
+	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down"]:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+
+
+func _apply_stick_actions() -> void:
+	if not _stick_active:
+		return
+	var threshold := 0.28
+	_axis(&"move_left", &"move_right", _stick_dir.x, threshold)
+	_axis(&"move_up", &"move_down", _stick_dir.y, threshold)
+
+
+func _axis(neg: StringName, pos: StringName, value: float, threshold: float) -> void:
+	if InputMap.has_action(neg):
+		if value < -threshold:
+			Input.action_press(neg)
+		else:
+			Input.action_release(neg)
+	if InputMap.has_action(pos):
+		if value > threshold:
+			Input.action_press(pos)
+		else:
+			Input.action_release(pos)
+
+
+func _draw_stick() -> void:
+	for child: Node in _stick.get_children():
+		child.queue_free()
+	var radius := float(maxi(20, _mm(12.0)))
+	var knob := float(maxi(10, _mm(6.0)))
+	var base := ColorRect.new()
+	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	base.color = Color(0, 0, 0, 0)
+	base.position = Vector2(-radius, -radius)
+	base.size = Vector2(radius * 2, radius * 2)
+	_stick.add_child(base)
+	_ring(_stick, radius)
+	var knob_rect := ColorRect.new()
+	knob_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	knob_rect.color = GHOST
+	knob_rect.position = _stick_dir * radius * 0.8 - Vector2(knob, knob) * 0.5
+	knob_rect.size = Vector2(knob, knob)
+	_stick.add_child(knob_rect)
+
+
+## 用 1px 线段画圆环（像素风不用抗锯齿圆）
+func _ring(parent: Node2D, radius: float) -> void:
+	var steps := 24
+	var last := Vector2.ZERO
+	for index in range(steps + 1):
+		var angle := TAU * float(index) / float(steps)
+		var point := Vector2(cos(angle), sin(angle)) * radius
+		if index > 0:
+			var mid := (last + point) * 0.5
+			var seg := ColorRect.new()
+			seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			seg.color = Color(0.91, 0.89, 0.85, 0.18)
+			seg.position = mid - Vector2(1, 1)
+			seg.size = Vector2(2, 2)
+			parent.add_child(seg)
+		last = point
+
+
+# ── ≡ 菜单 ─────────────────────────────────────────────────
+
+func _build_menu() -> void:
+	_menu_layer = Node2D.new()
+	_menu_layer.name = "Menu"
+	_menu_layer.visible = false
+	add_child(_menu_layer)
+
+
+func open_menu() -> void:
+	_menu_open = true
+	_menu_index = 0
+	_apply_rects()
+	_draw_menu()
+
+
+func close_menu() -> void:
+	_menu_open = false
+	_menu_layer.visible = false
+	_apply_rects()
+
+
+func menu_open() -> bool:
+	return _menu_open
+
+
+func menu_items() -> Array:
+	return MENU_ITEMS
+
+
+func menu_rows() -> Array:
+	var out := []
+	var w := float(_canvas.x)
+	var item_h := float(maxi(18, _mm(9.0)))
+	var pad := 4.0
+	var width := 72.0
+	var height := item_h * MENU_ITEMS.size() + pad * 2
+	var x := w - 12.0 - width
+	var y := _inset.y + 8.0
+	for index in range(MENU_ITEMS.size()):
+		out.append(Rect2(x, y + pad + index * item_h, width, item_h - 2))
+	return out
+
+
+func _draw_menu() -> void:
+	for child: Node in _menu_layer.get_children():
+		child.queue_free()
+	_menu_layer.visible = true
+	var rows := menu_rows()
+	var first: Rect2 = rows[0]
+	var last: Rect2 = rows[rows.size() - 1]
+	var panel := ColorRect.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.color = Color(0.043, 0.067, 0.098, 0.94)
+	panel.position = Vector2(first.position.x - 4, first.position.y - 4)
+	panel.size = Vector2(first.size.x + 8, last.end.y - first.position.y + 8)
+	_menu_layer.add_child(panel)
+	for index in range(rows.size()):
+		var row: Rect2 = rows[index]
+		if index == _menu_index:
+			var bar := ColorRect.new()
+			bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			bar.color = Color(0.129, 0.208, 0.278, 1)
+			bar.position = row.position
+			bar.size = row.size
+			_menu_layer.add_child(bar)
+		PixelFont.draw(_menu_layer, MENU_ITEMS[index],
+			row.position + Vector2(6, int((row.size.y - 12) * 0.5)), INK)
+
+
+## 点菜单行；返回被点的项名（空 = 没点中面板）
+func tap_menu_at(pos: Vector2) -> String:
+	if not _menu_open:
+		return ""
+	var rows := menu_rows()
+	for index in range(rows.size()):
+		if (rows[index] as Rect2).has_point(pos):
+			_menu_index = index
+			_draw_menu()
+			return MENU_ITEMS[index]
+	return ""
+
+
+func activate_menu_row(index: int) -> String:
+	if index < 0 or index >= MENU_ITEMS.size():
+		return ""
+	_menu_index = index
+	_draw_menu()
+	return MENU_ITEMS[index]
+
+
+# ── 输入分发 ───────────────────────────────────────────────
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed:
+			if _menu_open:
+				var hit := tap_menu_at(touch.position)
+				if not hit.is_empty():
+					_on_menu_choice(hit)
+				return
+			_stick_begin(touch.position, touch.index)
+		elif touch.index == _stick_touch:
+			_stick_end()
+		return
+	if event is InputEventScreenDrag:
+		var drag := event as InputEventScreenDrag
+		if drag.index == _stick_touch:
+			_stick_move(drag.position)
+		return
 
 
 func _on_pressed(id: String) -> void:
-	var spec: Dictionary = _spec_by_id.get(id, {})
+	var spec: Dictionary = KEYS.get(id, {})
 	if spec.is_empty():
 		return
-	if spec["kind"] == "gait":
-		_cycle_gait()
-		_light_up(id, true)
-	elif spec["kind"] == "hold":
-		# 键事件只给「只认事件」的地方（菜单/旅行图/背包）；移动靠 action 状态。
-		# 注意：Input.parse_input_event 是**下一帧**才 flush 的，合成的 KEY_x release
-		# 会把刚压下的 action 清掉（真机实测：按住方向键人物不动）。
-		# 所以按住期间每帧重申一次，见 _process 里的 _held。
-		var key := int(spec.get("key", -1))
-		if key >= 0:
-			_send_key(key)
-		var action := StringName(spec["action"])
-		Input.action_press(action)
-		_held[id] = action
-		_light_up(id, true)
-	else:
-		_tap(spec)
-		_light_up(id, true)
+	if spec["kind"] == "menu":
+		if _menu_open:
+			close_menu()
+		else:
+			open_menu()
+		last_emitted = "menu"
+		emitted.emit(id)
+		return
+	if id == "search":
+		_tap_key(69, "pickup")
+	elif id == "attack":
+		_send_mouse_left()
+		_pulse("attack")
+	elif id == "lamp":
+		_tap_key(70, "toggle_light")
+	elif id == "run":
+		_toggle_run()
+	elif id == "bag":
+		_tap_key(4194306, "inventory")
 	last_emitted = id
 	emitted.emit(id)
+	_apply_rects()
 
 
 func _on_released(id: String) -> void:
-	var spec: Dictionary = _spec_by_id.get(id, {})
-	if spec.is_empty():
+	if id == "run":
 		return
-	if spec["kind"] == "hold":
-		Input.action_release(StringName(spec["action"]))
-		_held.erase(id)
-	_light_up(id, false)
+	_apply_rects()
 
 
-func _light_up(id: String, hot: bool) -> void:
-	var visual: Node2D = _visuals.get(id)
-	if visual == null:
+func _on_menu_choice(item: String) -> void:
+	match item:
+		"继续":
+			close_menu()
+		"暂停":
+			_tap_key(4194305, "cancel_inspect")   # Esc：走廊里等价「暂停/收起」
+			close_menu()
+		"装填":
+			_tap_key(82, "reload")
+			close_menu()
+		"查看":
+			_tap_key(86, "view")
+			close_menu()
+		"蹲下":
+			_toggle_crouch()
+			close_menu()
+		"退出":
+			_tap_key(4194305, "cancel_inspect")
+			close_menu()
+
+
+func _toggle_run() -> void:
+	_run_on = not _run_on
+	if InputMap.has_action(&"sprint"):
+		if _run_on:
+			Input.action_press(&"sprint")
+		else:
+			Input.action_release(&"sprint")
+
+
+func _toggle_crouch() -> void:
+	if not InputMap.has_action(&"crouch"):
 		return
-	var fill := visual.get_node_or_null("Fill") as ColorRect
-	if fill != null:
-		fill.color = FILL_HOT if hot else FILL
-
-
-## 一次性动作：先合成事件（走廊/菜单靠事件），再保证动作状态按下这一帧也是真的。
-func _tap(spec: Dictionary) -> void:
-	var action := StringName(spec["action"])
-	var key := int(spec.get("key", -1))
-	if key < 0:
-		_send_mouse_left()
+	if Input.is_action_pressed(&"crouch"):
+		Input.action_release(&"crouch")
 	else:
-		_send_key(key)
-	if action != &"" and InputMap.has_action(action):
-		Input.action_press(action)
-		Input.action_release(action)
+		Input.action_press(&"crouch")
+
+
+func _pulse(action: String) -> void:
+	if InputMap.has_action(StringName(action)):
+		Input.action_press(StringName(action))
+		Input.action_release(StringName(action))
+
+
+func _tap_key(keycode: int, action: String) -> void:
+	_send_key(keycode)
+	if InputMap.has_action(StringName(action)):
+		Input.action_press(StringName(action))
+		Input.action_release(StringName(action))
 
 
 func _send_key(keycode: int) -> void:
@@ -322,99 +591,60 @@ func _send_mouse_left() -> void:
 		Input.parse_input_event(event)
 
 
-## 步态：走 → 跑 → 蹲 → 走。手机上一只手按两个速度键太别扭，改成循环切换。
-func _cycle_gait() -> void:
-	_gait_index = (_gait_index + 1) % GAITS.size()
-	if InputMap.has_action(&"sprint"):
-		Input.action_release(&"sprint")
-	if InputMap.has_action(&"crouch"):
-		Input.action_release(&"crouch")
-	match _gait_index:
-		1:
-			if InputMap.has_action(&"sprint"):
-				Input.action_press(&"sprint")
-		2:
-			if InputMap.has_action(&"crouch"):
-				Input.action_press(&"crouch")
-	var rect := _rect_of(_spec_by_id["gait"])
-	_set_label(_visuals["gait"], rect, GAITS[_gait_index])
+# ── 对外接口（走廊/门禁）────────────────────────────────────
 
-
-func gait_index() -> int:
-	return _gait_index
-
-
-## 安全区：刘海/挖孔在横屏会吃掉左右边。把每个按钮的矩形挪回安全区内。
-func apply_safe_area() -> void:
-	var win := Vector2(DisplayServer.window_get_size())
-	if win.x <= 0.0 or win.y <= 0.0:
+## 走廊每帧告诉触摸层「现在附近有没有可搜索物」：true 才出现「搜」。
+func set_search_available(value: bool) -> void:
+	if value == _search_available:
 		return
-	var safe := DisplayServer.get_display_safe_area()
-	if safe.size.x <= 0 or safe.size.y <= 0:
-		return
-	var view := Vector2(_canvas)
-	var scale := minf(win.x / view.x, win.y / view.y)
-	if scale <= 0.0:
-		return
-	var origin := (win - view * scale) * 0.5
-	var home := Rect2(
-		(safe.position.x - origin.x) / scale,
-		(safe.position.y - origin.y) / scale,
-		safe.size.x / scale,
-		safe.size.y / scale,
-	)
-	_set_safe_rect(home)
+	_search_available = value
+	_apply_rects()
 
 
-## 门禁用：直接给一个 384 空间的安全矩形，绕开真机。
-func _set_safe_rect(home: Rect2) -> void:
-	_safe_canvas = home.intersection(Rect2(0, 0, _canvas.x, _canvas.y))
-	for id: String in _buttons.keys():
-		var spec: Dictionary = _spec_by_id[id]
-		var rect := _rect_of(spec)
-		var moved := rect
-		if home.size.x > 0.0:
-			if moved.end.x > int(home.end.x):
-				moved.position.x -= moved.end.x - int(home.end.x)
-			if moved.position.x < int(home.position.x):
-				moved.position.x = int(home.position.x)
-			if moved.end.y > int(home.end.y):
-				moved.position.y -= moved.end.y - int(home.end.y)
-			if moved.position.y < int(home.position.y):
-				moved.position.y = int(home.position.y)
-		var button: TouchScreenButton = _buttons[id]
-		button.position = Vector2(moved.position)
-		var visual: Node2D = _visuals.get(id)
-		if visual != null:
-			var shift := Vector2(moved.position - rect.position)
-			for child: Node in visual.get_children():
-				if child is ColorRect:
-					(child as ColorRect).position += shift
-			var holder := visual.get_node_or_null("Label")
-			if holder != null:
-				for child: Node in holder.get_children():
-					if child is Node2D:
-						(child as Node2D).position += shift
+func search_available() -> bool:
+	return _search_available
 
 
-func safe_canvas() -> Rect2:
-	return _safe_canvas
+func run_on() -> bool:
+	return _run_on
 
 
-func button_rect(id: String) -> Rect2:
-	var button: TouchScreenButton = _buttons.get(id)
-	if button == null:
-		return Rect2()
-	var shape := button.shape as RectangleShape2D
-	var size := shape.size if shape != null else Vector2.ZERO
-	return Rect2(button.position, size)
+func joystick_active() -> bool:
+	return _stick_active
+
+
+func joystick_dir() -> Vector2:
+	return _stick_dir
+
+
+func set_dimmed(value: bool) -> void:
+	_dimmed = value
+	if _buttons_root != null:
+		_buttons_root.modulate.a = 0.35 if value else 1.0
+	if _stick != null:
+		_stick.modulate.a = 0.35 if value else 1.0
+
+
+func is_dimmed() -> bool:
+	return _dimmed
 
 
 func button_ids() -> Array:
 	return _buttons.keys()
 
 
-# ── 门禁直接调用的入口（免真实触摸事件）──────────────────────
+func button_visible(id: String) -> bool:
+	var button: TouchScreenButton = _buttons.get(id)
+	return button != null and button.visible
+
+
+func button_rect(id: String) -> Rect2:
+	var i := KEYS.keys().find(id)
+	if i < 0:
+		return Rect2()
+	return rects()[id]
+
+
 func press(id: String) -> void:
 	_on_pressed(id)
 
@@ -423,16 +653,40 @@ func release(id: String) -> void:
 	_on_released(id)
 
 
-## 面板打开时压透明度（不清空 visible：还要能点着关掉）
-func set_dimmed(value: bool) -> void:
-	_dimmed = value
-	if _buttons_root != null:
-		_buttons_root.modulate.a = DIM_ALPHA if value else 1.0
+func apply_safe_area() -> void:
+	var win := Vector2(DisplayServer.window_get_size())
+	if win.x <= 0.0 or win.y <= 0.0:
+		win = Vector2(_test_window) if _test_window.x > 0 else win
+	if win.x <= 0.0 or win.y <= 0.0:
+		return
+	var safe := DisplayServer.get_display_safe_area()
+	if safe.size.x <= 0 or safe.size.y <= 0:
+		_inset = Vector4(0, 0, 0, 0)
+		_apply_rects()
+		return
+	var view := Vector2(_canvas)
+	var scale := maxf(0.0001, win.x / view.x)
+	var origin := (win - view * scale) * 0.5
+	_inset = Vector4(
+		maxf(0.0, (safe.position.x - origin.x) / scale),
+		maxf(0.0, (safe.position.y - origin.y) / scale),
+		maxf(0.0, (win.x - (safe.position.x + safe.size.x) - origin.x) * -1.0 / scale),
+		maxf(0.0, (win.y - (safe.position.y + safe.size.y) - origin.y) * -1.0 / scale),
+	)
+	_apply_rects()
 
 
-func is_dimmed() -> bool:
-	return _dimmed
+func set_safe_inset_for_test(inset: Vector4) -> void:
+	_inset = inset
+	_apply_rects()
+
+
+func safe_inset() -> Vector4:
+	return _inset
+
 
 func _process(_delta: float) -> void:
 	for id: String in _held:
 		Input.action_press(_held[id])
+	if _stick_active:
+		_apply_stick_actions()

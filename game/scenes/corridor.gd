@@ -207,6 +207,8 @@ func _ready() -> void:
 	_spawn_enemies()
 	_load_inspections()
 	_load_loot()
+	# 教学改成「不写字」：只在可搜索容器上方留一格极淡微光（见 design/MOBILE.md §教学）
+	_build_container_glows()
 	_inventory = InventoryService.new(INVENTORY_CAPACITY)
 	_status = StatusService.new()
 	if not _status.load_all():
@@ -796,6 +798,40 @@ func _inspectable_prop_count() -> int:
 	return count
 
 
+## 触屏「搜」只在贴近**可搜索容器**时出现；可检查但不可搜的物件（如停摆时钟）不触发它。
+func _searchable_nearby() -> bool:
+	var id := _nearest_inspection_id()
+	if id.is_empty() or _loot == null:
+		return false
+	return _loot.has_container(id)
+
+
+## 柜子上方一格极淡微光：只表达「这个能碰」，不指路、不导航、不写文案。
+## 颜色锁调色板 c07_edge（#354b60），整数像素，不新增资产。
+const GLOW_COLOR := Color("#354b60")
+
+
+func _build_container_glows() -> void:
+	var root := Node2D.new()
+	root.name = "ContainerGlow"
+	add_child(root)
+	if _loot == null:
+		return
+	for id: String in _inspection_order:
+		if not _loot.has_container(id):
+			continue
+		var prop := $Props.get_node_or_null(NodePath(id)) as Sprite2D
+		if prop == null or prop.texture == null:
+			continue
+		var glow := ColorRect.new()
+		glow.name = "Glow"
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		glow.color = GLOW_COLOR
+		glow.size = Vector2(5, 1)
+		glow.position = Vector2(-2.5, -prop.texture.get_height() * 0.5 - 4.0)
+		prop.add_child(glow)
+
+
 func _nearest_inspection_id() -> String:
 	if _player == null or _inspection_records.is_empty():
 		return ""
@@ -1191,6 +1227,17 @@ func _build_camera() -> void:
 	add_child(_camera)
 
 
+## HUD 文字：暗底不用纯白（#e8e4d8），关键数字加 1px 深色描边防糊（对比度见 MOBILE.md 验收 C）。
+const HUD_INK := Color("#e8e4d8")
+const HUD_OUTLINE := Color("#0b1119")
+
+
+func _draw_hud_outlined(parent: Node, text: String, at: Vector2, tint: Color) -> void:
+	for offset: Vector2 in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
+		PixelFont.draw(parent, text, at + offset, HUD_OUTLINE)
+	PixelFont.draw(parent, text, at, tint)
+
+
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "HUD"
@@ -1201,9 +1248,9 @@ func _build_hud() -> void:
 	var dim := Color("#354b60")
 	var day3_mark := Color("#0b1119")
 	var frame_color := Color("#635e57")
-	PixelFont.draw(layer, "DAY 3", Vector2(8, 8), ink)
+	_draw_hud_outlined(layer, "DAY 3", Vector2(8, 8), HUD_INK)
 	if _travel != null and _travel.has_building(_current_building):
-		PixelFont.draw(layer, _travel.label_of(_current_building), Vector2(8, 22), Color("#635e57"))
+		_draw_hud_outlined(layer, _travel.label_of(_current_building), Vector2(8, 22), Color("#8c8378"))
 	_build_hud_stats_root(layer)
 
 	var widths := [44, 36, 28, 44, 24, 40]
@@ -1277,8 +1324,8 @@ func _refresh_hud_stats() -> void:
 		_player.status_speed_scale = _status.speed_multiplier()
 		_refresh_status_fx()
 	# 行距 15：PF-02 汉字墨迹 13×14，10px 行距会直接叠字。
-	PixelFont.draw(_hud_stats_root, "物资 %d" % int(round(_get_supplies() * 100.0)), Vector2(8, 42), Color("#9fb2bd"))
-	PixelFont.draw(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), Color("#9fb2bd"))
+	_draw_hud_outlined(_hud_stats_root, "物资 %d" % int(round(_get_supplies() * 100.0)), Vector2(8, 42), HUD_INK)
+	_draw_hud_outlined(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), HUD_INK)
 	var weapon_text := "空手"
 	if not _equipped.is_empty():
 		weapon_text = _loot.item_name(_equipped)
@@ -1286,26 +1333,21 @@ func _refresh_hud_stats() -> void:
 			weapon_text += " 耐久 %d" % _weapon_durability
 		elif _weapon_magazine > 0:
 			weapon_text += " 弹 %d/%d" % [_magazine, _weapon_magazine]
-	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 72), Color("#9fb2bd"))
-	PixelFont.draw(_hud_stats_root, "敌人 %d" % alive, Vector2(8, 87), Color("#9fb2bd"))
+	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 72), HUD_INK)
+	PixelFont.draw(_hud_stats_root, "敌人 %d" % alive, Vector2(8, 87), HUD_INK)
 	var status_text := _status.summary() if _status != null else ""
 	if not status_text.is_empty():
-		PixelFont.draw(_hud_stats_root, status_text, Vector2(8, 117), Color("#bfb6a3"))
+		_draw_hud_outlined(_hud_stats_root, status_text, Vector2(8, 117), HUD_INK)
 	if _at_exit:
-		_draw_hint(_hud_stats_root, "leave", Vector2(8, 132), Color("#f6f6f0"))
+		_draw_hint(_hud_stats_root, "leave", Vector2(8, 132), HUD_INK)
 	elif _combat_message_frames > 0 and not _combat_message.is_empty():
-		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 132), Color("#f6f6f0"))
-	_draw_tutorial_hint()
+		_draw_hud_outlined(_hud_stats_root, _combat_message, Vector2(8, 132), HUD_INK)
 
 
-## P0-4：引导那一行字。放在 (120, 8)：左边是 DAY/楼名，右边 238 起是触摸按钮。
+## 教学不再写字（约束：不写「走到柜子前点 E 搜索」这类替玩家思考的导航句）；
+## 只保留「柜子上方一格微光」（_build_container_glows）。这里的函数体故意为空。
 func _draw_tutorial_hint() -> void:
-	if _tutorial == null or _hud_stats_root == null:
-		return
-	var text := _tutorial.prompt(_mobile != null)
-	if text.is_empty():
-		return
-	PixelFont.draw(_hud_stats_root, text, Vector2(120, 8), Color("#e8c07a"))
+	return
 
 
 func _open_inventory() -> void:
@@ -2137,6 +2179,9 @@ func _process(delta: float) -> void:
 	_update_doors()
 	_update_search(delta)
 	_update_player_anim(delta)
+	# 触屏上下文键：贴近可搜索容器、或站在出口时出现「搜」，离开即消失。
+	if _mobile != null:
+		_mobile.set_search_available(_searchable_nearby() or _at_exit)
 	var near_exit := _player != null and _player.position.x >= EXIT_HINT_X
 	if near_exit != _at_exit:
 		_at_exit = near_exit

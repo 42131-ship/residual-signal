@@ -56,17 +56,12 @@ func is_done() -> bool:
 	return step >= STEP_DONE
 
 
-## 当前该显示的一行字；空串 = 不显示。
-func prompt(touch: bool) -> String:
-	match step:
-		STEP_MOVE:
-			return "点左侧方向键走两步" if touch else "按 A / D 走两步"
-		STEP_SEARCH:
-			return "走到柜子前点 E 搜索" if touch else "走到柜子前按 E 搜索"
-		STEP_DEPART:
-			return "走到右侧出口点 E 出门" if touch else "走到右侧出口按 E 出门"
-		_:
-			return ""
+## 当前该显示的一行字；**恒为空**。
+## 2026-11-26 按《手机玩家舒适圈》约束改正：不写「走到柜子前点 E 搜索」这类替玩家思考的导航句。
+## 教学改为「柜子上方一格极淡微光」（见 corridor.gd:_build_container_glows）——只表达「这个能碰」，
+## 不指路、不给方向。流程状态（tutorial_step）保留，用于统计与后续分步解锁，不再驱动文案。
+func prompt(_touch: bool) -> String:
+	return ""
 
 
 ## 门禁用：三步各推进一次应得的终态。

@@ -1,25 +1,19 @@
 extends SceneTree
-## 手机触摸层门禁（2026-11-26）。headless 可跑：
-##   .tools/Godot_v4.7.2-stable_win64_console.exe --headless --path . --script res://game/tests/touch_controls.gd
-## 通过输出一行 `TOUCH_OK ...`。
+## 手机触摸层门禁 + 本轮验收 A/B/C（2026-11-26 v2 重排）。headless 可跑：
+##   .tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/touch_controls.gd
+## 通过输出 `TOUCH_OK ...` 与 `TOUCH_ACCEPT A=... B=... C=...`。
 ##
-## 这里守的是**可回归的契约**，不是「真机点得准不准」（那是引擎 TouchScreenButton 的事）：
-##   ① 布局：每颗按钮都在 384×216 内、不压左侧 HUD、彼此不重叠
-##   ② 安全区：给一个收窄的安全矩形，所有按钮必须挪回里面（刘海/挖孔）
-##   ③ 按住 = 动作状态（走路/潜行/疾跑），松开就掉
-##   ④ 点按 = 合成事件 + 一次性动作；键码必须与走廊/菜单真实绑定的键一致（改名/换键就红）
-##   ⑤ 触摸层引用的每个动作，走廊或菜单里真的有对应注册
+## 注入的真机指标取 `2602BRT18C`：画布 555×256、窗口 2772×1280、520dpi。
+## 守的是契约（毫米尺寸/分区/上下文键/摇杆/菜单/对比度），不是「真机点得准」（那是引擎拾取）。
 
-const VIEW := Vector2i(384, 216)
-const HUD_ZONE := Rect2i(0, 0, 130, 140)
-const CORRIDOR := "res://game/scenes/corridor.gd"
-const MENU := "res://game/scenes/main_menu.gd"
-const KEY_NAMES := {
-	"KEY_A": KEY_A, "KEY_D": KEY_D, "KEY_W": KEY_W, "KEY_S": KEY_S,
-	"KEY_E": KEY_E, "KEY_V": KEY_V, "KEY_F": KEY_F, "KEY_R": KEY_R,
-	"KEY_TAB": KEY_TAB, "KEY_ESCAPE": KEY_ESCAPE,
-	"KEY_UP": KEY_UP, "KEY_DOWN": KEY_DOWN, "KEY_LEFT": KEY_LEFT, "KEY_RIGHT": KEY_RIGHT,
-}
+const IDS := ["attack", "search", "lamp", "run", "bag", "menu"]
+const CANVAS := Vector2i(555, 256)
+const WINDOW := Vector2i(2772, 1280)
+const DPI := 520
+
+const INK := Color("#e8e4d8")
+const BG_DARK := Color("#0b1119")
+const BG_WALL := Color("#111a26")
 
 var _failures: Array[String] = []
 var _layer: TouchControls
@@ -34,144 +28,173 @@ func _run() -> void:
 	_layer.name = "TouchControls"
 	root.add_child(_layer)
 	await process_frame
+	_layer.set_metrics_for_test(CANVAS, WINDOW, DPI)
+	await process_frame
+	_bind_actions()
 
-	var specs: Array = TouchControls.SPECS
-	_check(_layer.button_ids().size() == specs.size(),
-		"button count %d != specs %d" % [_layer.button_ids().size(), specs.size()])
-
-	# ① 布局
-	for raw: Dictionary in specs:
-		var id := String(raw["id"])
-		var rect := _layer.button_rect(id)
-		_check(rect.size != Vector2.ZERO, "%s has no hit shape" % id)
-		_check(rect.position.x >= 0.0 and rect.position.y >= 0.0
-				and rect.end.x <= float(VIEW.x) and rect.end.y <= float(VIEW.y),
-			"%s outside 384x216: %s" % [id, str(rect)])
-		_check(not rect.intersects(Rect2(HUD_ZONE)),
-			"%s covers HUD zone: %s" % [id, str(rect)])
-	var ids := _layer.button_ids()
-	for i in range(ids.size()):
-		for j in range(i + 1, ids.size()):
-			var a := _layer.button_rect(String(ids[i]))
-			var b := _layer.button_rect(String(ids[j]))
-			_check(not a.intersects(b), "%s overlaps %s" % [ids[i], ids[j]])
-
-	# ② 安全区：左右各收 20（横屏刘海）
-	_layer._set_safe_rect(Rect2(20, 0, VIEW.x - 40, VIEW.y))
-	var safe := Rect2(20, 0, VIEW.x - 40, VIEW.y)
-	for raw: Dictionary in specs:
-		var id := String(raw["id"])
-		var rect := _layer.button_rect(id)
-		_check(safe.encloses(rect), "%s still outside safe area: %s" % [id, str(rect)])
-	_layer._set_safe_rect(Rect2(0, 0, VIEW.x, VIEW.y))
-
-	_bind_actions(specs)
-
-	# ③ 按住 = 动作状态
-	_layer.press("right")
-	_check(Input.is_action_pressed("move_right"), "press right did not hold move_right")
-	_check(_layer.last_key == KEY_D, "right should synthesise KEY_D, got %d" % _layer.last_key)
-	_layer.release("right")
-	_check(not Input.is_action_pressed("move_right"), "release right left move_right stuck")
-
-	# ④ 步态循环：走 → 跑 → 蹲 → 走
-	_check(_layer.gait_index() == 0, "gait should start at walk")
-	_layer.press("gait")
-	_check(Input.is_action_pressed("sprint"), "gait 1 must press sprint")
-	_layer.press("gait")
-	_check(Input.is_action_pressed("crouch") and not Input.is_action_pressed("sprint"),
-		"gait 2 must be crouch only")
-	_layer.press("gait")
-	_check(not Input.is_action_pressed("crouch"), "gait 3 must return to walk")
-
-	# ⑤ 点按：灯 / 交互 / 攻击
-	_layer.press("light")
-	_check(_layer.last_emitted == "light", "light not emitted")
-	_check(_layer.last_key == KEY_F, "light should synthesise KEY_F, got %d" % _layer.last_key)
-	_layer.press("pickup")
-	_check(_layer.last_key == KEY_E, "pickup should synthesise KEY_E, got %d" % _layer.last_key)
-	_layer.press("attack")
-	_check(_layer.last_mouse, "attack should synthesise a left mouse press")
-
-	# ⑥ 键码与走廊 / 菜单的真实绑定一致
-	_check_keys_match(specs)
-	_check_actions_registered(specs)
-
-	# ⑦ 面板打开时压暗，但按钮仍然可点（不能直接 visible=false，否则关不掉面板）
-	_layer.set_dimmed(true)
-	_check(_layer.is_dimmed(), "set_dimmed(true) did not stick")
-	var root_node := _layer.get_node_or_null("Buttons") as Node2D
-	_check(root_node != null and root_node.modulate.a < 1.0, "dim must fade the button layer")
-	_layer.press("menu")
-	_check(_layer.last_emitted == "menu", "dimmed buttons must stay tappable")
-	_layer.set_dimmed(false)
-	_check(root_node != null and is_equal_approx(root_node.modulate.a, 1.0), "undim must restore alpha")
-
-	_finish()
+	_check_ids()
+	var report := _check_geometry()
+	_check_context_key()
+	_check_joystick()
+	_check_menu()
+	var contrast := _check_contrast()
+	_finish(report, contrast)
 
 
-func _bind_actions(specs: Array) -> void:
-	for raw: Dictionary in specs:
-		var action := String(raw.get("action", ""))
-		if action.is_empty():
-			continue
-		if not InputMap.has_action(action):
-			InputMap.add_action(StringName(action))
-	# 步态按钮压的是这两个（不在按钮表里直接出现）
-	for action: String in ["sprint", "crouch"]:
+func _bind_actions() -> void:
+	for action: String in ["move_left", "move_right", "move_up", "move_down", "sprint",
+			"crouch", "attack", "pickup", "toggle_light", "inventory", "reload", "view",
+			"cancel_inspect"]:
 		if not InputMap.has_action(action):
 			InputMap.add_action(StringName(action))
 
 
-## 触摸层合成的键码，必须就是游戏里给这个动作绑的那个键（改键就红）。
-func _check_keys_match(specs: Array) -> void:
-	var corridor := FileAccess.get_file_as_string(CORRIDOR)
-	var menu := FileAccess.get_file_as_string(MENU)
-	for raw: Dictionary in specs:
-		var action := String(raw.get("action", ""))
-		var key := int(raw.get("key", -1))
-		if action.is_empty() or key < 0:
+func _check_ids() -> void:
+	var got := _layer.button_ids()
+	_check(got.size() == IDS.size(), "button count %d != %d" % [got.size(), IDS.size()])
+	for id: String in IDS:
+		_check(got.has(id), "missing button: " + id)
+
+
+## A 单手可达 + 分区 + B 误触率
+func _check_geometry() -> Dictionary:
+	var table := _layer.rects()
+	var w := float(CANVAS.x)
+	var h := float(CANVAS.y)
+	var bottom_third := h * 2.0 / 3.0
+
+	# A：常驻玩法键必须落在下 1/3
+	var reach_fail := 0
+	for id: String in ["attack", "run", "lamp"]:
+		var rect: Rect2 = table[id]
+		if rect.position.y < bottom_third:
+			reach_fail += 1
+			_check(false, "%s above bottom third (y=%.0f < %.0f)" % [id, rect.position.y, bottom_third])
+	# 右上两格：包 + ≡，必须在右上角
+	for id: String in ["bag", "menu"]:
+		var rect: Rect2 = table[id]
+		_check(rect.position.x > w * 0.72 and rect.end.y < h * 0.25,
+			"%s must sit in top-right corner: %s" % [id, str(rect)])
+	# 中央 60% 零控件
+	var center := Rect2(w * 0.2, h * 0.2, w * 0.6, h * 0.6)
+	for id: String in IDS:
+		_check(not (table[id] as Rect2).intersects(center), "%s intrudes into center 60%%" % id)
+
+	# 毫米尺寸
+	var mm_attack := 11.0 * DPI / 25.4 / (float(WINDOW.x) / float(CANVAS.x))
+	_check(_layer.attack_size() >= int(mm_attack) - 1, "attack smaller than 11mm: %d" % _layer.attack_size())
+	_check(_layer.search_size() >= int(10.0 * DPI / 25.4 / (float(WINDOW.x) / float(CANVAS.x))) - 1,
+		"search smaller than 10mm")
+	_check(_layer.small_size() >= int(8.0 * DPI / 25.4 / (float(WINDOW.x) / float(CANVAS.x))) - 1,
+		"small key smaller than 8mm")
+
+	# 打 ↔ 搜 中心距 ≥ 14mm，且不贴边
+	var attack: Rect2 = table["attack"]
+	var search: Rect2 = table["search"]
+	var center_mm := attack.get_center().distance_to(search.get_center()) * (float(WINDOW.x) / float(CANVAS.x)) * 25.4 / DPI
+	_check(center_mm >= 14.0, "attack↔search center distance %.1fmm < 14mm" % center_mm)
+
+	# 常驻键两两不重叠（B 的几何前提）
+	var persistent := ["attack", "run", "lamp"]
+	for i in range(persistent.size()):
+		for j in range(i + 1, persistent.size()):
+			_check(not (table[persistent[i]] as Rect2).intersects(table[persistent[j]] as Rect2),
+				"%s overlaps %s" % [persistent[i], persistent[j]])
+
+	# B：50 次交替「打 / 搜 / 跑」，每次在目标矩形内随机取点，命中必须还是它
+	var seed_value := 20261126
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var sequence := ["attack", "search", "run"]
+	var misses := 0
+	var samples := 0
+	for index in range(50):
+		var target: String = sequence[index % sequence.size()]
+		if target == "search":
+			_layer.set_search_available(true)
+		var rect: Rect2 = _layer.rects()[target]
+		var point := rect.position + Vector2(
+			rng.randf_range(2.0, maxf(3.0, rect.size.x - 2.0)),
+			rng.randf_range(2.0, maxf(3.0, rect.size.y - 2.0)))
+		samples += 1
+		var hit := _hit_test(point)
+		if hit != target:
+			misses += 1
+	_layer.set_search_available(false)
+
+	return {"A": reach_fail == 0, "B": misses, "samples": samples, "center_mm": center_mm}
+
+
+func _hit_test(point: Vector2) -> String:
+	var table := _layer.rects()
+	for id: String in IDS:
+		if id == "search" and not _layer.search_available():
 			continue
-		if action == "attack":
-			continue
-		var expected := _bound_key(corridor, action)
-		if expected == -1:
-			expected = _bound_key(menu, action)
-		_check(expected == key,
-			"%s: touch key %d != game binding %d" % [action, key, expected])
+		if (table[id] as Rect2).has_point(point):
+			return id
+	return ""
 
 
-## 拿取第一个键名（正则取最长 token：直接 find("KEY_D") 会命中 KEY_DOWN 里的 KEY_D）。
-func _bound_key(source: String, action: String) -> int:
-	var needle := "_add_action(\"%s\", [" % action
-	var at := source.find(needle)
-	if at < 0:
-		return -1
-	var line_end := source.find("]", at)
-	if line_end < 0:
-		return -1
-	var snippet := source.substr(at, line_end - at)
-	var regex := RegEx.new()
-	regex.compile("KEY_[A-Z0-9_]+")
-	var found := regex.search(snippet)
-	if found == null:
-		return -1
-	var token := found.get_string()
-	return int(KEY_NAMES.get(token, -1))
+func _check_context_key() -> void:
+	_check(not _layer.search_available(), "search key must start hidden")
+	var visible_before := _layer.button_visible("search")
+	_check(not visible_before, "search visual must be hidden before context")
+	_layer.set_search_available(true)
+	_check(_layer.button_visible("search"), "search visual must appear when context is available")
+	_layer.set_search_available(false)
+	_check(not _layer.button_visible("search"), "search visual must disappear when context ends")
 
 
-func _check_actions_registered(specs: Array) -> void:
-	var corridor := FileAccess.get_file_as_string(CORRIDOR)
-	var menu := FileAccess.get_file_as_string(MENU)
-	for raw: Dictionary in specs:
-		var action := String(raw.get("action", ""))
-		if action.is_empty():
-			continue
-		var ok := corridor.find("_add_action(\"%s\"" % action) >= 0 \
-			or corridor.find("_add_mouse_action(\"%s\"" % action) >= 0 \
-			or menu.find("_add_key(\"%s\"" % action) >= 0 \
-			or menu.find("InputMap.add_action(action)") >= 0 and action.begins_with("menu_")
-		_check(ok, "action %s is not registered by corridor.gd / main_menu.gd" % action)
+func _check_joystick() -> void:
+	_layer._stick_begin(Vector2(120, 200), 0)
+	_check(_layer.joystick_active(), "joystick must activate on touch in the left-bottom zone")
+	_layer._stick_move(Vector2(160, 200))
+	_check(Input.is_action_pressed("move_right"), "joystick right must press move_right")
+	_layer._stick_move(Vector2(120, 200))
+	_check(not Input.is_action_pressed("move_right"), "dead zone must release move_right")
+	_layer._stick_end()
+	_check(not _layer.joystick_active(), "joystick must return on release")
+	# 右半屏不生成摇杆（不抢动作区）
+	_layer._stick_begin(Vector2(480, 200), 1)
+	_check(not _layer.joystick_active(), "joystick must not spawn in the action zone")
+	_layer._stick_end()
+
+
+func _check_menu() -> void:
+	_check(not _layer.menu_open(), "menu starts closed")
+	_layer.open_menu()
+	_check(_layer.menu_open(), "menu must open")
+	_check(_layer.menu_items().has("装填"), "menu must carry reload (the old 填 key is gone)")
+	var row: Rect2 = _layer.menu_rows()[2]
+	var choice := _layer.tap_menu_at(row.get_center())
+	_check(choice == "装填", "tapping the third row must pick 装填, got %s" % choice)
+	_layer.close_menu()
+	_check(not _layer.menu_open(), "menu must close")
+
+
+## C：暗底对比度（WCAG 相对亮度），全用文本色 #e8e4d8
+func _check_contrast() -> float:
+	var ratio_dark := _ratio(INK, BG_DARK)
+	var ratio_wall := _ratio(INK, BG_WALL)
+	_check(ratio_dark >= 7.0, "contrast on void %.2f < 7:1" % ratio_dark)
+	_check(ratio_wall >= 7.0, "contrast on wall %.2f < 7:1" % ratio_wall)
+	return minf(ratio_dark, ratio_wall)
+
+
+func _ratio(fg: Color, bg: Color) -> float:
+	var lf := _luminance(fg)
+	var lb := _luminance(bg)
+	var hi := maxf(lf, lb)
+	var lo := minf(lf, lb)
+	return (hi + 0.05) / (lo + 0.05)
+
+
+func _luminance(c: Color) -> float:
+	return 0.2126 * _channel(c.r) + 0.7152 * _channel(c.g) + 0.0722 * _channel(c.b)
+
+
+func _channel(v: float) -> float:
+	return v / 12.92 if v <= 0.04045 else pow((v + 0.055) / 1.055, 2.4)
 
 
 func _check(condition: bool, message: String) -> void:
@@ -180,9 +203,10 @@ func _check(condition: bool, message: String) -> void:
 		push_error("TOUCH_FAIL " + message)
 
 
-func _finish() -> void:
+func _finish(report: Dictionary, contrast: float) -> void:
 	if _failures.is_empty():
-		print("TOUCH_OK buttons=%d layout=in_bounds hud=clear safe_area=clamped hold=state tap=event keys=matched panel=dim" % _layer.button_ids().size())
+		print("TOUCH_OK buttons=%d layout=zones_v2 mm=11/10/8 reach=%s mis_touch=%d/%d contrast=%.1f:1" % [
+			_layer.button_ids().size(), str(report["A"]), int(report["B"]), int(report["samples"]), contrast])
 		quit(0)
 		return
 	print("TOUCH_FAILED count=%d" % _failures.size())

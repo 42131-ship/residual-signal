@@ -25,8 +25,9 @@ func _run() -> void:
 	_check(tutorial.step_id() == "move", "step_id at start must be move")
 	var pc_text := tutorial.prompt(false)
 	var touch_text := tutorial.prompt(true)
-	_check(not pc_text.is_empty() and pc_text.find("A") >= 0, "pc prompt must mention A: %s" % pc_text)
-	_check(not touch_text.is_empty() and touch_text.find("方向键") >= 0, "touch prompt must mention 方向键: %s" % touch_text)
+	# 约束：不写替玩家思考的导航句（「走到柜子前点 E 搜索」这类）——两套都必须为空。
+	_check(pc_text.is_empty(), "pc prompt must be empty (no navigation sentences): %s" % pc_text)
+	_check(touch_text.is_empty(), "touch prompt must be empty (no navigation sentences): %s" % touch_text)
 
 	# ① 走：前 5 步不推进，第 6 步推进到 search
 	for index in range(MOVE_STEPS - 1):
@@ -34,7 +35,6 @@ func _run() -> void:
 	_check(tutorial.step == Tutorial.STEP_MOVE, "still on move after %d steps" % (MOVE_STEPS - 1))
 	_check(tutorial.note_moved(), "move %d must advance" % MOVE_STEPS)
 	_check(tutorial.step == Tutorial.STEP_SEARCH, "must be on search after walking")
-	_check(tutorial.prompt(false).find("E") >= 0, "search prompt must mention E")
 
 	# 顺序不可跳跃：在 search 阶段走一万步也不会推进
 	_check(not tutorial.note_moved(), "walking during search must not advance")
