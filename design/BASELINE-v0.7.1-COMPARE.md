@@ -46,7 +46,7 @@ c7c3b9d docs(handoff): 本轮状态对齐（D24 复测 / 手机线与引导 / �
 | 10 | 消防站开场切片 | not_started | **partial 20%** | `data/templates/fire_station.json` + `props_fire_station.tscn`（主题美术 v1）已在；**可玩切片没有** |
 | 11 | Android arm64 构建 + 真机 | not_started（「无 APK」） | **partial 30%** | `export_presets.cfg` 基线就有 Windows + Android 两条；旧机产出过 49.6MB 已签名 APK；**本机无产物、无真机、无 10 台矩阵** |
 | 12 | 设置/隐私页 + 崩溃 opt-in + 6 音效 | not_started | **partial 40%** | 设置页 + 隐私同意**基线就已有**（`main_menu.gd` 25 处命中）；缺崩溃 opt-in（`crash` 零命中）、6 音效（`sounds.json` 有 20 个事件定义、0 播放代码、0 音频文件） |
-| 13 | 受邀封测包 | not_started | **not_started 0%** | 本轮刚补 `LICENSE`/`NOTICE`；CI 首跑待绿；封测包与 10–20 人流程未开始 |
+| 13 | 受邀封测包 | not_started | **not_started 0%** | 本轮刚补 `LICENSE`/`NOTICE`；规则 CI 已绿（2026-11-26 首跑，badge passing）；封测包与 10–20 人流程未开始 |
 
 ---
 
@@ -89,7 +89,7 @@ powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (38)，约
 
 **W2**：回响层三项（门状态/物品轨迹/时间可见度）→ 消防站开场切片 → Android arm64 可复现构建 + 10 台烟测。
 **W3**：统一 InputAction / 自适应触控 → 6 音效 → 崩溃 opt-in → 两开场教学漏斗。
-**W4**：LICENSE/NOTICE/AI 台账（本轮已起头）→ CI（本轮已起头）→ 内容评审 → TapTap 材料 → 受邀小测。
+**W4**：LICENSE/NOTICE/AI 台账（本轮已起头）→ CI（**本轮已绿**：validate + selftest + gd_sanity）→ 内容评审 → TapTap 材料 → 受邀小测。
 
 > TapTap 现状：**CLI 已装、未登录；无 app、无包体上传、资质四项未办**。
 > 这符合 P3（先离线受邀 Android 小测，TapTap 封测为下一步），不要提前做。

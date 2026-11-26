@@ -70,7 +70,7 @@
     "closed_test_package": {
       "status": "not_started",
       "pct": 0,
-      "evidence": "2026-11-26 刚补 LICENSE / NOTICE（代码 MIT、资产专有）；CI 首跑待绿；封测包、10–20 人受邀流程未开始"
+      "evidence": "2026-11-26 刚补 LICENSE / NOTICE（代码 MIT、资产专有）；规则 CI 已绿（badge passing）；封测包、10–20 人受邀流程未开始"
     }
   },
   "gates": {
@@ -81,8 +81,8 @@
     "last_run": "2026-11-26",
     "wall_clock_seconds": 144
   },
-  "rules_ci_green": false,
-  "rules_ci_note": "workflow 已加（.github/workflows/rules.yml：validate + selftest），等首次 Actions 跑绿后翻 true",
+  "rules_ci_green": true,
+  "rules_ci_note": "2026-11-26 首跑即绿（.github/workflows/rules.yml：validate 47 条 + selftest 25 夹具 + gd_sanity 结构）；badge = passing",
   "interruption_test_pass": false,
   "next_focus": "W1: SaveState v1（原子双槽+备份+schema 迁移+杀进程门禁）→ EntityRegistry → mode 字段 + ModePolicy → L0 Fact/Assertion + branch_id"
 }
