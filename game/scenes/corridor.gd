@@ -798,12 +798,12 @@ func _inspectable_prop_count() -> int:
 	return count
 
 
-## 触屏「搜」只在贴近**可搜索容器**时出现；可检查但不可搜的物件（如停摆时钟）不触发它。
+## 触屏「搜」只在**当下真有东西可交互**时出现：可检查物（含停摆时钟）、可搜索容器、门、出口。
+## 离开就消失，不常驻、不指路——它只是「这一刻这颗键有用」的物理提示。
 func _searchable_nearby() -> bool:
-	var id := _nearest_inspection_id()
-	if id.is_empty() or _loot == null:
-		return false
-	return _loot.has_container(id)
+	if _at_exit or _nearest_door >= 0:
+		return true
+	return not _nearest_inspection_id().is_empty()
 
 
 ## 柜子上方一格极淡微光：只表达「这个能碰」，不指路、不导航、不写文案。

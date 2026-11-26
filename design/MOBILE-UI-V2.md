@@ -58,7 +58,7 @@
 |---|---|---|---|
 | 摇杆 | `move_left/right/up/down` | — | 按住即状态，每帧重申（真机 P0） |
 | 打 | `attack` + 鼠标左键 | `InputEventMouseButton` 左键 | 走廊的 `_unhandled_input` 只认鼠标事件 |
-| 搜（上下文） | `pickup` | `KEY_E` | 只在贴近可搜索容器、或站在出口时出现 |
+| 搜（上下文） | `pickup` | `KEY_E` | 只在「这一刻真有东西可交互」时出现：可检查物（含停摆时钟）、容器、门、出口；离开即消失 |
 | 灯 | `toggle_light` | `KEY_F` | |
 | 跑 | `sprint`（开/关） | — | 状态型开关，标签在「跑/停」间切换 |
 | 包 | `inventory` | `KEY_TAB` | |
