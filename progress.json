@@ -20,12 +20,12 @@
     "pixel_font_pipeline": {
       "status": "done",
       "pct": 100,
-      "evidence": "PF-02 CJK 图集 802 字（不是旧文档写的 792）；tools/font_build.py --check 覆盖门禁绿"
+      "evidence": "Fusion 像素字体 12px（OFL-1.1）重建 PF-02：图集 1308 字、0 缺字、0 降采样（墨迹最大 11x11）；修掉 PixelFont 两个渲染 bug（PF-01 空格画成黑块、缺字不推进 x 导致叠字）；门禁 font_build --check 绿"
     },
     "touch_wide": {
       "status": "partial",
-      "pct": 60,
-      "evidence": "game/ui/touch_controls.gd 384 行 + touch-controls 门禁 TOUCH_OK 通过；缺统一 InputAction（手柄/自适应）、色盲与震动开关"
+      "pct": 65,
+      "evidence": "expand 已实现（MobileSupport.apply_fill_screen：内容缩放 keep -> expand，视口 384x216 -> 555x256，触控按钮按视口贴边）；真机 2602BRT18C 验证：黑边消失，但游戏内容仍按 384x216 绘制 -> 右侧/底部留黑，内容层重排（菜单居中/背景铺满/走廊相机）是下一步"
     },
     "savestate_v1": {
       "status": "done",
@@ -59,8 +59,8 @@
     },
     "android_arm64_build": {
       "status": "partial",
-      "pct": 60,
-      "evidence": "本机已可复现构建（2026-11-26）：Godot 4.7.2 + export templates 4.7.2.stable（1.22GB）+ JDK 17.0.21.1+2 + Android SDK build-tools 36.0.0/platform-tools + debug keystore；tools/deploy_android.ps1 一键 export/install/launch/shot；build/android/ResidualSignal-debug.apk = 46.8MB 已签名。缺：真机烟测与 10 台矩阵"
+      "pct": 70,
+      "evidence": "本机可复现出包 + 真机装包运行（2026-11-26）：Godot 4.7.2 + 模板 + JDK17 + SDK build-tools 36.0.0；设备 2602BRT18C / Android 17 / 1280x2772@520dpi；ResidualSignal-debug.apk 49.2MB 装机启动成功。注意 MIUI 每次 USB 安装要在手机上点「允许」，空间不足会 INSTALL_FAILED_USER_RESTRICTED"
     },
     "settings_privacy_audio": {
       "status": "partial",

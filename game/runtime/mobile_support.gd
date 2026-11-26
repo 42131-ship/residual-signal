@@ -31,6 +31,7 @@ static func attach(host: Node) -> TouchControls:
 		return existing as TouchControls
 	if not enabled():
 		return null
+	apply_fill_screen(host)
 	var layer := TouchControls.new()
 	layer.name = TOUCH_NODE
 	host.add_child(layer)
@@ -39,6 +40,19 @@ static func attach(host: Node) -> TouchControls:
 		lifecycle.name = LIFECYCLE_NODE
 		host.add_child(lifecycle)
 	return layer
+
+
+## 19.5:9 手机要「填满屏幕」：把内容缩放从 keep（左右黑边）改成 expand。
+## expand 会同时变宽变高（2772×1280 / 5 = 555×256），所以触控层要按视口贴边（见 TouchControls）。
+## 只在手机上调用：桌面与全部 384×216 门禁的呈现链路一个字节都不变。
+static func apply_fill_screen(host: Node) -> void:
+	var win := host.get_window()
+	if win == null:
+		return
+	win.content_scale_size = Vector2i(384, 216)
+	win.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
+	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	win.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_INTEGER
 
 
 ## 手机生命周期：切后台把帧率压到 1（省电、别让 SoC 烤手），回前台恢复；

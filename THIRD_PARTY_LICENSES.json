@@ -15,14 +15,15 @@
     },
     {
       "name": "缝合像素 Fusion",
-      "role": "标题 / 层级 8/10/12px",
+      "role": "PF-02 中文/拉丁点阵图集的构建输入（12px proportional zh_hans）",
       "license": "OFL-1.1",
       "source": "https://github.com/TakWolf/fusion-pixel-font",
       "author": "TakWolf 及上游贡献者",
       "notice_path": "art/fonts/NOTICE.md",
+      "license_text_path": "art/fonts/FUSION-PIXEL-OFL.txt",
       "reserved_font_name": true,
       "commercial_ok": true,
-      "verified": false
+      "verified": true
     },
     {
       "name": "PF-02 检查文本点阵",

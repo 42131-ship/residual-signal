@@ -41,6 +41,11 @@ const SPECS := [
 	{"id": "menu", "action": "cancel_inspect", "rect": [344, 10, 32, 24], "label": "退", "kind": "tap", "key": 4194305},
 ]
 
+## expand（手机填满屏幕）后视口更大：右侧/底部按钮跟着视口边缘平移。
+## 桌面与门禁跑在 384×216，偏移恒为 (0,0)，行为与以前完全一致。
+const ANCHOR_RIGHT := ["gait", "light", "attack", "pickup", "reload", "bag", "look", "menu"]
+const ANCHOR_BOTTOM := ["left", "right", "up", "down", "gait", "light", "attack", "pickup", "reload"]
+
 var _buttons: Dictionary = {}      # id -> TouchScreenButton
 var _visuals: Dictionary = {}      # id -> Node2D（重绘标签用）
 var _spec_by_id: Dictionary = {}   # id -> Dictionary
@@ -50,6 +55,7 @@ var _dimmed := false
 ## 面板（检查/背包/旅行图）打开时压到 0.35 透明度：还能点，但不挡字
 const DIM_ALPHA := 0.35
 var _safe_canvas := Rect2(0, 0, VIEW.x, VIEW.y)
+var _expand := Vector2i.ZERO
 var last_emitted := ""
 ## 门禁可观测：最近一次合成出去的键 / 鼠标
 var last_key := -1
@@ -58,6 +64,34 @@ var last_mouse := false
 
 func _ready() -> void:
 	layer = 20
+	_build()
+	apply_safe_area()
+	# 手机 expand 填满屏幕后视口是 555×256 而不是 384×216，要等一帧才更新；
+	# 重排一次让右侧/底部按钮贴边。桌面与门禁在 384×216 下偏移为 0，不会重排。
+	await get_tree().process_frame
+	if _sync_expand_offset() != Vector2i.ZERO:
+		_rebuild()
+
+
+## 视口比原生大出来的部分（expand 后 = 555-384, 256-216）。桌面恒为 (0,0)。
+var _canvas := Vector2i(VIEW.x, VIEW.y)
+
+
+func _sync_expand_offset() -> Vector2i:
+	# CanvasLayer 没有 get_viewport_rect()（那是 CanvasItem 的），走 Viewport.get_visible_rect()。
+	var visible := get_viewport().get_visible_rect().size
+	var size := Vector2i(int(visible.x), int(visible.y))
+	_canvas = Vector2i(maxi(VIEW.x, size.x), maxi(VIEW.y, size.y))
+	_expand = _canvas - Vector2i(VIEW)
+	return _expand
+
+
+func _rebuild() -> void:
+	if _buttons_root != null:
+		_buttons_root.queue_free()
+	_buttons.clear()
+	_visuals.clear()
+	_spec_by_id.clear()
 	_build()
 	apply_safe_area()
 
@@ -88,7 +122,13 @@ func _build() -> void:
 
 func _rect_of(spec: Dictionary) -> Rect2i:
 	var r: Array = spec["rect"]
-	return Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3]))
+	var rect := Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3]))
+	var id := String(spec.get("id", ""))
+	if ANCHOR_RIGHT.has(id):
+		rect.position.x += _expand.x
+	if ANCHOR_BOTTOM.has(id):
+		rect.position.y += _expand.y
+	return rect
 
 
 ## 一个按钮的外观：底 + 1px 边 + 居中标签（或点阵箭头）。全部 ColorRect / 点阵字，天然过像素门禁。
@@ -303,10 +343,11 @@ func apply_safe_area() -> void:
 	var safe := DisplayServer.get_display_safe_area()
 	if safe.size.x <= 0 or safe.size.y <= 0:
 		return
-	var scale := minf(win.x / float(VIEW.x), win.y / float(VIEW.y))
+	var view := Vector2(_canvas)
+	var scale := minf(win.x / view.x, win.y / view.y)
 	if scale <= 0.0:
 		return
-	var origin := (win - Vector2(VIEW) * scale) * 0.5
+	var origin := (win - view * scale) * 0.5
 	var home := Rect2(
 		(safe.position.x - origin.x) / scale,
 		(safe.position.y - origin.y) / scale,
@@ -318,7 +359,7 @@ func apply_safe_area() -> void:
 
 ## 门禁用：直接给一个 384 空间的安全矩形，绕开真机。
 func _set_safe_rect(home: Rect2) -> void:
-	_safe_canvas = home.intersection(Rect2(0, 0, VIEW.x, VIEW.y))
+	_safe_canvas = home.intersection(Rect2(0, 0, _canvas.x, _canvas.y))
 	for id: String in _buttons.keys():
 		var spec: Dictionary = _spec_by_id[id]
 		var rect := _rect_of(spec)

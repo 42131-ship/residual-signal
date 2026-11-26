@@ -22,7 +22,12 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "art" / "generated_candidates" / "fonts" / "PF-01_5x7.png"
 CJK_OUT = ROOT / "art" / "generated_candidates" / "fonts" / "PF-02_cjk_12.png"
 CJK_MAP_OUT = ROOT / "art" / "generated_candidates" / "fonts" / "PF-02_cjk_12.json"
-CJK_FONT = ROOT / "art" / "fonts" / "NotoSansSC-VF.ttf"
+# 主字体：Fusion 像素字体 12px（TakWolf，SIL OFL 1.1）。它是「为 12px 设计」的点阵字体，
+# 笔画直接对齐像素网格。之前用 NotoSansSC 缩到 13px 再二值化，复杂汉字墨迹占格 41%~85%，
+# 必然糊成一团——这是「所有字都很糊」的真正原因，换成点阵字体就没了。
+CJK_FONT = ROOT / "art" / "fonts" / "FusionPixel-12px-proportional-zh_hans.ttf"
+# 兜底：Fusion 极少数未覆盖的字用 Noto 同尺寸渲染（同样是 OFL，可随包）。
+CJK_FONT_FALLBACK = ROOT / "art" / "fonts" / "NotoSansSC-VF.ttf"
 INSPECTIONS = ROOT / "data" / "prop_inspections.json"
 LOOT_CONTAINERS = ROOT / "data" / "loot" / "containers.json"
 LOOT_ITEMS = ROOT / "data" / "loot" / "items.json"
@@ -42,13 +47,13 @@ ASCII_EXTRA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/×()"
 PAL = ROOT / "art" / "palettes" / "master.gpl"
 CELL_SIZE = 16
 CJK_COLUMNS = 16
-# 中文每字步进。以前是 12，为了「12px 步进内不重叠」把 14px 字形最近邻压到 10px，
-# 笔画糊成一团——这是 Stage 2 之后「所有字体都很糊」的真正原因。
-# 现在步进放到 14，字形不再降采样；面板最宽一行 12 字 = 168px，368px 面板放得下。
-CJK_ADVANCE = 14
-CJK_MAX_INK_W = CJK_ADVANCE - 1   # 13：留 1px 侧距，保证相邻字不粘
-CJK_MAX_INK_H = CELL_SIZE - 2     # 14
-CJK_PIXEL_SIZE = 13               # 栅格字号：13px 的汉字墨迹落在 13x13 内，不用降采样
+# 12px 点阵字体的设计尺寸就是 12：不降采样、不居中留白。
+# 行内步进由每个字自己的 advance 决定（中文 12，拉丁 6~10，写进 JSON 的 advance 字段）；
+# 这里的 CJK_ADVANCE 只是「缺该字段时的兜底」，也用于老存档/老图集的兼容。
+CJK_ADVANCE = 12
+CJK_MAX_INK_W = CELL_SIZE - 2      # 14：12px 字体墨迹 ≤12，留余量
+CJK_MAX_INK_H = CELL_SIZE - 2      # 14
+CJK_PIXEL_SIZE = 12                # 字体设计尺寸，改大改小都会毁掉点阵对齐
 
 
 for _s in (sys.stdout, sys.stderr):
@@ -161,7 +166,29 @@ def _collect_cjk_characters() -> list[str]:
     characters = sorted(characters - {"", "\n", "\r", "\t", " "})
     # 代码里的中文字面量（动词、提示语、报错文案）也要进图集：
     # 「搜索」的『索』只出现在 .gd 里，不扫脚本就会静默少字。
-    return sorted(set(characters) | (_scan_script_cjk() - {"", "\n", "\r", "\t", " "}))
+    # 兜底：data/ 下**所有** JSON 的字符串值都进图集。
+    # 之前漏了 data/analytics/events.json 的隐私文案（同意页真的会画出来），
+    # 运行时表现为「匿名收集」少「匿」「集」两个字。宁可多收字，不能少字。
+    data_root = ROOT / "data"
+    extra: set[str] = set()
+    if data_root.exists():
+        for path in sorted(data_root.rglob("*.json")):
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:  # noqa: BLE001
+                continue
+            stack: list[object] = [raw]
+            while stack:
+                node = stack.pop()
+                if isinstance(node, dict):
+                    stack.extend(node.values())
+                elif isinstance(node, list):
+                    stack.extend(node)
+                elif isinstance(node, str):
+                    extra.update(re.findall(
+                        r"[\u00b7\u00d7\u2010-\u2027\u2030-\u205e\u2190-\u21ff"
+                        r"\u2500-\u257f\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]", node))
+    return sorted(set(characters) | extra | (_scan_script_cjk() - {"", "\n", "\r", "\t", " "}))
 
 
 def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
@@ -176,24 +203,33 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
     rows = (len(characters) + CJK_COLUMNS - 1) // CJK_COLUMNS
     atlas = Image.new("RGBA", (CJK_COLUMNS * CELL_SIZE, rows * CELL_SIZE), (0, 0, 0, 0))
     font = ImageFont.truetype(str(CJK_FONT), CJK_PIXEL_SIZE)
-    if hasattr(font, "set_variation_by_axes"):
-        font.set_variation_by_axes([650])
-    draw = ImageDraw.Draw(atlas)
+    fallback = ImageFont.truetype(str(CJK_FONT_FALLBACK), CJK_PIXEL_SIZE) if CJK_FONT_FALLBACK.exists() else None
     glyph_map: dict[str, list[int]] = {}
     shrunk = 0
+    fell_back = 0
     widest = 0
     tallest = 0
     for index, char in enumerate(characters):
         cell_x = (index % CJK_COLUMNS) * CELL_SIZE
         cell_y = (index // CJK_COLUMNS) * CELL_SIZE
-        bounds = font.getbbox(char)
-        mask = Image.new("L", (bounds[2] - bounds[0] + 2, bounds[3] - bounds[1] + 2), 0)
-        ImageDraw.Draw(mask).text((1 - bounds[0], 1 - bounds[1]), char, font=font, fill=255)
-        mask = mask.point(lambda value: 255 if value >= 110 else 0)
-        ink_bounds = mask.getbbox()
+        used = font
+        advance = int(round(font.getlength(char)))
+        if advance <= 0 and fallback is not None:
+            used, advance = fallback, int(round(fallback.getlength(char)))
+            fell_back += 1
+        if advance <= 0:
+            raise SystemExit(f"zero advance: {char!r}")
+        # 以「笔位」为原点渲染（PAD 只是量取缓冲）：
+        # offset 记录墨迹相对笔位的偏移，这样成比例字距（拉丁 6~10px）才能正确排布；
+        # 旧做法把字形在 16px 格子里居中，遇到非等宽 advance 会既粘又飘。
+        pad = 4
+        probe = Image.new("L", (advance + pad * 2, CELL_SIZE + pad * 2), 0)
+        ImageDraw.Draw(probe).text((pad, pad), char, font=used, fill=255)
+        probe = probe.point(lambda value: 255 if value >= 110 else 0)
+        ink_bounds = probe.getbbox()
         if ink_bounds is None:
             raise SystemExit(f"empty glyph: {char}")
-        mask = mask.crop(ink_bounds)
+        mask = probe.crop(ink_bounds)
         scale = min(CJK_MAX_INK_W / mask.width, CJK_MAX_INK_H / mask.height, 1.0)
         target = (max(1, round(mask.width * scale)), max(1, round(mask.height * scale)))
         if target != mask.size:
@@ -201,29 +237,27 @@ def _build_cjk_atlas(ink: tuple[int, int, int]) -> int:
             shrunk += 1
         widest = max(widest, mask.width)
         tallest = max(tallest, mask.height)
-        glyph = Image.new("RGBA", (CELL_SIZE, CELL_SIZE), (0, 0, 0, 0))
-        left = (CELL_SIZE - mask.width) // 2
-        top = (CELL_SIZE - mask.height) // 2
         colored = Image.new("RGBA", mask.size, (*ink, 0))
         colored.putalpha(mask)
-        glyph.alpha_composite(colored, (left, top))
-        atlas.paste(glyph, (cell_x, cell_y))
+        atlas.paste(colored, (cell_x, cell_y))
         glyph_map[char] = {
-            "region": [cell_x + left, cell_y + top, mask.width, mask.height],
-            "offset": [left, top],
+            "region": [cell_x, cell_y, mask.width, mask.height],
+            "offset": [ink_bounds[0] - pad, ink_bounds[1] - pad],
+            "advance": advance,
         }
 
     CJK_OUT.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(CJK_OUT)
     CJK_MAP_OUT.write_text(json.dumps({
         "schema": "pixel-font-atlas.v1",
-        "font": "Noto Sans SC",
+        "font": "Fusion Pixel 12px proportional (SIL OFL 1.1)",
+        "fallback_font": "Noto Sans SC (SIL OFL 1.1)",
         "cell_size": CELL_SIZE,
         "advance": CJK_ADVANCE,
         "columns": CJK_COLUMNS,
         "characters": glyph_map,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"CJK 字形: {len(characters)} 个 · 步进 {CJK_ADVANCE}px · "
+    print(f"CJK 字形: {len(characters)} 个 · 兜底字 {fell_back} · 中文步进 {CJK_ADVANCE}px · "
           f"墨迹最大 {widest}x{tallest} · 被缩小的字 {shrunk}")
     if widest > CJK_MAX_INK_W or tallest > CJK_MAX_INK_H:
         raise SystemExit(f"CJK atlas overflow: {widest}x{tallest}")

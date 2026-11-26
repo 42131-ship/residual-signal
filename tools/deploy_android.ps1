@@ -80,14 +80,16 @@ function Invoke-Adb {
 
 function Get-DeviceLines {
     $r = Invoke-Adb -AdbArgs @('devices', '-l') -TimeoutSec 30
-    return @($r.text | Where-Object { $_ -match '\tdevice' })
+    # adb pads with tabs, but tabs can arrive as spaces through the cmd/file round-trip.
+    # Match "<serial><whitespace>device" and explicitly NOT unauthorized/offline.
+    return @($r.text | Where-Object { $_ -match '^\S+\s+device(\s|$)' })
 }
 
 
 function Get-Devices {
     $r = Invoke-Adb -AdbArgs @('devices', '-l') -TimeoutSec 30
     $r.text
-    $dev = @($r.text | Where-Object { $_ -match '\tdevice' })
+    $dev = Get-DeviceLines
     if ($dev.Count -gt 0) { Write-Host ('[OK] ' + $dev.Count + ' device(s) online') }
     else { Write-Host '[WAIT] no device yet: plug phone, enable USB debugging, accept RSA prompt' }
 }
