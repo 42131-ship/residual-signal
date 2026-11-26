@@ -138,9 +138,9 @@ func rects() -> Dictionary:
 	var search := Rect2(attack.get_center().x - s * 0.5,
 		attack.position.y - search_gap - s, s, s)
 	out["search"] = search
-	# 打左侧：跑；跑上方：灯（与打物理隔开）
+	# 打左侧：跑；灯在跑左边（两颗小键同一排，和「打」物理隔开）
 	var run := Rect2(attack.position.x - g - m, attack.position.y + a - m, m, m)
-	var lamp := Rect2(run.position.x, run.position.y - g - m, m, m)
+	var lamp := Rect2(run.position.x - g - m, run.position.y, m, m)
 	out["run"] = run
 	out["lamp"] = lamp
 	# 右上：包 + ≡（两格，右对齐）
@@ -636,6 +636,26 @@ func button_ids() -> Array:
 func button_visible(id: String) -> bool:
 	var button: TouchScreenButton = _buttons.get(id)
 	return button != null and button.visible
+
+
+## 这个点是不是落在了触摸层的按钮上（场景里的点击导航用它避让，别和触控键抢触点）
+func hits_any(point: Vector2) -> bool:
+	var table := rects()
+	for id: String in table.keys():
+		if id == "search" and not _search_available:
+			continue
+		if not _buttons.has(id):
+			continue
+		if not (table[id] as Rect2).has_point(point):
+			continue
+		if not button_visible(id):
+			continue
+		return true
+	if _menu_open:
+		for row: Rect2 in menu_rows():
+			if row.has_point(point):
+				return true
+	return false
 
 
 func button_rect(id: String) -> Rect2:

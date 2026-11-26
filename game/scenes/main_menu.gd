@@ -261,6 +261,12 @@ func _process(delta: float) -> void:
 # ── 输入（供门禁直接调用的同时，也接受真按键）─────────────
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 触屏：点哪一项就选中并确认。手机上没有光标，不能要求玩家先「移动焦点」再确认。
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed:
+			_handle_tap(touch.position)
+		return
 	if not event is InputEventKey or event.is_echo() or not event.is_pressed():
 		return
 	if event.is_action_pressed("menu_back"):
@@ -300,6 +306,47 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("menu_confirm"):
 		confirm()
 	_consume_input()
+
+
+## 触屏点选：把触点换算到设计坐标后按「行」判定。
+## 触控层自己的按钮（包/≡/打/灯/跑/搜）先避让，别把点它们的操作当成菜单点击。
+func _handle_tap(canvas_point: Vector2) -> void:
+	if _mobile != null and _mobile.hits_any(canvas_point):
+		return
+	var origin := Vector2(ScreenLayout.origin_of(self))
+	var point := canvas_point - origin
+	if _view == "consent":
+		for index in range(2):
+			var option_y := 154 + index * 20
+			if Rect2(12, option_y - 4, 160, 20).has_point(point):
+				_index = index
+				confirm()
+				return
+		return
+	if _view == "settings":
+		if Rect2(12, 36, 200, 24).has_point(point):
+			if Analytics.has_consent():
+				Analytics.revoke_consent()
+			else:
+				Analytics.grant_consent()
+			_render()
+		elif point.y > 180:
+			_view = "root"
+			_index = 0
+			_render()
+		return
+	if _view == "endings":
+		if point.y > 180:
+			_view = "root"
+			_index = 0
+			_render()
+		return
+	for index in range(ITEMS.size()):
+		var row_y := 62 + index * 22 - 4
+		if Rect2(12, row_y, 160, 20).has_point(point):
+			_index = index
+			confirm()
+			return
 
 
 func move(delta: int) -> void:
