@@ -71,7 +71,7 @@ func _ready() -> void:
 	_cursor = _node("Cursor")
 	_marks_root = _node("Marks")
 	_current_root = _node("CurrentBuilding")
-	PixelFont.draw(_hint_root, "W/S 选楼 · E 出发 · Esc 留下", Vector2(8, 202), LABEL)
+	_draw_hint("travel_map", Vector2(8, 202), LABEL)
 	setup(current_building)
 
 
@@ -127,6 +127,8 @@ func _load_layout() -> void:
 func _node(node_name: String) -> Node2D:
 	var node := Node2D.new()
 	node.name = node_name
+	# 手游：内容在更大的画布里居中（桌面/门禁下 origin 恒为 (0,0)）。
+	node.position = Vector2(ScreenLayout.origin_of(self))
 	add_child(node)
 	return node
 
@@ -135,7 +137,9 @@ func _build_background() -> void:
 	var base := ColorRect.new()
 	base.name = "Base"
 	base.color = Color("#0b1119")
-	base.size = Vector2(VIEW)
+	var canvas := ScreenLayout.canvas_of(self)
+	var origin := ScreenLayout.origin_of(self)
+	base.size = Vector2(canvas)
 	add_child(base)
 	var texture := load(BG_PATH) as Texture2D
 	if texture == null:
@@ -145,11 +149,14 @@ func _build_background() -> void:
 	art.texture = texture
 	art.centered = false
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var tex_size := texture.get_size()
+	if tex_size.x > 0 and tex_size.y > 0:
+		art.scale = Vector2(float(canvas.x) / tex_size.x, float(canvas.y) / tex_size.y)
 	add_child(art)
 	var scrim := ColorRect.new()
 	scrim.name = "Scrim"
 	scrim.color = SCRIM
-	scrim.size = Vector2(VIEW)
+	scrim.size = Vector2(canvas)
 	add_child(scrim)
 
 
@@ -587,3 +594,10 @@ func edge_count() -> int:
 
 func edges() -> Array[Dictionary]:
 	return _edges.duplicate()
+
+## 输入提示统一走 InputHints：桌面上是键鼠文案，手机上为触屏文案（空则整行不画）。
+func _draw_hint(key: String, at: Vector2, color: Color) -> void:
+	var text := InputHints.get_hint(key)
+	if text.is_empty():
+		return
+	PixelFont.draw(_hint_root, text, at, color)

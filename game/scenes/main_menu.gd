@@ -33,10 +33,19 @@ var _mobile: TouchControls
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# 手游：先切到 expand（画布 555x256）并等一帧让视口生效，再按画布搭界面。
+	# 反过来的话界面会按 384x216 搭好、再扩画布，右边会留一块黑。
+	MobileSupport.apply_fill_screen(self)
+	if MobileSupport.fill_screen_enabled():
+		await get_tree().process_frame
 	_ensure_actions()
 	_build_chrome()
 	_item_root = _node("Items")
 	_body_root = _node("Body")
+	# 手游：内容在更大的画布里居中（桌面/门禁下 origin 恒为 (0,0)，不引入任何偏移）。
+	var origin := ScreenLayout.origin_of(self)
+	_item_root.position = Vector2(origin)
+	_body_root.position = Vector2(origin)
 	if not _book.load_template(ENDING_TEMPLATE):
 		push_error("ENDING_BOOK_FAILED: " + _book.load_error())
 	# TapDB 合规：同意前不初始化收集；首次启动先让玩家选。
@@ -78,13 +87,16 @@ func _add_key(action: String, keycode: Key) -> void:
 
 
 func _build_chrome() -> void:
+	var canvas := ScreenLayout.canvas_of(self)
+	var origin := ScreenLayout.origin_of(self)
 	var background := ColorRect.new()
 	background.name = "Background"
 	background.color = BG
-	background.size = Vector2(VIEW)
+	background.size = Vector2(canvas)
 	add_child(background)
 
-	# 生图背景（若已量化入库）。没有就保持纯色底 —— 任何时候都能启动，不等美术。
+	# 生图背景（若已量化入库）。手机 expand 后画布更大：等比拉伸铺满，仍然最近邻
+	# （像素不糊，只是格子变粗一点），不再留左右黑边。
 	var texture := load(BG_PATH) as Texture2D
 	if texture != null:
 		var art := Sprite2D.new()
@@ -92,26 +104,36 @@ func _build_chrome() -> void:
 		art.texture = texture
 		art.centered = false
 		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var tex_size := texture.get_size()
+		if tex_size.x > 0 and tex_size.y > 0:
+			art.scale = Vector2(float(canvas.x) / tex_size.x, float(canvas.y) / tex_size.y)
 		add_child(art)
 		var scrim := ColorRect.new()
 		scrim.name = "Scrim"
 		scrim.color = SCRIM
-		scrim.size = Vector2(VIEW)
+		scrim.size = Vector2(canvas)
 		add_child(scrim)
 
 	# 底部一条暗带 + 顶部一条细线：给标题和菜单分层次，不靠渐变。
 	var band := ColorRect.new()
 	band.name = "Band"
 	band.color = Color(0.067, 0.102, 0.149, 0.85)
-	band.position = Vector2(0, 150)
-	band.size = Vector2(VIEW.x, 66)
+	band.position = Vector2(0, origin.y + 150)
+	band.size = Vector2(canvas.x, 66)
 	add_child(band)
 	var rule := ColorRect.new()
 	rule.name = "Rule"
 	rule.color = FRAME
-	rule.position = Vector2(16, 44)
+	rule.position = Vector2(origin.x + 16, origin.y + 44)
 	rule.size = Vector2(VIEW.x - 32, 1)
 	add_child(rule)
+
+
+## 输入提示统一走 InputHints：桌面是键鼠文案，手机是空/触屏文案（空就不画）。
+func _draw_hint(key: String, at: Vector2, color: Color) -> void:
+	var text := InputHints.get_hint(key)
+	if not text.is_empty():
+		PixelFont.draw(_body_root, text, at, color)
 
 
 func _clear(root: Node2D) -> void:
@@ -142,7 +164,7 @@ func _render_root() -> void:
 		if index == _index:
 			_add_rect(Vector2(12, y - 4), Vector2(140, 20), DIM)
 		PixelFont.draw(_item_root, ITEMS[index], Vector2(20, y), BRIGHT if index == _index else INK)
-	PixelFont.draw(_body_root, "W/S 选择   E 确认", Vector2(16, 158), INK)
+	_draw_hint("menu_list", Vector2(16, 158), INK)
 	PixelFont.draw(_body_root, "第 %d / %d 天 · 沉积 %d" % [_run.day + 1, RunState.MAX_DAY, _run.sediment],
 		Vector2(16, 176), DIM)
 	if _message_frames > 0:
@@ -159,7 +181,7 @@ func _render_settings() -> void:
 	var y := 70.0
 	for line: String in Analytics.privacy_lines():
 		y = _draw_wrapped(_body_root, line, Vector2(16, y), INK, 25, 14.0)
-	PixelFont.draw(_body_root, "E 切换   Esc 返回", Vector2(16, 194), INK)
+	_draw_hint("menu_toggle", Vector2(16, 194), INK)
 
 
 func _render_consent() -> void:
@@ -174,7 +196,7 @@ func _render_consent() -> void:
 			_add_rect(Vector2(12, option_y - 4), Vector2(160, 18), DIM)
 		PixelFont.draw(_item_root, options[index], Vector2(20, option_y),
 			BRIGHT if index == _index else INK)
-	PixelFont.draw(_body_root, "W/S 选择   E 确认", Vector2(16, 194), INK)
+	_draw_hint("menu_list", Vector2(16, 194), INK)
 
 
 ## 按固定字宽折行（中文等宽，简单可靠；不做词边界）。
@@ -205,7 +227,7 @@ func _render_endings() -> void:
 		var label := str(row["label"])
 		PixelFont.draw(_item_root, label, Vector2(24, y), BRIGHT if bool(row["unlocked"]) else INK)
 		PixelFont.draw(_body_root, str(row["summary"]), Vector2(24, y + 14), INK if bool(row["unlocked"]) else DIM)
-	PixelFont.draw(_body_root, "Esc 返回", Vector2(16, 194), INK)
+	_draw_hint("menu_back", Vector2(16, 194), INK)
 
 
 func _add_rect(at: Vector2, size: Vector2, color: Color) -> void:

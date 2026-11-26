@@ -482,13 +482,13 @@ func _draw_door_prompt() -> void:
 func _door_action_text(door: Dictionary) -> String:
 	if bool(door["locked"]):
 		if _inventory != null and (_inventory.has("keys") or _is_melee_equipped()):
-			return "E 撬开"
+			return InputHints.get_hint("door_pry")
 		return "锁着"
 	if bool(door["open"]):
-		return "E 关门"
+		return InputHints.get_hint("door_close")
 	if _inventory != null and _inventory.has("padlock"):
-		return "E 锁门"
-	return "E 开门"
+		return InputHints.get_hint("door_lock")
+	return InputHints.get_hint("door_open")
 
 
 func _is_melee_equipped() -> bool:
@@ -852,6 +852,8 @@ func _build_inspection_ui(_parent: Node) -> void:
 	_inspection_prompt_layer.add_child(_inspection_prompt_root)
 	_inspection_panel_root = Node2D.new()
 	_inspection_panel_root.name = "InspectPanel"
+	# 手游：检查面板在更大画布里居中（桌面 origin 为 0）。
+	_inspection_panel_root.position = Vector2(ScreenLayout.origin_of(self))
 	_inspection_panel_root.visible = false
 	_inspection_prompt_layer.add_child(_inspection_panel_root)
 
@@ -885,6 +887,8 @@ func _draw_inspection_prompt(id: String) -> void:
 
 
 func _show_inspection(id: String) -> void:
+	# 手游：面板在更大画布里居中（桌面 origin 恒为 0）。每次显示重算，避开 _ready 时序。
+	_inspection_panel_root.position = Vector2(ScreenLayout.origin_of(self))
 	var record: Dictionary = _inspection_records.get(id, {})
 	if record.is_empty():
 		return
@@ -1115,7 +1119,7 @@ func _show_panel(title: String, lines: Array, id: String) -> void:
 	PixelFont.draw(_inspection_panel_root, title, Vector2(16, 160), Color("#f6f6f0"))
 	for index: int in mini(2, lines.size()):
 		PixelFont.draw(_inspection_panel_root, str(lines[index]), Vector2(16, 176 + index * 14), Color("#9fb2bd"))
-	PixelFont.draw(_inspection_panel_root, "ESC", Vector2(326, 160), Color("#9fb2bd"))
+	_draw_hint(_inspection_panel_root, "inspect_close", Vector2(326, 160), Color("#9fb2bd"))
 	_inspection_panel_root.set_meta("inspection_id", id)
 	_inspection_panel_root.visible = true
 	_inspection_open = true
@@ -1237,6 +1241,8 @@ func _build_inventory_ui() -> void:
 	add_child(_inventory_layer)
 	_inventory_panel_root = Node2D.new()
 	_inventory_panel_root.name = "InventoryPanel"
+	# 手游：背包面板在更大画布里居中（桌面 origin 为 0）。
+	_inventory_panel_root.position = Vector2(ScreenLayout.origin_of(self))
 	_inventory_layer.add_child(_inventory_panel_root)
 
 
@@ -1286,7 +1292,7 @@ func _refresh_hud_stats() -> void:
 	if not status_text.is_empty():
 		PixelFont.draw(_hud_stats_root, status_text, Vector2(8, 117), Color("#bfb6a3"))
 	if _at_exit:
-		PixelFont.draw(_hud_stats_root, "按 E 离场", Vector2(8, 132), Color("#f6f6f0"))
+		_draw_hint(_hud_stats_root, "leave", Vector2(8, 132), Color("#f6f6f0"))
 	elif _combat_message_frames > 0 and not _combat_message.is_empty():
 		PixelFont.draw(_hud_stats_root, _combat_message, Vector2(8, 132), Color("#f6f6f0"))
 	_draw_tutorial_hint()
@@ -1323,6 +1329,8 @@ func _close_inventory() -> void:
 
 
 func _render_inventory() -> void:
+	# 手游：背包面板在更大画布里居中（桌面 origin 恒为 0）。
+	_inventory_panel_root.position = Vector2(ScreenLayout.origin_of(self))
 	if _inventory_panel_root == null or not _inventory_open:
 		return
 	for child: Node in _inventory_panel_root.get_children():
@@ -1355,7 +1363,7 @@ func _render_inventory() -> void:
 				text += "×%d" % count
 			PixelFont.draw(_inventory_panel_root, text, Vector2(panel_x + 10, row_y),
 				Color("#f6f6f0" if row == _inventory_index else "#9fb2bd"))
-	PixelFont.draw(_inventory_panel_root, "E 使用 Q 丢弃 TAB 关闭", Vector2(16, panel_y + 160), Color("#9fb2bd"))
+	_draw_hint(_inventory_panel_root, "inventory_actions", Vector2(16, panel_y + 160), Color("#9fb2bd"))
 	if not _inventory_toast.is_empty():
 		PixelFont.draw(_inventory_panel_root, _inventory_toast, Vector2(16, panel_y + 174), Color("#f6f6f0"))
 
@@ -1454,7 +1462,7 @@ func _perform_attack() -> void:
 			reach = FIREARM_REACH
 			if _magazine <= 0:
 				damage = 0
-				_toast_combat("没有子弹，按 R 装填")
+				_toast_combat(InputHints.get_hint("reload_toast"))
 			else:
 				_magazine -= 1
 	_emit_noise(noise)
@@ -2301,3 +2309,10 @@ func _angle_delta(a: float, b: float) -> float:
 ## 门禁用：当前光锥角度（0 = 朝右，PI = 朝左）。
 func light_angle() -> float:
 	return _light_angle
+
+## 输入提示统一走 InputHints：桌面是键鼠文案，手机是触屏文案（空则整行不画）。
+func _draw_hint(parent: Node, key: String, at: Vector2, color: Color) -> void:
+	var text := InputHints.get_hint(key)
+	if text.is_empty():
+		return
+	PixelFont.draw(parent, text, at, color)

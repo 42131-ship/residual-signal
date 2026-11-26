@@ -24,8 +24,8 @@
     },
     "touch_wide": {
       "status": "partial",
-      "pct": 65,
-      "evidence": "expand 已实现（MobileSupport.apply_fill_screen：内容缩放 keep -> expand，视口 384x216 -> 555x256，触控按钮按视口贴边）；真机 2602BRT18C 验证：黑边消失，但游戏内容仍按 384x216 绘制 -> 右侧/底部留黑，内容层重排（菜单居中/背景铺满/走廊相机）是下一步"
+      "pct": 75,
+      "evidence": "手游化重排（2026-11-26）：expand 默认对 Android/iOS 生效（画布 555x256），菜单/地图内容居中、背景按最近邻铺满、检查/背包面板居中、触控按钮贴边；输入提示改为 PC/触屏两套（game/ui/input_hints.gd，PC 表冻结备份见 design/CONTROLS.md §九）。真机 2602BRT18C 已验证：键盘提示消失、背景铺满；剩余：右侧窄条、D-pad 压住天数行待调"
     },
     "savestate_v1": {
       "status": "done",
@@ -65,7 +65,7 @@
     "settings_privacy_audio": {
       "status": "partial",
       "pct": 40,
-      "evidence": "main_menu.gd 已有设置页 + 隐私同意（MENU_OK settings=yes）；缺崩溃 opt-in（grep crash 零命中）与 6 音效（sounds.json 有 20 个事件定义、0 播放代码、0 音频文件）"
+      "evidence": "main_menu.gd 已有设置页 + 隐私同意（MENU_OK settings=yes）；手机端提示已按触屏改写；缺崩溃 opt-in 与 6 音效"
     },
     "closed_test_package": {
       "status": "not_started",

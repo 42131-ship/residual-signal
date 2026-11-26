@@ -50,9 +50,11 @@ static func attach(host: Node) -> TouchControls:
 ## 结果是「内容靠左 + 右侧/底部留黑」。所以默认关闭，用 RS_EXPAND=1 打开做实验；
 ## 等内容层（菜单居中 / 背景铺满 555×256 / 走廊相机取景）重排完，再把默认值改成 true。
 static func fill_screen_enabled() -> bool:
+	# 默认跟随平台：真机（Android/iOS）填满屏幕；桌面保持 16:9 整数放大，门禁基线不变。
+	# RS_EXPAND=0 强制关闭（排查对齐问题用），RS_EXPAND=1 可在桌面模拟。
 	if OS.has_environment("RS_EXPAND"):
 		return OS.get_environment("RS_EXPAND") == "1"
-	return false
+	return OS.has_feature("android") or OS.has_feature("ios")
 
 
 static func apply_fill_screen(host: Node) -> void:
