@@ -35,3 +35,8 @@ textures/canvas_textures/default_texture_filter=0
 environment/defaults/default_clear_color=Color(0.0117, 0.0196, 0.0392, 1)
 ; 手机必须开 ETC2/ASTC，否则未压缩贴图会把低端机的显存吃爆
 textures/vram_compression/import_etc2_astc=true
+
+[input_devices]
+
+; 触摸不要仿真成鼠标左键：否则点「蹲/手电筒」也会被走廊当成攻击（真机实测：按蹲，感染体倒下）。
+pointing/emulate_mouse_from_touch=false

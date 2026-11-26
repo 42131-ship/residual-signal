@@ -13,6 +13,9 @@ const CELL_W := 6
 const GLYPH_H := 8
 const ORDER := "DAY0123456789  "
 const ADVANCE := 6
+## 数字/拉丁字形（PF-01，8px）比汉字（PF-02，12px）矮，同一 y 起画会显得上移；
+## 统一往下压 4px，让两种字形**底对齐**（真机反馈「体力 100 的 100 上移」）。
+const BASELINE_DROP := 4
 const CJK_ADVANCE_FALLBACK := 14
 ## 空格单独处理：PF-01 的空格区域是不透明深色（RGB 图集没有 alpha），照着画会在画面上盖一个黑块。
 const SPACE_ADVANCE := 6
@@ -78,7 +81,7 @@ static func draw(parent: Node, text: String, pos: Vector2, tint: Color) -> int:
 			sprite.texture = _texture()
 			sprite.region_enabled = true
 			sprite.region_rect = Rect2(idx * CELL_W, 0, CELL_W, GLYPH_H)
-			sprite.position = pos + Vector2(x, 0)
+			sprite.position = pos + Vector2(x, BASELINE_DROP)
 			x += ADVANCE
 		else:
 			var entry: Variant = _cjk_map.get(char)
