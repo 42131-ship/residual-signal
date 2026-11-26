@@ -141,9 +141,9 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 
 | # | 欠账 | 位置 | 影响 | 量 |
 |---|---|---|---|---|
-| D15 | 字体图集要手动重建 | tools/font_build.py | ✅ 已还（2026-11-25）：`--check` 只读覆盖门禁进 pipeline，卡牌/结局文案已入图集（792 字） | S |
+| D15 | 字体图集要手动重建 | tools/font_build.py | ✅ 已还（2026-11-25）：`--check` 只读覆盖门禁进 pipeline（当时 792 字）；2026-11-26 补「蹲 / 两」后 **802 字** | S |
 | D22 | 无数据上报（TapDB） | game/runtime/tapdb_service.gd | 客户端直连已接（2026-11-25）；待 ClientID + 后台事件登记 + 导出包实机验证 | M |
-| D23 | 发布管线未配置 | 仓库根 | 无 `export_presets.cfg`；本机无 Node/`taptap-cli`、无开发者上下文；流程见 `design/TAPTAP.md` | M |
+| D23 | 发布管线未配置 | 仓库根 | ✅ **大半已还（2026-11-26）**：CLI 装好并登录、两条导出预设入库、PC exe 与 arm64 APK 都已产出并签名、图标已做。剩「建 app draft → 上传 → 补资料 → 提审」（要账号持有人点头） | S–M |
 | D16 | `psd-tools` 未进 CI | requirements-tools.txt | 换机器导不出 PSD | S |
 | ~~D17~~ | ~~存档只有 schema 字符串，无版本迁移~~ **已还（2026-11-26）**：`SaveStore` 三槽原子写 + `v0/v1 → v2` 迁移；门禁 `save-atomic` / `save-interrupt` | `game/runtime/save_store.gd` | — | ✅ |
 | D18 | 截图证据靠门禁顺手生成，没有 diff 基线 | design/previews | 观感回归只能靠肉眼 | M |

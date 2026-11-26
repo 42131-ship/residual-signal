@@ -22,17 +22,17 @@
 
 | 项 | 状态 |
 |---|---|
-| 游戏形态 | Godot 4.7 · PC Windows 包（Godot 导出的 exe/zip） |
-| `export_presets.cfg` | **不存在**（还没配置 Windows 导出） |
+| 游戏形态 | Godot 4.7 · **PC Windows 包 + Android APK**（两条预设，见 `design/MOBILE.md`） |
+| `export_presets.cfg` | **已入库**：`Windows Desktop` + `Android` 两条 |
 | Node | **有**：`C:\Program Files\nodejs\node.exe`，v24.19.0 |
 | npm / npx / corepack | **没有**：该安装里只有 `node.exe`（`node_modules\` 只有 tripo-cli），无 shim → 不能直接 `npm i -g` |
 | 便携 npm | **已装**：`.tools\npm\package`（npm 12.2.3），`.tools/` 不入库 |
 | `taptap-cli` | **已装（便携）**：`2026.11.24` / `contract 3`，在 `.tools\npm-global`（含 `taptap-cli.cmd`） |
-| `doctor` | `cli_version` / `installation` / `server_health` / `metadata`（150 条命令，set 1.0.82）**pass**；`config` / `credentials` **fail** |
+| `doctor` | **八项全 pass**（2026-11-26 登录后实测；含 `config` / `credentials` / `identity`） |
 | Skills | **16 个内置**（`skills list`），随 CLI 版本绑定，不需要另装 |
-| TapTap 开发者登录 | **未登录**（无 developerId / appId 上下文） |
+| TapTap 开发者登录 | **已登录**：厂商 `starxin的工作室`（`489018`）；详见 §2.1 |
 | TapDB | 客户端直连代码已完成；缺 ClientID、后台事件登记、导出包实测（见 `design/ANALYTICS.md`） |
-| 版号/资质 | 未核查；走 `taptap-cli skills read taptap-qualification` 或控制台资质页 |
+| 版号/资质 | **已实测试算**：版号 `optional`，必交隐私/防沉迷/AI 声明/适龄 → 见 `design/RELEASE_FEASIBILITY.md` |
 
 **怎么跑起来（每个新 shell 先加 PATH，本机没有全局 npm 前缀）**：
 

@@ -1029,15 +1029,19 @@ _emit_noise(base)  # 三段映射：x < 192 → school_corridor_a；< 416 → b�
 
 # 附录 A · 未完成清单（截至 2026-11-25）
 
+> **这是 2026-11-25 的快照，不是现状。** 现状以 [`SESSION_HANDOFF.md`](SESSION_HANDOFF.md) 为准
+> （2026-11-26 之后：门禁 36 → 51、已出 Android 包、已登录 TapTap、已做引导与图标）。
+> 保留本节是为了看「当时为什么这么排」，不要拿这里的数字当当前值。
+
 > 这份是**接手就能干活**的清单：每条都有位置、现状、验收方式。
 > 排序 = 建议动手顺序。详细论证见 [`TECH_DEBT.md`](TECH_DEBT.md)。
 
-## A0. 当前状态快照
+## A0. 当前状态快照（2026-11-25）
 
 | 项 | 值 |
 |---|---|
 | 远端 | `42131-ship/residual-signal`，`main` 分支 |
-| Godot 门禁 | **36 条**，全绿（2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light` / `building-theme` / `analytics`；`pipeline.json` 里 step 数 34 + 4 条 headless 数据门禁在别处） |
+| Godot 门禁 | **36 条**（当天的数字；**现已 51 条**，见 `SESSION_HANDOFF.md`）。2026-11-25 新增 `m2a-actions` / `menu-entry` / `travel-fuel` / `down` / `enemy-hearing` / `card-day` / `room-light` / `building-theme` / `analytics`；`pipeline.json` 里 step 数 34 + 4 条 headless 数据门禁在别处 |
 | 数据规则 | **47 条**，`ERROR 0 · WARN 0 · SKIP 0`；输入台账 **29/29** |
 | 分辨率 | 原生 384×216，整数缩放（本机 3×，参考机 5×） |
 | 存档 | `user://run.json`（`RunState`），跨场景 + 重启可读 |
@@ -1395,7 +1399,7 @@ FONT_COVERAGE required=792 glyphs=792 missing=0
 | Skills | 入口/路由、身份定位、创建游戏、资料与版本、资质、包体自测、测试计划、数据表现、素材库等；以 `taptap-cli skills list` 为准 |
 | 发布链路 | 定位身份 → 创建草稿 → Windows 导出与自测 → `upload-pc-package` → 补资料 → 测试计划 → `prepare-review-snapshot` / `precheck-review` / `submit-review` |
 | 写操作纪律 | 先 `--dry-run`，用户确认后 `--yes`；上传成功 ≠ 资料写入 ≠ 包体绑定 |
-| 本机阻塞 | 无 Node/npm/npx/`taptap-cli`；无 `export_presets.cfg`；无开发者登录上下文；未核查版号/资质 |
+| 本机阻塞 | ~~无 Node/npm/npx/`taptap-cli`；无 `export_presets.cfg`；无开发者登录上下文~~ → **2026-11-26 全部解除**（便携 npm + CLI 2026.11.24、两条导出预设、已登录），只剩「建 app draft / 上传 / 提审」要人点头 |
 | TapDB | 客户端直连代码 + 离线门禁已完成，待 ClientID / 后台事件登记 / 导出包实机验证 |
 
 **颗粒度约定**：以后新增平台能力，README 只加一行入口 + 一条可复制命令；细节写 `design/<capability>.md`；

@@ -11,7 +11,7 @@
 | 件 | 位置 / 值 |
 |---|---|
 | 导出用引擎 | `.tools/Godot_v4.7.2-stable_win64_console.exe`（从 `D:\extension\tools\godot` 复制） |
-| 跑门禁用引擎 | `.tools/Godot_v4.7-stable_win64_console.exe`（**没换**，既有 50 条门禁仍在 4.7 上跑） |
+| 跑门禁用引擎 | `.tools/Godot_v4.7-stable_win64_console.exe`（**没换**，既有 51 条门禁仍在 4.7 上跑） |
 | 导出模板 | `%APPDATA%\Godot\export_templates\4.7.2.stable`（本机只有 4.5.2 / 4.7.2，**没有 4.7.0**） |
 | JDK | `.tools\jdk17\jdk-17.0.21.1+2`（Temurin 17，便携解压，无需管理员） |
 | Android SDK | `C:\Users\Administrator\AppData\Local\Android\Sdk`（build-tools 34.0.0 / 35.0.0，platforms 34/35，platform-tools） |
@@ -70,7 +70,7 @@ $env:GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD = '<见 .tools\keystore\signing.txt
 |---|---|
 | 命中用 `TouchScreenButton`，不用 `Control` 按钮 | Control 走「触摸→鼠标仿真」，多指会被合并成单指针；这游戏必须能「左手走 + 右手攻击」 |
 | 按钮外观自己画（ColorRect + 点阵字 + 点阵箭头） | 项目风格：程序绘制、不引外部贴图，天然过像素门禁；顺带避免图集缺字（箭头 ←↑↓ 图集里没有） |
-| 一次性动作**合成键事件**（`Input.parse_input_event`） | 走廊/菜单的输入走事件而不是状态；这样**不用改** `corridor.gd` / `main_menu.gd` 的热路径（那两处一改，D24 那 9 条失效门禁会更难查） |
+| 一次性动作**合成键事件**（`Input.parse_input_event`） | 走廊/菜单的输入走事件而不是状态；这样**不用改** `corridor.gd` / `main_menu.gd` 的热路径（那两处一改，D24 那批失效门禁会更难查） |
 | 按住用 `Input.action_press/release` | `player.gd` 读的是动作状态，按住即走 |
 | 十字键「按住 + 补一次按键事件」 | 旅行图/背包/主菜单只认事件；没有这一下，手机上能走但打不开地图、选不了菜单 |
 | 步态改成**循环切换**（走→跑→蹲） | 手机上没法「按住 Shift 再按 Ctrl」；一键循环比并列两个修饰键可靠 |

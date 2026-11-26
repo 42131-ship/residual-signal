@@ -4,6 +4,13 @@
 
 Godot **4.7**（GL Compatibility 渲染器）+ GDScript；数据与资产管线是 Python。
 
+> **当前状态（2026-11-26）**：两端都能出包 —— Windows exe + Android APK（arm64，release 已签名）。
+> 门禁 **51 条**（38 `ready` / 8 `broken` / 5 未标状态），数据规则 **47 条** `ERROR 0 · WARN 0 · SKIP 0`。
+> 手机触摸操控与首 10 分钟引导已接；**真机还没跑过**。
+> 现状与下一批活看 [`design/SESSION_HANDOFF.md`](design/SESSION_HANDOFF.md)，
+> 发行可行性与门槛看 [`design/RELEASE_FEASIBILITY.md`](design/RELEASE_FEASIBILITY.md)，
+> 下一阶段方向看 [`design/NEXT.md`](design/NEXT.md)。
+
 ---
 
 ## 快速开始
@@ -175,7 +182,7 @@ python tools/theme_build.py
 | TapTap 发布 | PC 包路线 + CLI/Skills 文档收束（`design/TAPTAP.md`） | CLI 已装并登录；PC/Android 导出预设已建，APK 已出（见下两行） |
 | 手机版 | Android APK（arm64，debug/release 均签名）+ 触摸操控 + 安全区/省电/ETC2 | 已实现并通过 `touch-controls` 门禁；**待真机实测**（`design/MOBILE.md` §7） |
 | P0-4 引导 | 首 10 分钟引导（走 → 搜 → 出门），HUD 一行字，状态存 `RunState.tutorial_step` | 已实现并通过 `tutorial` 门禁（`design/NEXT.md`） |
-| D15 | 字体图集覆盖门禁（792 字，卡牌/结局文案 + 结算标点入图集） | 已实现并通过 `font_build.py --check` |
+| D15 | 字体图集覆盖门禁（现 802 字，卡牌/结局/引导文案 + 结算标点入图集） | 已实现并通过 `font_build.py --check` |
 | Stage 3 | 地面接缝 / 磨损 / 散落物 | 未开始 |
 | Stage 4 | 前景遮挡与玩家可读性 | 未开始 |
 | Stage 5 | 参照精品 2D 生存恐怖重构 HUD | 未开始 |
