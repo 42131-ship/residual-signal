@@ -92,7 +92,7 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 
 | # | 欠账 | 位置 | 为什么必须还 | 量 |
 |---|---|---|---|---|
-| **D24** | **走廊门禁失效**（原记录 9 条）—— 2026-11-26 复测：`traverse` **已恢复**；`animation` / `corridor-status` 仍**挂死**；其余 6 条未复跑 | `game/tests/*`、`pipeline.json` | 它们守着搜刮/战斗/状态/走廊渲染，坏了就等于**没有安全网**；后续改动会悄悄破坏这些系统 | M–L |
+| ~~D24~~ | ~~走廊门禁失效~~ **已还（2026-11-26 接手当天）**：根因是 6 条门禁被登记成 `--headless`，而这 6 条测试**要真渲染**（`display` 同理）；改回真渲染后 **38/38 全绿、144 秒**。详见 [`TAKEOVER-2026-11-26.md`](TAKEOVER-2026-11-26.md) §三 | `game/tests/*`、`pipeline.json`、`tools/run_gates.ps1` | — | ✅ |
 | ~~D1~~ | ~~双状态：`_supplies` 与 `world_state` 并行~~ | — | **已还（M2a）** | ✅ |
 | ~~D2~~ | ~~`_noise` 与 `add_noise` 语义不同~~ | — | **已还（M2a-2）**：走廊只报底值，世界层缩放进沉积并传染邻接 | ✅ |
 | D3 | `actions_left` 恒为 1、从未消耗 | corridor.gd:1488 | 「一天一次外出」只写在数据里，实际没约束 | S |
@@ -101,6 +101,11 @@ A1 剩余：**D7（五楼共用学校美术）**。D4 已按 `routes.json` 的�
 | ~~D6~~ | ~~校验器不覆盖 `data/travel`、`data/endings`、`data/systems`、`data/loot`~~ | — | **已还（D6）**：新增 R44–R47；`selftest.py` 埋坏数据证明四条都会开火 | ✅ |
 
 **D24 复测（2026-11-26，实测口径）**：
+
+> **2026-11-26 接手当天已还清（38/38 全绿，144 秒）**：下表的「仍挂死 / 未复跑」是**旧机**口径。
+> 本机实测根因是登记参数——5 条 `corridor-*` 与 `display` 被写成 `--headless`，而这些测试要真渲染；
+> 去掉后每条 1–2 秒通过，`animation` / `corridor-preview` / `corridor-status` 本来就过。
+> 完整证据与复跑命令见 [`TAKEOVER-2026-11-26.md`](TAKEOVER-2026-11-26.md) §三。
 
 - `traverse` **已恢复**：`TRAVERSE_OK waypoints=8 bounds=588x88 corners=4 center=1 leaks=0`。
   `ebe33e7` 那笔提交本身就是「修复 traverse 被 D9 打断」，`pipeline.json` 里还写着 `broken` 是**陈旧的**，应改回 `ready`。
