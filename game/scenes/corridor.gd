@@ -1336,10 +1336,8 @@ func _refresh_hud_stats() -> void:
 	if _status != null and _player != null:
 		_player.status_speed_scale = _status.speed_multiplier()
 		_refresh_status_fx()
-	# 物资不再给「80」这种精确数：玩家只能拿到一个体感档位（充足/偏紧/见底），
-	# 具体值留在 world_state 里给系统用，不喂给玩家当仪表盘。
-	_draw_hud_outlined(_hud_stats_root, "物资 %s" % _supplies_word(), Vector2(8, 42), HUD_INK)
-	_draw_hud_outlined(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), HUD_INK)
+	# 物资不再上 HUD：它是系统变量，不是玩家该读的仪表（只保留体力与状态）。
+	_draw_hud_outlined(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 42), HUD_INK)
 	var weapon_text := "空手"
 	if not _equipped.is_empty():
 		weapon_text = _loot.item_name(_equipped)
