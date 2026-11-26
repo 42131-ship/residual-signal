@@ -798,6 +798,16 @@ func _inspectable_prop_count() -> int:
 	return count
 
 
+## 物资档位词：只在玩家能感知的三档里说话，不报精确百分比。
+func _supplies_word() -> String:
+	var value := _get_supplies()
+	if value >= 0.66:
+		return "充足"
+	if value >= 0.33:
+		return "偏紧"
+	return "见底"
+
+
 ## 触屏「搜」只在**当下真有东西可交互**时出现：可检查物（含停摆时钟）、可搜索容器、门、出口。
 ## 离开就消失，不常驻、不指路——它只是「这一刻这颗键有用」的物理提示。
 func _searchable_nearby() -> bool:
@@ -1248,7 +1258,7 @@ func _build_hud() -> void:
 	var dim := Color("#354b60")
 	var day3_mark := Color("#0b1119")
 	var frame_color := Color("#635e57")
-	_draw_hud_outlined(layer, "DAY 3", Vector2(8, 8), HUD_INK)
+	_draw_hud_outlined(layer, "DAY %d" % (int(_run.day) + 1), Vector2(8, 8), HUD_INK)
 	if _travel != null and _travel.has_building(_current_building):
 		_draw_hud_outlined(layer, _travel.label_of(_current_building), Vector2(8, 22), Color("#8c8378"))
 	_build_hud_stats_root(layer)
@@ -1323,8 +1333,9 @@ func _refresh_hud_stats() -> void:
 	if _status != null and _player != null:
 		_player.status_speed_scale = _status.speed_multiplier()
 		_refresh_status_fx()
-	# 行距 15：PF-02 汉字墨迹 13×14，10px 行距会直接叠字。
-	_draw_hud_outlined(_hud_stats_root, "物资 %d" % int(round(_get_supplies() * 100.0)), Vector2(8, 42), HUD_INK)
+	# 物资不再给「80」这种精确数：玩家只能拿到一个体感档位（充足/偏紧/见底），
+	# 具体值留在 world_state 里给系统用，不喂给玩家当仪表盘。
+	_draw_hud_outlined(_hud_stats_root, "物资 %s" % _supplies_word(), Vector2(8, 42), HUD_INK)
 	_draw_hud_outlined(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 57), HUD_INK)
 	var weapon_text := "空手"
 	if not _equipped.is_empty():
@@ -1334,7 +1345,7 @@ func _refresh_hud_stats() -> void:
 		elif _weapon_magazine > 0:
 			weapon_text += " 弹 %d/%d" % [_magazine, _weapon_magazine]
 	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 72), HUD_INK)
-	PixelFont.draw(_hud_stats_root, "敌人 %d" % alive, Vector2(8, 87), HUD_INK)
+	# 敌人数量不暴露（玩家不该拥有「还剩几只」这种上帝视角仪表）。
 	var status_text := _status.summary() if _status != null else ""
 	if not status_text.is_empty():
 		_draw_hud_outlined(_hud_stats_root, status_text, Vector2(8, 117), HUD_INK)

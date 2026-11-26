@@ -23,13 +23,16 @@ const DESIGN := Vector2i(384, 216)
 ## 触控键表。id / 动作 / 尺寸(mm) / 语义 / 合成的键
 ## kind: hold=按住即动作状态；tap=发一次事件；toggle=开关（跑）
 const KEYS := {
-	"attack": {"size_mm": 11.0, "label": "打", "kind": "tap", "key": -1, "action": "attack"},
+	"attack": {"size_mm": 11.0, "label": "攻击", "kind": "tap", "key": -1, "action": "attack"},
 	"search": {"size_mm": 10.0, "label": "搜", "kind": "tap", "key": 69, "action": "pickup"},
-	"lamp": {"size_mm": 8.0, "label": "灯", "kind": "tap", "key": 70, "action": "toggle_light"},
-	"run": {"size_mm": 8.0, "label": "跑", "kind": "toggle", "key": 0, "action": "sprint"},
-	"bag": {"size_mm": 8.0, "label": "包", "kind": "tap", "key": 4194306, "action": "inventory"},
-	"menu": {"size_mm": 8.0, "label": "", "kind": "menu", "key": 0, "action": ""},
+	"lamp": {"size_mm": 11.0, "label": "手电筒", "kind": "tap", "key": 70, "action": "toggle_light"},
+	"run": {"size_mm": 11.0, "label": "走", "kind": "gait", "key": 0, "action": ""},
+	"bag": {"size_mm": 11.0, "label": "背包", "kind": "tap", "key": 4194306, "action": "inventory"},
+	"menu": {"size_mm": 11.0, "label": "", "kind": "menu", "key": 0, "action": ""},
 }
+
+## 步态循环：走 → 跑 → 蹲（一个键，标签就是当前状态；手机上没有第二个修饰键可按）
+const GAITS := ["走", "跑", "蹲"]
 
 ## 边距（画布像素，按 384 基准；手机按 _mm 再放大一档）
 const GAP := 6
@@ -52,6 +55,7 @@ var _menu_index := 0
 var _menu_layer: Node2D
 var _search_available := false
 var _run_on := false
+var _gait_index := 0
 var _held: Dictionary = {}
 
 # 浮动摇杆
@@ -114,7 +118,7 @@ func search_size() -> int:
 
 
 func small_size() -> int:
-	return maxi(18, _mm(8.0))
+	return maxi(24, _mm(11.0))
 
 
 ## 六颗常驻/上下文控件的矩形（全部从画布右下角与右上角推出来）
@@ -250,7 +254,7 @@ func _draw_visual(node: Node2D, id: String, rect: Rect2) -> void:
 	node.add_child(holder)
 	var text := label
 	if id == "run":
-		text = "跑" if not _run_on else "停"
+		text = GAITS[_gait_index]
 	var width := PixelFont.width_of(text)
 	var at := Vector2(
 		rect.position.x + int((rect.size.x - width) * 0.5),
@@ -507,7 +511,7 @@ func _on_pressed(id: String) -> void:
 	elif id == "lamp":
 		_tap_key(70, "toggle_light")
 	elif id == "run":
-		_toggle_run()
+		_cycle_gait()
 	elif id == "bag":
 		_tap_key(4194306, "inventory")
 	last_emitted = id
@@ -549,6 +553,24 @@ func _toggle_run() -> void:
 			Input.action_press(&"sprint")
 		else:
 			Input.action_release(&"sprint")
+
+
+## 走 → 跑 → 蹲 → 走。标签永远显示「现在的状态」，玩家按一下就换一档。
+func _cycle_gait() -> void:
+	_gait_index = (_gait_index + 1) % GAITS.size()
+	for action: StringName in [&"sprint", &"crouch"]:
+		if InputMap.has_action(action):
+			Input.action_release(action)
+	if _gait_index == 1 and InputMap.has_action(&"sprint"):
+		Input.action_press(&"sprint")
+	elif _gait_index == 2 and InputMap.has_action(&"crouch"):
+		Input.action_press(&"crouch")
+	_draw_visual(_visuals["run"], "run", rects()["run"])
+	_run_on = _gait_index == 1
+
+
+func gait_index() -> int:
+	return _gait_index
 
 
 func _toggle_crouch() -> void:

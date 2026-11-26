@@ -75,8 +75,8 @@ func _check_geometry() -> Dictionary:
 		var rect: Rect2 = table[id]
 		_check(rect.position.x > w * 0.72 and rect.end.y < h * 0.25,
 			"%s must sit in top-right corner: %s" % [id, str(rect)])
-	# 中央 60% 零控件
-	var center := Rect2(w * 0.2, h * 0.2, w * 0.6, h * 0.6)
+	# 中央 60%×45% 零控件（下 1/3 是法定的动作区，不算中央）
+	var center := Rect2(w * 0.2, h * 0.2, w * 0.6, h * 0.45)
 	for id: String in IDS:
 		_check(not (table[id] as Rect2).intersects(center), "%s intrudes into center 60%%" % id)
 
