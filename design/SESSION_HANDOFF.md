@@ -24,30 +24,36 @@
 python tools/validate.py     # 期望：共 47 条规则：ERROR 0 · WARN 0 · SKIP 0
 python tools/selftest.py     # 期望：全部通过（含 R44-R47 的坏夹具）
 
-# 门禁（51 条已登记；渲染/无头参数由脚本从 pipeline.json 读，别手抄）
+# 门禁（`pipeline.json` 54 步；2026-11-26 全量实测 **ALL PASS (41)**，148 秒）
 powershell -NoProfile -File tools\run_gates.ps1
 powershell -NoProfile -File tools\run_gates.ps1 -Only corridor   # 只跑名字含 corridor 的
 ```
 
-**当前不全绿，这是已知状态**：2026-11-26 复测到的是 —— `traverse` **已恢复**（`TRAVERSE_OK`），
-`animation` 与 `corridor-status` **仍然挂死**（>2.5min / >5min 无任何结论），其余 6 条未复跑（见 3.0 的 D24）。
-所以先看 `pipeline.json` 里 `status`：`ready` = 最近验证过，`broken` = 已知失效。**但 `traverse` 那条的 `broken` 是陈旧的**。
+**现在全绿**：D24 已还清 —— 根因是 6 条门禁被登记成 `--headless`，而 `display` 与 `corridor-*` 这批**要真渲染**；
+改回真渲染后 38 → **41 条全过**、148 秒。证据与复跑命令见 [`TAKEOVER-2026-11-26.md`](TAKEOVER-2026-11-26.md) §二/§三。
+`pipeline.json` 的 `status` 现在只剩 `ready`（另有 5 条纯数据步骤没有 status），**没有 `broken`**。
+
+**进度数字的真源是 [`../progress.json`](../progress.json)**（机器可读：57%、各模块状态、门禁/CLI/设备）。
+本文件不重复那些数字，只讲「怎么开工」。
 
 - `.tools/register_gates.py` 可自动补登记缺失的门禁；新门禁必须登记，否则跑不全还看着绿
 - 带「需渲染」的门禁**不能加 `--headless`**，否则截图/光照断言拿不到
 - 跑全量大约 30 分钟；用 `-Only` 分批更实际
 
 发布侧（2026-11-26 已装好并**已登录**，细节见 `design/TAPTAP.md` §2/§2.1）：本机 Node 24.19.0 在但**没有 npm**，
-所以用便携 npm（`.tools\npm\package\bin\npm-cli.js`）装了 `@taptap/cli 2026.11.24` 到 `.tools\npm-global`。
+所以用便携 npm（`.tools\npm\package\bin\npm-cli.js`）装了 `@taptap/cli`（本机 `version` 报 `2026.11.24` / contract 3；
+`TAKEOVER` 里记的 `2026.11.25` 是升级后的版本，以 `taptap-cli version` 为准）。
 每个新 shell 先 `$env:Path = "D:\Downloads\残余信号\.tools\npm-global;$env:Path"`，再 `taptap-cli doctor`（应全绿）。
 厂商 `starxin的工作室` = `developerId 489018`；名下唯一游戏是 `感染之夜`（`appId 991852`，与本项目无关），
 **残余信号还没有 app**，要发就得先 `app create`（写操作，先 `--dry-run`）。
 
-手机侧（2026-11-26，细节见 [`MOBILE.md`](MOBILE.md)）：`export_presets.cfg` 已建（Windows + Android），
-模板 APK 路线打通，产出 `build/android/ResidualSignal-{debug,release}.apk`（arm64 / 已签名 / 51.4 & 49.6 MB）。
-触摸层 `game/ui/touch_controls.gd` + `game/runtime/mobile_support.gd` 已挂进走廊与主菜单，
-门禁 `touch-controls` 已登记（现在共 51 条）。导出用 **4.7.2** 引擎（模板只有 4.7.2），**跑门禁仍用 4.7**。
-**真机还没测过**（本机没有设备）；未做项与验收方式见 `MOBILE.md` §7。
+手机侧（2026-11-26，细节见 [`MOBILE.md`](MOBILE.md) / [`MOBILE-REVIEW.md`](MOBILE-REVIEW.md)）：
+`export_presets.cfg` 已建（Windows + Android），模板 APK 路线打通，产出 `build/android/ResidualSignal-{debug,release}.apk`。
+**真机已经跑过整套流程**（`2602BRT18C` / Android 17 / 2772×1280）：主菜单 → 走廊 → 搜索 → 门 → 出口 → 旅行图 →
+到达 → 背包 → 手电，并修掉 **P0「按住方向键人物不动」**（合成键 release 下一帧清掉 action）、
+切场景空引用脚本错误、左右黑边（自算视口 555×256 满屏）。
+导出用 **4.7.2** 引擎（模板只有 4.7.2），**跑门禁仍用 4.7**；这条双引擎债见 `TECH_DEBT.md` D26。
+真机上仍待改善的清单（搜索进度反馈、战斗可读性、手机面板排版）在 `MOBILE-REVIEW.md` §四。
 
 引导（2026-11-26）：`game/runtime/tutorial.gd` 三步（走 → 搜 → 出门），只由玩法事件推进，
 状态存 `RunState.tutorial_step`（老档缺键当 0）；门禁 `tutorial`。
@@ -70,23 +76,13 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 > 改回 `--path . --fixed-fps 60 --script ... -- <TAG>` 后，`run_gates.ps1` → **`ALL PASS (38)`，144 秒**。
 > 证据、根因与复跑命令见 [`TAKEOVER-2026-11-26.md`](TAKEOVER-2026-11-26.md) §三；**下面的老表只作历史记录**。
 
-上一轮把 15 条没登记的门禁补进 `pipeline.json` 后实测，发现旧门禁在 `ebe33e7` 上失效。
-**2026-11-26 复测后的真实状态**（别照抄老表）：
+**历史记录（2026-11-26 上午，旧机口径，已被上面的结论推翻）**：
+当时 9 条被记成失效 —— `traverse` 报 `player missing`、`animation` / `corridor-status` 挂了数分钟、
+其余几条从未复跑。后来查明**都不是代码坏了**，是登记参数把要真渲染的门禁塞进了 `--headless`。
+留着这段只为记住教训：**门禁红之前先看它是怎么被调起来的**。
 
-| 门禁 | 2026-11-26 实测 | 下一步 |
-|---|---|---|
-| `traverse` | **已恢复**：`TRAVERSE_OK waypoints=8 bounds=588x88 corners=4 center=1 leaks=0` | 把 `pipeline.json` 的 `status` 从 `broken` 改回 `ready` |
-| `animation` | 复跑**挂死** >150s，无任何结论 | 找等待点：不是断言失败，是永不触发的信号 |
-| `corridor-status` | 复跑**挂死** >5min，无任何结论 | 同上；先看它 `await` 了什么 |
-| `corridor-combat` / `-inspect` | 未复跑（上轮记 `CORRIDOR_*_FAILED count=1`） | 真跑一次再判断 |
-| `corridor-preview` / `-doors` / `-inventory` / `-loot` | 未复跑（上轮记卡死 >300s） | 真跑一次再判断 |
-
-这几条守着搜刮/战斗/状态/走廊渲染 —— 坏了就等于**没有安全网**。
-`pipeline.json` 里仍是 `"status": "broken"`（`run_gates.ps1` 照跑，方便边修边验），但**`traverse` 那条已经过期**。
-
-**怀疑方向**（部分已被推翻）：`traverse` 不是节点改名问题——它现在直接过。
-剩下两条挂死的更像「协程在等一个不会发生的信号」：D9 倒下会打断长流程，
-`disarm_enemies()` 只解决了「敌人打死玩家」这一路，不解决「等结算面板/等翻页」这一路。
+**教训（写进 §4 坑表）**：给 `corridor-*` / `display` / `animation` 这类要开窗口的测试加 `--headless`，
+表现是**进程挂死无输出**，看起来像「代码卡住」，实际是断言永远拿不到帧。
 
 ### 3.1 小（每条半天内）
 
@@ -113,17 +109,18 @@ P0 真机手感 → P1 内容扩容（D13 同伴 / 每楼文本池 / 卡 18→40
 
 ---
 
-## 4. 七个坑与规矩（都真踩过）
+## 4. 八个坑与规矩（都真踩过）
 
 | 坑 | 规矩 |
 |---|---|
 | `git fetch` 失败后 `git reset --hard origin/main` 删本地提交（2 次） | 只跑 `.tools/sync_local.ps1`：fetch 不成功就什么都不动 |
 | PowerShell 整文件重写把中文读成乱码（3 次，最近是 `.ps1` 脚本本身） | 改 UTF-8 只用 `edit`/`write`；**`.ps1` 保持纯 ASCII**；`Get-Content` 查看看必须 `-Encoding utf8` |
-| git 传输被 reset（频繁） | 远端已前进时先 `fetch` 再 `rebase`；推不上去用 `.tools/push_files.py --parent <远端sha> --files ...` |
+| git 传输被 reset（频繁；本机到 github.com 直连基本不可用） | 走本地代理：`git -c http.proxy=http://127.0.0.1:65532 ...`（**别把代理写进仓库**）；推不上去再用 `.tools/push_files.py` |
 | 判断「远端有没有我的提交」 | 比**树哈希**（`git rev-parse HEAD^{tree}` vs API `commit.tree.sha`），不信 `origin/main` |
 | 未类型化数组传给 `Array[String]` 参数 | 运行时抛错会中断协程 → 进程挂着像卡死；门禁里显式声明类型 |
 | 门禁写了没登记 | `run_gates.ps1` 只跑登记过的；新增门禁必须登记并确认条数 |
 | `font_build.py` 重建图集后没重新导入 | 表现**不是缺字而是整屏乱码**（区域坐标与旧 PNG 对不上）；重建后必须再跑一次 `--import` |
+| 给「要真渲染」的门禁加了 `--headless` | 进程**挂死无输出**，看着像代码卡住；`display` / `corridor-*` / `animation` 必须真窗口。改回真渲染后 41 条全过（148s） |
 
 两条工程纪律：
 

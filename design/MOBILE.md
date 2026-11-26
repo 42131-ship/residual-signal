@@ -11,7 +11,7 @@
 | 件 | 位置 / 值 |
 |---|---|
 | 导出用引擎 | `.tools/Godot_v4.7.2-stable_win64_console.exe`（从 `D:\extension\tools\godot` 复制） |
-| 跑门禁用引擎 | `.tools/Godot_v4.7-stable_win64_console.exe`（**没换**，既有 51 条门禁仍在 4.7 上跑） |
+| 跑门禁用引擎 | `.tools/Godot_v4.7-stable_win64_console.exe`（**没换**，全部 41 条门禁仍在 4.7 上跑） |
 | 导出模板 | `%APPDATA%\Godot\export_templates\4.7.2.stable`（本机只有 4.5.2 / 4.7.2，**没有 4.7.0**） |
 | JDK | `.tools\jdk17\jdk-17.0.21.1+2`（Temurin 17，便携解压，无需管理员） |
 | Android SDK | `C:\Users\Administrator\AppData\Local\Android\Sdk`（build-tools 34.0.0 / 35.0.0，platforms 34/35，platform-tools） |
@@ -105,11 +105,14 @@ $env:GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD = '<见 .tools\keystore\signing.txt
 ## 5. 门禁
 
 ```powershell
-python tools/validate.py        # 47 条规则（本轮未改数据：ERROR 0 · WARN 0 · SKIP 0）
-python tools/font_build.py --check   # FONT_COVERAGE required=801 glyphs=801 missing=0
+python tools/validate.py        # 47 条规则：ERROR 0 · WARN 0 · SKIP 0
+python tools/font_build.py --check   # 字体图集覆盖（真源已换成 Fusion 12px：1308 字、0 缺字）
 .tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/touch_controls.gd
-# TOUCH_OK buttons=12 layout=in_bounds hud=clear safe_area=clamped hold=state tap=event keys=matched
+# TOUCH_OK buttons=12 layout=in_bounds hud=clear safe_area=clamped hold=state tap=event keys=matched panel=dim
 ```
+
+> 2026-11-26 真机复跑后，全量 `run_gates.ps1` 是 **ALL PASS (41)**、148 秒；
+> `pipeline.json` 现在 54 步、没有 `broken`。
 
 `touch-controls` 已登记进 `pipeline.json`（`gate: hard`，headless 可跑）。它守的是**契约**，不是「真机点得准」：
 
@@ -125,9 +128,9 @@ python tools/font_build.py --check   # FONT_COVERAGE required=801 glyphs=801 mis
 
 ## 6. 字体
 
-触摸层用了 `走 / 跑 / 蹲 / 灯 / 填 / 打 / 包 / 看 / 退` 九个字，其中 **蹲** 不在原图集里（791 → 792 时漏的）。
-`python tools/font_build.py` 重建后 `PF-02` 从 792 → **801 字**，`--check` 归零。
-以后加按钮文案，先跑 `--check` 再重建，别等运行时静默缺字。
+触摸层用了 `走 / 跑 / 蹲 / 灯 / 填 / 打 / 包 / 看 / 退` 九个字，其中 **蹲** 当时不在图集里（791 → 792 时漏的）。
+后来字体真源换成了 **Fusion 12px（OFL-1.1）**，图集重建到 **1308 字、0 缺字、0 降采样**（见 `progress.json` 的 `pixel_font_pipeline`），
+这九个字全在覆盖范围内。以后加按钮文案，先跑 `--check` 再重建，别等运行时静默缺字。
 
 > **踩过的坑**：重建图集之后必须再跑一次 `--import`。否则 Godot 用的还是旧 PNG 的导入结果，
 > 区域坐标与新 JSON 对不上——运行时表现不是「缺字」而是**整屏乱码**（每个字都画成别的字）。
@@ -137,10 +140,10 @@ python tools/font_build.py --check   # FONT_COVERAGE required=801 glyphs=801 mis
 
 | # | 项 | 为什么重要 | 怎么验 |
 |---|---|---|---|
-| M1 | **真机实跑**（本机无设备） | 触摸手感、刘海、横屏旋转、发热全都没在真机上看过 | `adb install -r build/android/ResidualSignal-release.apk` 后连玩三局：新游戏→搜刮→打一场→出门选楼→结算 |
+| M1 | ~~真机实跑~~ **已做（2026-11-26）** | 设备 `2602BRT18C` / Android 17 / 2772×1280；走通 主菜单→走廊→搜索→门→出口→旅行图→到达→背包→手电，修掉「按住方向键不动」P0 | 评审与待改善项见 [`MOBILE-REVIEW.md`](MOBILE-REVIEW.md)；复跑 `tools/deploy_android.ps1` |
 | M2 | ~~应用图标~~ **已做（2026-11-26）** | `tools/icon_build.py` 生成 32×32 手排图标（×6/×8 + 自适应 432 三件套），`pixelpipe` 6 色 PASS | `project.godot:config/icon` + `export_presets.cfg:launcher_icons/*` 已接；导出不再报 `No project icon specified` |
-| M3 | 刘海/挖孔的实际收边 | 安全区只在门禁里用**注入的矩形**验过，没在真机读过 `get_display_safe_area()` | 真机开游戏，看右上「包/看/退」是否被吃掉 |
-| M4 | 19.5:9 的黑边 | 整数缩放 5× → 1920×1080，两侧各留 ~240px 黑边 | 要么接受黑边（像素最锐），要么做 `expand`（要重排房间宽度，代价大）；真机看完再定 |
+| M3 | 刘海/挖孔的实际收边 | 安全区只在门禁里用**注入的矩形**验过；真机已实测满屏（555×256 视口），但刘海区未单独核对 | 真机开游戏，看右上「包/看/退」是否被吃掉 |
+| M4 | ~~19.5:9 的黑边~~ **已做（2026-11-26）** | 改成自算视口 `ceil(窗口/整数倍)` = 555×256 + 分数缩放，真机满屏无黑边 | 见 `mobile_support.gd:apply_fill_screen`；`RS_EXPAND` 开关见 TAKEOVER |
 | M5 | 面板遮挡 | 检查面板/背包面板是满宽的，触摸按钮会压在上面 | 真机看「E 使用 Q 丢弃 TAB 关闭」那行是否被挡；必要时开面板时把右上按钮淡出 |
 | M6 | 性能与发热 | GL Compatibility 本就是低配路径，但没测帧率/温度 | 真机抓 `adb shell dumpsys gfxinfo`，或在 HUD 加临时 FPS |
 | M7 | ETC2/ASTC 重新导入 | 打开开关后没有重新导入纹理（`--import` 跑过，但压缩率未核） | 真机看显存与加载时间；必要时 `--import` 全量重跑 |
