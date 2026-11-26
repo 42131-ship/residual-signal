@@ -59,8 +59,8 @@
     },
     "android_arm64_build": {
       "status": "partial",
-      "pct": 30,
-      "evidence": "export_presets.cfg 已有 Windows + Android 两条预设；旧机产出过 49.6MB 已签名 arm64 APK；本机无构建产物、无真机烟测、无 10 台矩阵"
+      "pct": 60,
+      "evidence": "本机已可复现构建（2026-11-26）：Godot 4.7.2 + export templates 4.7.2.stable（1.22GB）+ JDK 17.0.21.1+2 + Android SDK build-tools 36.0.0/platform-tools + debug keystore；tools/deploy_android.ps1 一键 export/install/launch/shot；build/android/ResidualSignal-debug.apk = 46.8MB 已签名。缺：真机烟测与 10 台矩阵"
     },
     "settings_privacy_audio": {
       "status": "partial",
