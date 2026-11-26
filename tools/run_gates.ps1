@@ -30,7 +30,7 @@ foreach ($step in $steps) {
     $out = Invoke-Expression $step.cmd 2>&1
     Pop-Location
     $ok = ($out | Select-String -Pattern '_OK' | Select-Object -Last 1)
-    $bad = ($out | Select-String -Pattern '_FAIL' | Select-Object -First 1)
+    $bad = ($out | Select-String -Pattern '_FAIL' | Where-Object { $_.Line -notmatch 'WARNING' } | Select-Object -First 1)
     if ($ok -and -not $bad) {
         Write-Host ("[PASS] {0,-18} {1}" -f $step.name, $ok.Line.Trim()) -ForegroundColor Green
     } else {

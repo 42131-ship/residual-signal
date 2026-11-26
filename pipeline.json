@@ -235,61 +235,61 @@
       "name": "animation",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/animation.gd -- QA",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-combat",
-      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_combat.gd",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_combat.gd -- CORRIDOR-COMBAT",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-doors",
-      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_doors.gd",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_doors.gd -- CORRIDOR-DOOR",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-inspect",
-      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_inspect.gd",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_inspect.gd -- CORRIDOR-INSPECT",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-inventory",
-      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_inventory.gd",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_inventory.gd -- CORRIDOR-INV",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-loot",
-      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/corridor_loot.gd",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_loot.gd -- CORRIDOR-LOOT",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-preview",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_preview.gd -- QA",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "corridor-status",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/corridor_status.gd -- QA",
       "gate": "hard",
-      "status": "broken",
-      "note": "已知失败（D24）：在 ebe33e7 上不通过或超时，需按新改动修断言后再转 ready"
+      "status": "ready",
+      "note": "2026-11-26 已还（D24）：改成真渲染后通过，转 ready"
     },
     {
       "name": "display",
-      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/display.gd",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --script res://game/tests/display.gd",
       "gate": "hard",
       "status": "ready",
       "note": "数据门禁（脚本自带 --headless）"
