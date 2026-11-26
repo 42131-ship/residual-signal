@@ -43,9 +43,21 @@ static func attach(host: Node) -> TouchControls:
 
 
 ## 19.5:9 手机要「填满屏幕」：把内容缩放从 keep（左右黑边）改成 expand。
-## expand 会同时变宽变高（2772×1280 / 5 = 555×256），所以触控层要按视口贴边（见 TouchControls）。
+## expand 会把视口从 384×216 变成 555×256，所以触控层要按视口贴边（见 TouchControls）。
 ## 只在手机上调用：桌面与全部 384×216 门禁的呈现链路一个字节都不变。
+##
+## 现状态（2026-11-26 真机验证）：视口扩展与按钮贴边都成立，但**游戏内容仍按 384×216 绘制**，
+## 结果是「内容靠左 + 右侧/底部留黑」。所以默认关闭，用 RS_EXPAND=1 打开做实验；
+## 等内容层（菜单居中 / 背景铺满 555×256 / 走廊相机取景）重排完，再把默认值改成 true。
+static func fill_screen_enabled() -> bool:
+	if OS.has_environment("RS_EXPAND"):
+		return OS.get_environment("RS_EXPAND") == "1"
+	return false
+
+
 static func apply_fill_screen(host: Node) -> void:
+	if not fill_screen_enabled():
+		return
 	var win := host.get_window()
 	if win == null:
 		return
