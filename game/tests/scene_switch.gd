@@ -20,8 +20,7 @@ func _run() -> void:
 			_prefix = argument
 	# 从干净档案开始，避免上一次运行留下的 user://run.json 影响断言
 	RunState.current = null
-	if FileAccess.file_exists(RunState.SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(RunState.SAVE_PATH))
+	RunState.clear_saved()
 
 	var first := SCENE.instantiate() as Node2D
 	root.add_child(first)

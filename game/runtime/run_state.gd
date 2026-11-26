@@ -6,7 +6,10 @@ extends RefCounted
 ## 不放进来的：玩家坐标、容器搜过没有（那些属于具体场景，换场景就该重置）。
 
 const MAX_DAY := 30
-const SAVE_PATH := "user://run.json"
+## 存档实体在 SaveStore 里（主档 / 备份 / 临时档）。保留 SAVE_PATH 这个名字给测试清档用。
+const SAVE_PATH := SaveStore.MAIN
+## v2 = W1 起：v0（无 schema）/ v1 老档读入时自动迁移，只补字段不丢数据（D17）。
+const SCHEMA := "run-state.v2"
 
 ## 跨场景的唯一状态：静态引用，切换场景后仍然存在（不是 Node，所以不会被 free）。
 static var current: RunState = null
@@ -31,6 +34,8 @@ var unlocked: Dictionary = {}   # template -> { ending_id: true }
 var finished := false
 ## 首 10 分钟引导走到第几步（0 走 / 1 搜 / 2 出门 / 3 完成）。老档没这个键 → 0。
 var tutorial_step := 0
+## 这份存档是从哪个旧版本迁移来的（空 = 本来就是当前版本）。只用于诊断，不参与玩法。
+var migrated_from := ""
 
 
 ## 取当前局；没有就开一局新的。
@@ -70,30 +75,34 @@ func new_run() -> void:
 	finished = false
 	# 引导是「这一局」的事：新游戏重新教一遍（老玩家会很快走完，不打断）。
 	tutorial_step = 0
+	# 新开一局不是从旧档迁移来的。
+	migrated_from = ""
 	# 解锁记录跨局保留：结局栏是长期档案，不该被「新游戏」清掉。
 
 
-## 存档：跨场景要活下来，重启也要活下来。
+## 存档：跨场景要活下来，重启也要活下来。写盘交给 SaveStore 做原子化（主档+备份+临时档）。
 func save() -> bool:
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
+	if not SaveStore.write(to_dict()):
 		push_error("RUN_SAVE_FAILED: " + SAVE_PATH)
 		return false
-	file.store_string(JSON.stringify(to_dict(), "  "))
 	return true
 
 
 ## 读档：没有存档/坏档都返回 null，由调用方决定开新局。
+## 主档坏了会自动回落备份/临时档，并把那份提升成主档（自愈），见 SaveStore.read()。
 static func load_saved() -> RunState:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return null
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	var parsed: Variant = SaveStore.read()
 	if not parsed is Dictionary:
 		return null
 	var state := RunState.new()
 	if not state.from_dict(parsed):
 		return null
 	return state
+
+
+## 三份存档全清（新游戏 / 测试开局用）。只删主档会把备份留下来污染下一次读取。
+static func clear_saved() -> void:
+	SaveStore.clear()
 
 
 func visited_label() -> String:
@@ -119,7 +128,8 @@ func has_any_unlock() -> bool:
 
 func to_dict() -> Dictionary:
 	return {
-		"schema": "run-state.v1",
+		"schema": SCHEMA,
+		"migrated_from": migrated_from,
 		"day": day,
 		"sediment": sediment,
 		"building": building,
@@ -140,8 +150,14 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(data: Dictionary) -> bool:
-	if str(data.get("schema", "")) != "run-state.v1":
+	if not SaveStore.is_save_dict(data):
 		return false
+	# D17：老档原地迁移（v0 = 无 schema，v1 = 上一个格式）。只补字段，不覆盖已有值。
+	var schema := str(data.get("schema", ""))
+	migrated_from = "" if schema == SCHEMA else (schema if schema != "" else "run-state.v0")
+	if schema != SCHEMA:
+		data = data.duplicate(true)
+		data["schema"] = SCHEMA
 	day = clampi(int(data.get("day", 0)), 0, MAX_DAY)
 	sediment = clampi(int(data.get("sediment", 0)), 0, 40)
 	building = str(data.get("building", "school"))

@@ -38,10 +38,10 @@ c7c3b9d docs(handoff): 本轮状态对齐（D24 复测 / 手机线与引导 / �
 | 2 | 数据层 + 47 规则 | done | **done 100%** | `validate.py` 47 条 0/0/0；`selftest.py` **25 个夹具全开火** |
 | 3 | 像素 + 字体管线 | done（802 字） | **done 100%**（802 字） | `PF-02_cjk_12.json` 的 `characters` 实测 **802**；仓库旧文档写 792，**旧文档错** |
 | 4 | 多点触控 / 横屏 | partial | **partial 60%** | `game/ui/touch_controls.gd` **384 行** + `TOUCH_OK buttons=12` 通过；缺统一 InputAction（手柄/自适应）、色盲与震动开关 |
-| 5 | 存档 SaveState v1 | not_started | **not_started 0%** | `run_state.gd:save()` 直接 `FileAccess.WRITE`，无 tmp/rename/备份/校验；门/容器/背包/敌人/NPC 记忆不进档 —— **与 HTML 判断完全一致** |
+| 5 | 存档 SaveState v1 | not_started | **done 100%（W1 第一步，2026-11-26）** | `game/runtime/save_store.gd` 三槽原子写（TMP > MAIN > BAK）+ 回读校验 + 自愈提升；`RunState` 迁移 v0/v1→v2；门禁 `save-atomic`、`save-interrupt`（7 相位 × 50 轮，**lost=0**） |
 | 6 | 模式内核 | not_started | **not_started 0%** | `data/mode_profile.json` 已有 `story/endless/shared` 三档**数据**；`RunState` 无 `mode` 字段、无 `ModePolicy` 类、菜单无选择 |
 | 7 | EntityRegistry | not_started | **not_started 0%** | 全仓库 `EntityRegistry` / `stable_id` 零命中 |
-| 8 | L0 Fact / Assertion | not_started | **not_started 0%** | 只有 `L0/events.jsonl`（append-only），无 fact/assertion 分离、无 `branch_id` |
+| 8 | L0 Fact / Assertion | not_started | **not_started 0%** | 只有 `L0/events.jsonl`（append-only），无 fact/assertion 分离、无 `branch_id`。**注意**：`schema/migrations/save_v1|v2_day09.json` 已有世界快照迁移样本（sediment `int → {amount,last_noise_day}`），但 `WorldState` 侧没有迁移代码——样本不能当实现 |
 | 9 | 回响层三项 | not_started | **not_started 0%** | `RunState` 无 door 持久化、无 `transfer_log`、时钟未模糊 |
 | 10 | 消防站开场切片 | not_started | **partial 20%** | `data/templates/fire_station.json` + `props_fire_station.tscn`（主题美术 v1）已在；**可玩切片没有** |
 | 11 | Android arm64 构建 + 真机 | not_started（「无 APK」） | **partial 30%** | `export_presets.cfg` 基线就有 Windows + Android 两条；旧机产出过 49.6MB 已签名 APK；**本机无产物、无真机、无 10 台矩阵** |
@@ -74,7 +74,7 @@ $PY = "C:\Users\Administrator\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies
 
 & $PY tools/validate.py     # 期望：共 47 条规则：ERROR 0 · WARN 0 · SKIP 0
 & $PY tools/selftest.py     # 期望：25 个 [PASS]，0 个 [FAIL]
-powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (38)，约 144 秒
+powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (40)，约 145 秒
 ```
 
 改模块状态时**只改 `progress.json`**，不要改这份对照表（它是 2026-11-26 的快照 + 证据）。
@@ -84,12 +84,14 @@ powershell -NoProfile -File tools\run_gates.ps1   # 期望：ALL PASS (38)，约
 
 ## 五、下一步（与 HTML §05 对齐）
 
-**W1（先做）**：`SaveState v1`（原子双槽 + `.bak` + schema 迁移 + 50 次杀进程/断电门禁）→ `EntityRegistry`（stable ID）
+**W1（进行中）**：~~`SaveState v1`（原子双槽 + `.bak` + schema 迁移 + 50 次杀进程/断电门禁）~~ **已落地 2026-11-26**
+（`save-atomic` / `save-interrupt` 两条门禁，7 相位 × 50 轮 lost=0）→ 下一步 `EntityRegistry`（stable ID）
 → `mode` 字段 + `ModePolicy`（数据档案已有）→ `L0` Fact/Assertion 分离 + `branch_id`。
 
 **W2**：回响层三项（门状态/物品轨迹/时间可见度）→ 消防站开场切片 → Android arm64 可复现构建 + 10 台烟测。
 **W3**：统一 InputAction / 自适应触控 → 6 音效 → 崩溃 opt-in → 两开场教学漏斗。
 **W4**：LICENSE/NOTICE/AI 台账（本轮已起头）→ CI（**本轮已绿**：validate + selftest + gd_sanity）→ 内容评审 → TapTap 材料 → 受邀小测。
 
-> TapTap 现状：**CLI 已装、未登录；无 app、无包体上传、资质四项未办**。
+> TapTap 现状（2026-11-26 更新）：**CLI 已装且已登录**（`taptap-cli doctor` 全绿，`developerId 489018「starxin的工作室」`）；
+> 「残余信号」**仍未建 app**、无包体上传、资质四项未办。
 > 这符合 P3（先离线受邀 Android 小测，TapTap 封测为下一步），不要提前做。

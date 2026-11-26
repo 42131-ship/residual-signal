@@ -323,6 +323,20 @@
       "note": "数据门禁（脚本自带 --headless）"
     },
     {
+      "name": "save-atomic",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/save_atomic.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "W1/D17：主档+备份+临时档原子写、自愈、v0/v1 -> v2 迁移"
+    },
+    {
+      "name": "save-interrupt",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/save_interrupt.gd",
+      "gate": "hard",
+      "status": "ready",
+      "note": "W1：7 种断电相位 x 50 轮，零数据丢失"
+    },
+    {
       "name": "status",
       "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --headless --path . --script res://game/tests/status.gd",
       "gate": "hard",

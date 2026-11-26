@@ -18,8 +18,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	RunState.current = null
-	if FileAccess.file_exists(RunState.SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(RunState.SAVE_PATH))
+	RunState.clear_saved()
 
 	_corridor = SCENE.instantiate() as Node2D
 	root.add_child(_corridor)

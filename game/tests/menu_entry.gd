@@ -17,8 +17,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	RunState.current = null
-	if FileAccess.file_exists(RunState.SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(RunState.SAVE_PATH))
+	RunState.clear_saved()
 
 	# 造一份「继续」用的存档：加油站 / 第 3 天 / 有燃料
 	var seeded := RunState.start_new()

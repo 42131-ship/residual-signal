@@ -21,8 +21,7 @@ func _run() -> void:
 			_prefix = argument
 	# 门禁必须控制前置条件：先清掉上一次跑测试留下的存档，否则「继续」会读到它。
 	RunState.current = null
-	if FileAccess.file_exists(RunState.SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(RunState.SAVE_PATH))
+	RunState.clear_saved()
 	_menu = SCENE.instantiate() as Node2D
 	root.add_child(_menu)
 	await process_frame
