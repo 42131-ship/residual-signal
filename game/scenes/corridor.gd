@@ -800,16 +800,29 @@ func _inspectable_prop_count() -> int:
 	return count
 
 
-## HUD 单行：DAY · 地点 · 体力 · 伤口（无伤不占位）。行高按内容走，不铺满屏。
+## HUD 单行：DAY · 地点 · 体力 · 手持 · 伤口（无伤不占位）。整块只有这一行，高度 ≤ 屏高 8%。
 func _hud_line() -> String:
 	var building := ""
 	if _travel != null and _travel.has_building(_current_building):
 		building = _travel.label_of(_current_building)
 	var text := "DAY %d · %s · 体力 %d" % [int(_run.day) + 1, building, int(round(_health * 100.0))]
+	text += " · " + _weapon_label()
 	var status_text := _status.summary() if _status != null else ""
 	if not status_text.is_empty():
 		text += " · " + status_text
 	return text
+
+
+## 手持状态并进单行（不再单独占一行）：空手 / 武器名 + 耐久或弹匣。
+func _weapon_label() -> String:
+	if _equipped.is_empty() or _loot == null:
+		return "空手"
+	var label := _loot.item_name(_equipped)
+	if _weapon_durability > 0:
+		label += " 耐久 %d" % _weapon_durability
+	elif _weapon_magazine > 0:
+		label += " 弹 %d/%d" % [_magazine, _weapon_magazine]
+	return label
 
 
 ## 物资档位词：只在玩家能感知的三档里说话，不报精确百分比。
@@ -1361,18 +1374,8 @@ func _refresh_hud_stats() -> void:
 		_refresh_status_fx()
 	# HUD 压成单行（③-2）：DAY · 地点 · 体力 · 伤口；伤口来自状态摘要，无伤则省略。
 	_draw_hud_outlined(_hud_stats_root, _hud_line(), Vector2(8, 8), HUD_INK)
-	var weapon_text := "空手"
-	if not _equipped.is_empty():
-		weapon_text = _loot.item_name(_equipped)
-		if _weapon_durability > 0:
-			weapon_text += " 耐久 %d" % _weapon_durability
-		elif _weapon_magazine > 0:
-			weapon_text += " 弹 %d/%d" % [_magazine, _weapon_magazine]
-	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 30), HUD_INK)
+	# 手持状态已并进 _hud_line()；这一行不再重复画，HUD 只剩一行文字。
 	# 敌人数量不暴露（玩家不该拥有「还剩几只」这种上帝视角仪表）。
-	var status_text := _status.summary() if _status != null else ""
-	if not status_text.is_empty():
-		_draw_hud_outlined(_hud_stats_root, status_text, Vector2(8, 117), HUD_INK)
 	if _at_exit:
 		_draw_hint(_hud_stats_root, "leave", Vector2(8, 132), HUD_INK)
 	elif _combat_message_frames > 0 and not _combat_message.is_empty():
