@@ -3,7 +3,7 @@
   "baseline_note": "v0.7.1 执行基线 HTML 的审计快照是 9758e3c（2026-11-25）；本文件由 Agent 在 d192703（2026-11-26）按仓库实测刷新。P1–P10 决策不变，只刷进度数字。",
   "decisions_source": "残余信号 v0.7.1 进度对照版 §04（P1–P10，不可推翻）",
   "schema_version": 1,
-  "updated_at": "2026-11-26",
+  "updated_at": "2026-11-28",
   "overall_percent": 57,
   "overall_note": "HTML 基线 48%；实测上调 4 个模块 + W1 存档内核与 EntityRegistry 落地，约 57。距 v0.7 全做完（~72%）还差 W1 余下两步（mode/ModePolicy、L0 分离）+ W2–W4。",
   "modules": {
@@ -25,7 +25,7 @@
     "touch_wide": {
       "status": "partial",
       "pct": 80,
-      "evidence": "手游化 + 真机全流程（2026-11-26）：expand 自算视口 555×256 满屏无黑边；PC/触屏双轨提示；**修掉「按住方向键不移动」P0**（合成键 release 下一帧清 action）+ 输入空引用脚本错误；主菜单/旅行图/走廊面板居中。真机走通 主菜单→走廊→搜索→门→出口→旅行图→到达→背包→手电。待改善清单见 design/MOBILE-REVIEW.md（P0：搜索进度反馈/战斗可读性/手机面板排版）"
+      "evidence": "手游化 + 真机全流程（2026-11-26）：expand 自算视口 555×256 满屏无黑边；PC/触屏双轨提示；**修掉「按住方向键不移动」P0**（合成键 release 下一帧清 action）+ 输入空引用脚本错误；主菜单/旅行图/走廊面板居中。真机走通 主菜单→走廊→搜索→门→出口→旅行图→到达→背包→手电。**2026-11-28**：修「开门后过不去」（纵深锚点改成走道中线，门禁 ⑦ 覆盖 y=216 真机几何）；搜索条贴物件 + 手机「搜」改按住态（原来 tap 同帧松手，搜索永远走不完）。待改善清单见 design/MOBILE-REVIEW.md（P0：战斗可读性/手机面板排版；新：两只感染体 10 秒围死玩家）"
     },
     "savestate_v1": {
       "status": "done",
@@ -78,8 +78,8 @@
     "godot_gates": 41,
     "green": 41,
     "broken": [],
-    "last_run": "2026-11-26",
-    "wall_clock_seconds": 148
+    "last_run": "2026-11-28",
+    "wall_clock_seconds": 150
   },
   "taptap": {
     "cli": "2026.11.25",

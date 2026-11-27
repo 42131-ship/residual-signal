@@ -1,6 +1,6 @@
 # SESSION HANDOFF · 换会话从这里开始
 
-> 交班时间：2026-11-27 23:40（Asia/Shanghai）。本轮 HEAD 见 `git log -1`。
+> 交班时间：2026-11-28 00:20（Asia/Shanghai）。本轮 HEAD 见 `git log -1`。
 > 进度真源：`../progress.json`；欠账：`TECH_DEBT.md`；方向：`NEXT.md`；手机契约：`MOBILE.md`。
 > **本文只讲「接手怎么开工 + 上一轮改了什么 + 下一步做什么」。**
 
@@ -10,51 +10,78 @@
 
 Godot 4.7 像素横版生存（384×216 设计空间 / 手机画布 555×256），Android 横屏优先、离线。
 主线闭环、41 条 Godot 门禁全绿、47 条数据规则 `ERROR 0`、TapTap CLI 已登录（developerId 489018）。
-**真机（2602BRT18C / 1272×2772@520dpi）可装可玩**，本轮把手机 UI 从「能点」调到「够得着」。
+**真机可装可玩**；本轮修掉「开门后过不去」的真根因，并把搜索从「有进度条」做成「有代价的动作」。
 
-## 2. 上一轮（2026-11-27）实际改了什么
+## 2. 上一轮（2026-11-27 夜 → 11-28 凌晨）实际改了什么
 
-| 提交 | 内容 | 真机状态 |
+| 提交 | 内容 | 状态 |
 |---|---|---|
-| `21c8ced` | **黑框根因**：手电暗罩只盖 `384×216`，改按画布 `555×256` | ✅ 用户确认消失 |
-| `dfcb205` | 攻击：0.75s 可重入锁 + 命中帧白光只亮 2 帧 | 待手感确认 |
-| `596fe0f` | 触摸**按下即响应**（矩形直接派发，不再依赖 TouchScreenButton 拾取）；奔跑/蹲下改**长按** | ✅ 连点有反应、奔跑变快 |
-| `ac4ae89` | 门交互加**纵深判定**（原来只比 x，远处也能开门） | 待复验 |
-| `8571dc0` | HUD 单行 `DAY·地点·体力·手持`；主界面不再挂游戏触控层 | ✅ 截图确认 |
-| `043eafe` | 手持状态并进单行，HUD 只剩一行 | ✅ |
+| `21c8ced` | 黑框根因：手电暗罩只盖 `384×216`，改按画布 `555×256` | ✅ 用户确认 |
+| `dfcb205` | 攻击：0.75s 可重入锁 + 命中帧白光只亮 2 帧 | ✅ 门禁按新设计更新 |
+| `596fe0f` | 触摸**按下即响应**；奔跑/蹲下改**长按** | ✅ |
+| `ac4ae89` | 门交互加纵深判定 | ⚠️ 引入了 §3.1 的 bug |
+| `8571dc0` / `043eafe` | HUD 压成单行 `DAY·地点·体力·手持·伤口` | ✅ |
+| `08503a8` | **修「开门后过不去」**：纵深锚点改走道中线；开合补 `set_deferred` | ✅ 门禁转绿 |
+| `1490b2b` | **②-1 搜索条贴物件 + 按住才算数 + 搜索有噪声**；手机「搜」改按住态 | ✅ 门禁转绿 |
 
-关键常量（现行）：
+### 2.1 「开门后过不去」的真根因（别再猜了）
+
+`ac4ae89` 判纵深时拿**门板顶边** `leaf.global_position.y = DOOR_TOP = 80` 当锚点，
+而玩家脚底（`Player.global_position` 就是脚底，碰撞体 `position=(0,-20) size=(40)`）永远在 `128..216`：
+
+```text
+dy = |player.y - 80| ∈ [48, 136]  >  INTERACT_DEPTH_TOLERANCE(24)   →  门一次都选不中
+```
+
+后果链：门**默认常开** → 玩家按下「搜」→ 因为选不中门，实际什么都没发生；
+但门在别处被关过一次之后就再也开不了 → 表现为「我开了门但过不去」。
+
+修法（现行常量）：
 
 ```gdscript
-const ATTACK_FRAMES := 45        # 0.75s @60
+const DOOR_ANCHOR_Y := (WALK_TOP + WALK_BOTTOM) * 0.5           # 172 = 走道中线
+const DOOR_DEPTH_TOLERANCE := (WALK_BOTTOM - WALK_TOP) * 0.5 + 8.0  # 52
+```
+
+外加 `_apply_door_state()` 里 `shape.disabled = is_open` 之后再补一次
+`shape.set_deferred("disabled", is_open)`：物理查询刷新期间直接赋值可能被静默丢弃，
+症状正是「门板没了、人还是过不去」（幂等，代价为零）。
+
+### 2.2 手机「搜」为什么以前永远搜不完
+
+`KEYS["search"]` 原来是 `tap`：`_tap_key()` 在**同一帧**按下又松开 `pickup`，
+而 `_update_search()` 要求 `Input.is_action_pressed("pickup")` 才推进 → 下一帧就被判「松手」中断。
+现在 `kind: "hold_key"`：按下发一次真按键事件（走廊靠它起手）+ **一直按住** `pickup`（进度靠它推进）。
+
+### 2.3 关键常量（现行）
+
+```gdscript
+const ATTACK_FRAMES := 45           # 0.75s @60
 const ATTACK_HIT_FRAMES := 2
-const DOOR_REACH_X := 44.0       # 门交互横向范围
+const DOOR_REACH_X := 44.0
+const DOOR_ANCHOR_Y := 172.0        # 走道中线（不是门板顶边！）
+const DOOR_DEPTH_TOLERANCE := 52.0
+const SEARCH_NOISE_INTERVAL := 0.5  # 搜索每 0.5s 记 1 点噪声
 const WALK_TOP := 128.0 / WALK_BOTTOM := 216.0 / WALK_LEFT := 14.0 / WALK_RIGHT := 602.0
 ```
 
 ## 3. 已知未决（下一个会话先处理）
 
-1. **开门后过不去**（用户报告，未复现定位）。
-   已排除：隔断墙没有碰撞体（`_build_room_partitions()` 纯 Polygon2D）；门在 `_apply_door_state()` 里确实 `shape.disabled = is_open`。
-   **待确认**：卡住时**门板还在不在**。门板消失仍过不去 → 补一次 `set_deferred("disabled", true)`；门板还在 → 开门状态没走到 `_apply_door_state`。
-2. **天空（空）**：无。
-3. 触控键 `hold` 分支留着调试打印 `[TOUCH] hold <id>`，确认完毕可删。
+1. **手机搜索条还没在真机截到图**。盲操作进走廊会被两只感染体围死（见 §3.3），
+   两次尝试都在走到储物柜之前被「倒下」打断。**待做**：先在手机菜单里放个
+   「无敌/清场」调试开关，或者进游戏后立刻打一只再搜。
+2. **倒下之后同一天内可以被打到 0 体力而不触发任何后果**（`_trigger_down` 的
+   `_down_day` 一天只放行一次）。真机截图里出现过「HUD 体力 0 + 倒下面板写着体力 30」。
+   要么给「同一世界日第二次倒下」定后果，要么受伤下限夹在 `0.05`。
+3. **两只感染体 10 秒内围死玩家**（`ENEMY_SPAWNS = [(300,168),(520,160)]`、抓伤 0.15/次、冷却 1.2s）。
+   搜一个柜子 1.6s、走到柜子 ~2s，几乎必然吃两抓。P0 手感项，下一轮量一次再调。
 
-## 4. 下一步：补丁 v1.0 的 ② 与 ④（①③ 已基本完成）
+## 4. 下一步：②-2 容器面板 + ④ 死亡三态
 
-### ②-1 搜索条（最小，先做）
-- `_refresh_search_progress()` 现有条在屏幕左下 (8,146)，要改成**贴在被搜物件上方**；
-- 时长从 `data/loot/containers.json` 新字段 `search_seconds` 读（柜子 1.6 / 尸体 1.0），不硬编码；
-- 移动或受击立刻中断且**进度归零、零产出**；
-- 验收：0.1s 内出条；打断 10 次零产出。
-
-### ②-2 容器面板
+### ②-2 容器面板（下一个做）
 - 新建 `game/ui/container_panel.gd`：左容器 / 右背包、≤40% 屏宽、居中偏右、暗底 + 1px 描边、**不暂停世界**；
 - 空容器给「咔哒 + 一格空槽」，不许静默；
-- 验收：截图量占屏 ≤40%；打开时敌人仍在靠近。
-
-### ②-3 搜索的代价
-- 搜索全程 `_emit_noise(1)`；被贴近打断并吃一抓（`_update_search` 已有分支，确认走同一出口）。
+- 验收：截图量占屏 ≤40%；打开时敌人仍在靠近（`_corridor._enemies[i].global_position` 有位移）。
 
 ### ④ 死亡三态 + 尸体掉落
 - 倒地（独立 death_pose）→ 可搜索（30–45s）→ 消失；
@@ -67,11 +94,14 @@ const WALK_TOP := 128.0 / WALK_BOTTOM := 216.0 / WALK_LEFT := 14.0 / WALK_RIGHT 
 | 坑 | 规矩 |
 |---|---|
 | PowerShell 拼 GDScript 字符串把 `""` 写成反引号 → 连续三次改坏 | **只用 `edit`/`write` 工具改 `.gd`**；PowerShell 只用来跑命令 |
-| 字库缺字静默跳过（「攻」变成只剩「击」） | 新文案先 `python tools/font_build.py --check`，缺字就 `font_build.py` 重建 + **再 `--import`**（否则整屏乱码） |
-| UI 按 `VIEW_SIZE(384×216)` 画 | 手机画布是 `555×256`：一律用 `ScreenLayout.canvas_of(self)`，否则出现「不压暗的一圈」「围成方框」 |
+| `edit` 的 `old_string` 少写/多写一个换行 → 代码粘成一行 `func _place(...):	_actor...`，报 `Unexpected "Indent"` | 改完立刻单跑那条门禁；看到 Parse Error 先搜 `):\t` 这种粘连 |
+| 字库缺字静默跳过（「攻」变成只剩「击」） | 新文案先 `python tools/font_build.py --check`，缺字就重建 + **再 `--import`** |
+| UI 按 `VIEW_SIZE(384×216)` 画 | 手机画布是 `555×256`：一律用 `ScreenLayout.canvas_of(self)`；世界坐标投屏幕用 `get_viewport().get_canvas_transform()` |
+| 拿「交互锚点」当「物件位置」画 UI | `_inspection_anchor()` 会把 y 夹进走道（柜子在墙上），贴条要用道具自身位置 ± 贴图高度 |
 | adb 通过 PowerShell 管道会挂着 | 一律 `cmd /c "adb … > file 2>&1"` 再读文件 |
 | 换签名装机报 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | 先 `adb uninstall com.starxin.residualsignal`（会丢设备存档） |
 | `git push` 到 github.com 直连会 reset | 加 `-c http.proxy=http://127.0.0.1:65532` |
+| GitHub REST API 走同一个代理会 403 | 同步状态用 `git fetch` + `git rev-list --left-right --count` 判断，别去求 API |
 
 ## 6. 命令速查
 
@@ -89,7 +119,7 @@ cmd /c "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe exec-out screencap 
 
 # 门禁
 & '.tools\Godot_v4.7-stable_win64_console.exe' --headless --path . --script res://game/tests/touch_controls.gd
-python tools/validate.py ; python tools/font_build.py --check
+python tools/validate.py ; python tools/selftest.py ; python tools/font_build.py --check
 powershell -NoProfile -File tools\run_gates.ps1
 ```
 
@@ -102,5 +132,6 @@ powershell -NoProfile -File tools\run_gates.ps1
 | 奔跑（长按） | 疾跑，松手回走 |
 | 蹲下（长按） | 潜行，松手起身 |
 | 攻击（≥11mm） | 挥击，0.75s 内不可打断 |
-| 搜（上下文） | 贴近可交互物/门/出口才出现 |
+| 搜（上下文，**按住**） | 贴近可搜索物按住 1.6~5s 搜完；中途走动/松手 = 归零零产出 |
 | 背包 / ≡ | 背包 / 菜单（继续·暂停·装填·查看·蹲下·退出） |
+
