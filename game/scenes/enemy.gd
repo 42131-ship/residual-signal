@@ -25,6 +25,13 @@ var speed := 18.0
 var damage := 1
 var dead := false
 var player: Node2D
+## 区块拴绳：感染体只在自己那段走廊里活动（x 范围；空 Rect2 = 不限）。
+## 没有它，两只隔着整条走廊的感染体会一起扑向站着搜柜子的玩家 —— 真机实测 10 秒围死。
+var leash := Rect2()
+## 脱战时间：> 0 时完全忽略玩家（倒下后给玩家爬起来的机会，不然醒来就被原地再打死）。
+var grace := 0.0
+## 出生点：倒下结算时送回这里。
+var home := Vector2.ZERO
 var _cooldown := 0.0
 var _sprite: Sprite2D
 var _anim_time := 0.0
@@ -52,9 +59,17 @@ func _physics_process(delta: float) -> void:
 	if dead or player == null:
 		return
 	_cooldown = maxf(0.0, _cooldown - delta)
+	if grace > 0.0:
+		grace = maxf(0.0, grace - delta)
+		_chasing = false
+		_advance_anim(delta)
+		return
 	var to_player := player.global_position - global_position
 	var distance := to_player.length()
-	if distance > CHASE_RANGE:
+	# 玩家不在自己这段走廊里 = 看不见（哪怕直线距离很近）。范围判定之外再加区块判定。
+	var player_in_leash := leash.size.x <= 0.0 or (
+		player.global_position.x >= leash.position.x and player.global_position.x <= leash.end.x)
+	if distance > CHASE_RANGE or not player_in_leash:
 		_chasing = false
 		# D10：没看见玩家时，循声走向声源；2 秒后停在原地。
 		if hearing_time > 0.0:
@@ -62,7 +77,7 @@ func _physics_process(delta: float) -> void:
 			var to_sound := _hearing_target - global_position
 			if to_sound.length() > 6.0:
 				global_position += to_sound.normalized() * speed * HEAR_SPEED_FACTOR * delta
-				global_position.y = clampf(global_position.y, WALK_TOP, WALK_BOTTOM)
+				_clamp_to_leash()
 				if _sprite != null:
 					_sprite.flip_h = to_sound.x < 0.0
 				_chasing = true
@@ -73,7 +88,7 @@ func _physics_process(delta: float) -> void:
 	hearing_time = 0.0
 	if distance > ATTACK_RANGE:
 		global_position += to_player.normalized() * speed * delta
-		global_position.y = clampf(global_position.y, WALK_TOP, WALK_BOTTOM)
+		_clamp_to_leash()
 		if _sprite != null:
 			_sprite.flip_h = to_player.x < 0.0
 		_chasing = true
@@ -82,6 +97,22 @@ func _physics_process(delta: float) -> void:
 		attacked.emit(damage)
 	z_index = int(global_position.y)
 	_advance_anim(delta)
+
+
+## 关在走道里，再关在自己的区块里。
+func _clamp_to_leash() -> void:
+	global_position.y = clampf(global_position.y, WALK_TOP, WALK_BOTTOM)
+	if leash.size.x > 0.0:
+		global_position.x = clampf(global_position.x, leash.position.x, leash.end.x)
+
+
+## 倒下结算：送回出生点、忘掉玩家、脱战一段时间。
+func reset_after_down(grace_seconds: float) -> void:
+	global_position = home
+	hearing_time = 0.0
+	_chasing = false
+	grace = maxf(grace, grace_seconds)
+	z_index = int(global_position.y)
 
 
 ## D10：走廊发出 ≥阈值噪声时调用。声源超出听程返回 false（远处的敌人不受影响）。

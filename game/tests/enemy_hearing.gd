@@ -79,10 +79,11 @@ func _run() -> void:
 		await physics_frame
 	_check(near.global_position.distance_to(stopped) < 1.0, "enemy must stop after the investigation window")
 
-	# ⑤ 看见优先于听见：玩家进入追击范围后 hearing 必须被清掉
+	# ⑤ 看见优先于听见：玩家进入追击范围后 hearing 必须被清掉。
+	# 站到感染体左侧 60px —— 必须在它自己的区块里（leash），否则它「看不见」是正确行为。
 	_corridor._emit_noise(3)
 	await physics_frame
-	actor.global_position = near.global_position + Vector2(80, 0)
+	actor.global_position = near.global_position + Vector2(-60, 0)
 	await physics_frame
 	await physics_frame
 	_check(not near.is_investigating(), "seeing the player must cancel hearing")

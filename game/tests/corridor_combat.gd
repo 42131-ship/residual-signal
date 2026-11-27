@@ -121,6 +121,58 @@ func _run() -> void:
 	await process_frame
 	_check(_corridor._equipped == "", "broken weapon should be unequipped")
 	_check(_corridor._weapon_durability == 0, "broken weapon durability should be 0")
+
+	# ⑤ 区块拴绳：B 区的感染体不许跨进 A 区。站在 A 区（x=60）等 3 秒，
+	# 它只能在门口（x≥192）来回——两只隔着走廊一起扑过来是「10 秒围死」的根因。
+	# 用一只新的活体守卫（前面两只已经躺了，拿尸体测等于没测）。
+	var guard := Enemy.new()
+	guard.position = Vector2(300.0, 168.0)
+	guard.home = Vector2(300.0, 168.0)
+	guard.leash = _corridor._room_span(1)
+	guard.player = _actor
+	_corridor.add_child(guard)
+	_corridor._enemies.append(guard)
+	# ①先在它自己的区块里站一下，证明它真的会追（不然这条门禁是空转）。
+	await _place(260.0, 168.0)
+	await _wait_physics(90)
+	_check(guard.global_position.x < 296.0,
+		"the guard must chase a player inside its own room (x=%.1f)" % guard.global_position.x)
+	# ②玩家退进 A 区：它只能跟到门口，而且打不到人。
+	await _place(60.0, 168.0)
+	_corridor._health = 1.0
+	_corridor._hurt_immune = 0.0
+	await _wait_physics(180)
+	_check(not guard.dead, "the guard must stay alive during the leash test")
+	_check(guard.global_position.x >= 208.0 - 0.5,
+		"a B-room enemy must not follow the player into A (x=%.1f)" % guard.global_position.x)
+	_check(_corridor._health >= 1.0 - 0.001,
+		"with the leash holding, the player must stay unharmed in A (hp=%.2f)" % _corridor._health)
+
+	# ⑥ 受击无敌帧：0.7s 内连打两下只吃一下。
+	_corridor._hurt_immune = 0.0
+	var before_iframe: float = _corridor._health
+	_corridor._on_enemy_attacked(1)
+	var after_first: float = _corridor._health
+	_corridor._on_enemy_attacked(1)
+	_check(after_first < before_iframe, "the first scratch must hurt")
+	_check(is_equal_approx(_corridor._health, after_first),
+		"a second scratch inside the i-frames must be ignored (%.2f -> %.2f)"
+		% [after_first, _corridor._health])
+	_check(_corridor._hurt_immune > 0.0, "taking a hit must start the i-frame window")
+
+	# ⑦ 倒下后脱战：感染体回巢 + 4 秒内不认人，玩家爬起来不会立刻再被咬死。
+	_corridor._hurt_immune = 0.0
+	_corridor._down_lockout = 0.0
+	_corridor._health = 0.0
+	_corridor._trigger_down()
+	await process_frame
+	var rehomed := true
+	for enemy: Enemy in _corridor._enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			if enemy.global_position.distance_to(enemy.home) > 1.0 or enemy.grace <= 0.0:
+				rehomed = false
+	_check(rehomed, "a down must send every living enemy home and drop its aggro")
+	_check(_corridor._hurt_immune > 0.0, "a down must open a grace window for the player")
 	_finish()
 
 

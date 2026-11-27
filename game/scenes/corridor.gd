@@ -184,6 +184,14 @@ const STATUS_FX_COLORS := {
 }
 ## 搜索时敌人靠到多近算被打断。
 const SEARCH_THREAT_RANGE := 40.0
+## 受击无敌帧：一次抓伤之后 0.7s 内不再吃第二下。
+## 没有它，两只贴脸的感染体会在同一瞬间把 0.3 体力削光（真机 4 秒躺下）。
+const HURT_IFRAMES := 0.7
+## 倒下之后的脱战时间：玩家从血里爬起来那几秒，感染体必须重新发现他。
+const DOWN_GRACE := 4.0
+## 倒下结算的锁：只防同一瞬间重复结算，不再是「一天只放行一次」。
+## 之前的按天锁会让「当天已经被打倒过一次」的玩家被打到 0 体力而毫无后果。
+const DOWN_LOCKOUT := 2.0
 ## 命中顿帧：普通命中 3 帧（50ms）、击杀 5 帧；抖屏 1px。
 const HITSTOP_FRAMES := 3
 const HITSTOP_KILL_FRAMES := 5
@@ -192,6 +200,9 @@ var _hitstop_frames := 0
 var _shake_frames := 0
 var _flash_frames := 0
 var _flash_targets: Array[Enemy] = []
+## 受击无敌帧 / 倒下锁 / 倒下后的脱战窗口（都在 _process 顶部无条件倒计时）。
+var _hurt_immune := 0.0
+var _down_lockout := 0.0
 ## 主角动作状态（walk/idle/hurt）与计时；受击后 0.22 秒锁在 hurt 帧。
 var _player_anim_time := 0.0
 var _player_anim_id := "idle"
@@ -1722,13 +1733,42 @@ func _spawn_enemies() -> void:
 		enemy.name = "Enemy_%d" % index
 		enemy.position = ENEMY_SPAWNS[index]
 		enemy.player = _player
+		# 每个感染体只守自己那段走廊：B 区的那只永远进不了 A 区，
+		# 搜柜子（A 区）时不会再被两只一起围（真机 10 秒围死就是这么来的）。
+		enemy.leash = _room_span(_room_index_of_x(ENEMY_SPAWNS[index].x))
+		enemy.home = ENEMY_SPAWNS[index]
 		enemy.attacked.connect(_on_enemy_attacked)
 		enemy.died.connect(_on_enemy_died)
 		add_child(enemy)
 		_enemies.append(enemy)
 
 
+## 某个 x 属于哪个区块（0=A / 1=B / 2=C）：按隔断墙的 tile 边界切。
+func _room_index_of_x(x: float) -> int:
+	var tile_x := x / float(TILE_SIZE)
+	if tile_x < float(ROOM_PARTITION_TILES[0]):
+		return 0
+	if tile_x < float(ROOM_PARTITION_TILES[1]):
+		return 1
+	return 2
+
+
+## 区块的 x 范围（含门洞中线，感染体可以站在门口）：拴绳子用。
+func _room_span(room_index: int) -> Rect2:
+	var left := 0.0
+	var right := float(WORLD_TILES.x * TILE_SIZE)
+	if room_index > 0:
+		left = float(ROOM_PARTITION_TILES[room_index - 1] * TILE_SIZE + ROOM_PARTITION_WIDTH / 2)
+	if room_index < ROOM_PARTITION_TILES.size():
+		right = float(ROOM_PARTITION_TILES[room_index] * TILE_SIZE + ROOM_PARTITION_WIDTH / 2)
+	return Rect2(left, WALK_TOP, right - left, WALK_BOTTOM - WALK_TOP)
+
+
 func _on_enemy_attacked(damage: int) -> void:
+	# 无敌帧：一次抓伤之后 0.7s 内不吃第二下（两只贴脸也不会同帧削两刀）。
+	if _hurt_immune > 0.0:
+		return
+	_hurt_immune = HURT_IFRAMES
 	_health = clampf(_health - 0.15 * float(damage), 0.0, 1.0)
 	var stage := _status.apply("wound")
 	_player_hurt_t = 0.22
@@ -1747,9 +1787,10 @@ func _on_enemy_died(enemy: Enemy) -> void:
 
 
 ## D9：体力归零的后果——丢 1 沉积、翻到次日、被拖回学校安全屋、体力恢复到 0.3。
-## 一天最多触发一次（_down_day 记录结算后的天数），避免同一帧被多次结算。
+## 每一次被打空都结算（每次抵一天），只用一个锁定期防同一瞬间重复结算；
+## 旧实现按「世界日」只放行一次，导致当天已经被打倒过的人会被打到 0 体力而毫无后果。
 func _trigger_down() -> void:
-	if _downing or _day == null:
+	if _downing or _day == null or _down_lockout > 0.0:
 		return
 	_downing = true
 	_down_count += 1
@@ -1768,6 +1809,11 @@ func _trigger_down() -> void:
 	if _player != null:
 		_player.global_position = Vector2(2 * TILE_SIZE, 8 * TILE_SIZE)
 		_player.velocity = Vector2.ZERO
+	# 倒下不是「原地满血复活」：感染体各自回巢并脱战 4 秒，
+	# 否则玩家在面板上还没看清发生了什么就被贴脸再打死一次（真机复现过）。
+	_reset_enemies_after_down()
+	_hurt_immune = DOWN_GRACE
+	_down_lockout = DOWN_LOCKOUT
 	_run.actions_left = _travel.actions_per_day() if _travel != null else 1
 	# D12：倒下也翻到次日，同样抽一张事件卡。
 	_sync_world_day()
@@ -1784,6 +1830,13 @@ func _trigger_down() -> void:
 
 func down_count() -> int:
 	return _down_count
+
+
+## 把活着的感染体送回出生点并脱战（倒下结算 & 门禁用）。
+func _reset_enemies_after_down() -> void:
+	for enemy: Enemy in _enemies:
+		if enemy != null and is_instance_valid(enemy) and not enemy.dead:
+			enemy.reset_after_down(DOWN_GRACE)
 
 
 func last_down_day() -> int:
@@ -2141,12 +2194,7 @@ func _current_room_node() -> String:
 func _current_room_index() -> int:
 	if _player == null:
 		return 0
-	var tile_x := _player.global_position.x / float(TILE_SIZE)
-	if tile_x < float(ROOM_PARTITION_TILES[0]):
-		return 0
-	if tile_x < float(ROOM_PARTITION_TILES[1]):
-		return 1
-	return 2
+	return _room_index_of_x(_player.global_position.x)
 
 
 ## D11 门禁口：当前平滑后的灯光乘数 / 区块索引。
@@ -2299,9 +2347,14 @@ func _build_flashlight() -> void:
 
 
 func _process(delta: float) -> void:
+	# 这三个计时器无条件走：顿帧里也要到期，不然「无敌帧」会跟着顿帧一起冻住。
+	_hurt_immune = maxf(0.0, _hurt_immune - delta)
+	_down_lockout = maxf(0.0, _down_lockout - delta)
 	_update_hit_feedback()
 	# D9：体力归零 → 倒下结算。放在顿帧 return 之前，免得被顿帧拖到无敌窗口。
-	if not _downing and _health <= 0.0 and _day != null and int(_day.day) != _down_day:
+	# 判据只有「锁定期」（防同帧重复），不再是「这一天是否已经倒过」——
+	# 否则当天第二次被打空就什么都不会发生。
+	if not _downing and _health <= 0.0 and _day != null and _down_lockout <= 0.0:
 		_trigger_down()
 	if _hitstop_frames > 0:
 		# 顿帧：世界停住，只有反馈在动。镜头也刻意不跟，让这一下“钉”在屏幕上。

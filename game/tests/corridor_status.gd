@@ -37,8 +37,11 @@ func _run() -> void:
 	_check(status.ids().size() == 4, "expected four states, got %d" % status.ids().size())
 
 	# ① 被感染体抓伤 → 伤口一级，再抓一级。
+	# 受击无敌帧（0.7s）是战斗手感的一部分，这里测的是伤口阶梯，所以手动清掉窗口。
+	_corridor._hurt_immune = 0.0
 	_corridor._on_enemy_attacked(1)
 	_check(status.stage_of("wound") == 1, "scratch must raise wound to 1")
+	_corridor._hurt_immune = 0.0
 	_corridor._on_enemy_attacked(1)
 	_check(status.stage_of("wound") == 2, "second scratch must raise wound to 2")
 
@@ -113,6 +116,7 @@ func _run() -> void:
 		Input.action_press("pickup")
 		_check(not _corridor._search_id.is_empty(), "search did not start")
 		enemy.global_position = _actor.global_position + Vector2(20.0, 0.0)
+		_corridor._hurt_immune = 0.0
 		_corridor._update_search(0.1)
 		Input.action_release("pickup")
 		_check(_corridor._search_id.is_empty(), "a nearby enemy must interrupt the search")
