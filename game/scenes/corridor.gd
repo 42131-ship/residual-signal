@@ -2188,7 +2188,9 @@ func _build_flashlight() -> void:
 	var mask := ColorRect.new()
 	mask.name = "Mask"
 	mask.color = Color.WHITE
-	mask.size = Vector2(VIEW_SIZE)
+	# 暗罩必须盖满**画布**：手机画布是 555×256，只按 384×216 盖会露出未压暗的一圈，
+	# 表现为「屏幕上一个方框」（真机反复出现的那圈就是它，不是状态边框）。
+	mask.size = Vector2(ScreenLayout.canvas_of(self))
 	mask.material = _light_material
 	layer.add_child(mask)
 
