@@ -43,6 +43,9 @@ func _run() -> void:
 	await _place(second.global_position.x - 24.0, second.global_position.y)
 	await _wait_physics(100)
 	_check(_corridor._health < 1.0, "enemy attack did not damage the player: %.2f" % _corridor._health)
+	# ① 之后把感染体改成「只当画面元素」：后面几段要等 0.75s 挥击锁，
+	# 站着不动的玩家会被连续抓伤打到 0 体力触发「倒下」，把这张门禁搅黄（门禁不是测 D9）。
+	_corridor.disarm_enemies()
 
 	# ② 近战：装备撬棍（伤害 2 / 耐久 8），两下打死第一只。
 	_corridor._inventory.add("crowbar")
@@ -71,6 +74,8 @@ func _run() -> void:
 		_check(hit_sprite.modulate == Color.WHITE, "flash must be cleared after the feedback window")
 	_check(_actor.is_physics_processing(), "player physics must resume after hitstop")
 
+	# 挥击有 0.75s 可重入锁（ATTACK_FRAMES=45）：第二下必须先等锁放手，否则输入被忽略。
+	await _wait_attack_ready()
 	_corridor._unhandled_input(_mouse_left())
 	await process_frame
 	_check(first.dead, "second hit should kill the enemy")
@@ -87,12 +92,14 @@ func _run() -> void:
 	_check(not _corridor._inventory.has("ammo_9mm"), "reload did not consume the ammo item")
 	await _place(second.global_position.x - 30.0, second.global_position.y)
 	_actor.facing_x = 1.0
+	await _wait_attack_ready()
 	var noise_before: int = _corridor._noise
 	_corridor._unhandled_input(_mouse_left())
 	await process_frame
 	_check(second.hp == 1, "pistol hit should deal 3, hp=%d" % second.hp)
 	_check(_corridor._magazine == 5, "shot did not consume the magazine round")
 	_check(_corridor._noise > noise_before, "gunshot should raise noise")
+	await _wait_attack_ready()
 	_corridor._unhandled_input(_mouse_left())
 	await process_frame
 	_check(second.dead, "second pistol shot should kill the enemy")
@@ -109,6 +116,7 @@ func _run() -> void:
 	_corridor._enemies.append(dummy)
 	await _place(276.0, 168.0)
 	_actor.facing_x = 1.0
+	await _wait_attack_ready()
 	_corridor._unhandled_input(_mouse_left())
 	await process_frame
 	_check(_corridor._equipped == "", "broken weapon should be unequipped")
@@ -119,6 +127,15 @@ func _run() -> void:
 func _wait_physics(frames: int) -> void:
 	for _frame in range(frames):
 		await physics_frame
+
+
+## 等 0.75s 挥击锁放手（ATTACK_FRAMES=45，在 _process 里递减；顿帧期间不递减）。
+func _wait_attack_ready() -> void:
+	for _frame in range(180):
+		if _corridor._attack_frames <= 0:
+			return
+		await process_frame
+	_check(false, "attack lock never released")
 
 
 func _place(x: float, y: float) -> void:

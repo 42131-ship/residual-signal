@@ -99,6 +99,23 @@ func _run() -> void:
 	await _press(KEY_E)
 	_check(not bool(door["locked"]) and bool(door["open"]), "keys did not unlock and open the door")
 	await _capture("%s_open" % _prefix)
+
+	# ⑦ 真机几何：站在走道下缘（y=216）也必须能选中第二扇门、开关、穿过去。
+	# 旧实现拿门板顶边 y=80 当纵深锚点，玩家脚底在 128..216，dy 恒 > 24，
+	# 门一次都选不中——「开门后过不去」的真机报告就是这么来的。
+	var far_door: Dictionary = doors[1]
+	var far_center := float(far_door["center_x"])
+	await _place(far_center - 34.0, 216.0)
+	_check(str(_corridor._door_prompt_text).contains("关门"),
+		"bottom-of-band prompt should offer closing, got %s" % str(_corridor._door_prompt_text))
+	await _press(KEY_E)
+	_check(not bool(far_door["open"]), "second door did not close from the bottom of the walk band")
+	_check(not (far_door["shape"] as CollisionShape2D).disabled,
+		"second door must enable collision when closed")
+	await _press(KEY_E)
+	_check(bool(far_door["open"]), "second door did not reopen from the bottom of the walk band")
+	await _place(far_center - 70.0, 216.0)
+	_check(await _walk_right_until(far_center + 26.0, 400), "second door still blocks at y=216")
 	_finish()
 
 
@@ -113,8 +130,8 @@ func _walk_right_until(target_x: float, budget: int) -> bool:
 	return false
 
 
-func _place(x: float) -> void:
-	_actor.global_position = Vector2(x, 128.0)
+func _place(x: float, y := 128.0) -> void:
+	_actor.global_position = Vector2(x, y)
 	_actor.velocity = Vector2.ZERO
 	await process_frame
 	await process_frame

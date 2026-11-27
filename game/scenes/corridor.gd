@@ -42,6 +42,12 @@ const LIGHT_OUTSIDE_BASE := Vector3(0.42, 0.46, 0.58)
 const DOOR_TOP := 80.0
 const DOOR_BOTTOM := 216.0
 const DOOR_REACH_X := 44.0
+## 门的纵深锚点 = 走道中线。门洞横跨整条走道（DOOR_TOP=80 只是门板顶边，
+## 玩家脚底永远在 128..216），拿门板 y 当锚点会把 dy 算成 48..136，
+## 门就永远选不中——「开门后过不去」的真根因就在这里（ac4ae89）。
+const DOOR_ANCHOR_Y := (WALK_TOP + WALK_BOTTOM) * 0.5
+## 站在走道里任何一点都算「在门前」：半个走道 + 8px 余量。
+const DOOR_DEPTH_TOLERANCE := (WALK_BOTTOM - WALK_TOP) * 0.5 + 8.0
 ## 战斗：近战/枪械的够到距离与敌人深度容差。
 const MELEE_REACH := 36.0
 const FIREARM_REACH := 320.0
@@ -450,10 +456,11 @@ func _update_doors() -> void:
 		for index: int in _doors.size():
 			var door: Dictionary = _doors[index]
 			var dx := absf(_player.global_position.x - float(door["center_x"]))
-			# 门也要看纵深：只比 x 会让「在另一条走道」的玩家把门开掉（真机反馈：离 3-A 很远却开门）。
-			var leaf := door.get("leaf") as Node2D
-			var dy := absf(_player.global_position.y - leaf.global_position.y) if leaf != null else 0.0
-			if dx <= DOOR_REACH_X and dy <= INTERACT_DEPTH_TOLERANCE:
+			# 门也要看纵深，但锚点必须是走道中线而不是门板顶边：
+			# 门板从 DOOR_TOP=80 一直画到 216，玩家脚底却在 128..216，
+			# 用门板 y 判纵深会让 dy 恒 > 24，门一次都选不中（真机「开门后过不去」）。
+			var dy := absf(_player.global_position.y - DOOR_ANCHOR_Y)
+			if dx <= DOOR_REACH_X and dy <= DOOR_DEPTH_TOLERANCE:
 				_nearest_door = index
 				break
 	if _nearest_door != previous:
@@ -538,7 +545,12 @@ func _toggle_door(index: int) -> void:
 func _apply_door_state(index: int) -> void:
 	var door: Dictionary = _doors[index]
 	var is_open := bool(door["open"])
-	(door["shape"] as CollisionShape2D).disabled = is_open
+	var shape := door["shape"] as CollisionShape2D
+	# 直接赋值 + 再补一次 deferred：物理查询刷新期间直接写 disabled 可能被静默丢弃，
+	# 症状就是「门板消失了、人还是过不去」。两次写同一个值，幂等，代价为零。
+	if shape != null:
+		shape.disabled = is_open
+		shape.set_deferred("disabled", is_open)
 	(door["leaf"] as Polygon2D).visible = not is_open
 	(door["handle"] as Polygon2D).visible = not is_open
 	_draw_door_prompt()
