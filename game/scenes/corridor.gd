@@ -19,8 +19,10 @@ const INTERACT_DEPTH_TOLERANCE := 24.0
 const FLASHLIGHT_RADIUS := 240.0
 ## 背包容量（拾取上限）。
 const INVENTORY_CAPACITY := 10
-## 挥击视觉持续帧数。
-const ATTACK_FRAMES := 4
+## 挥击动作时长：0.75s @60fps。这段里不允许再次进入（可重入锁），也不允许被打断。
+const ATTACK_FRAMES := 45
+## 命中帧白光只亮 2 帧，用来标「这一下打实了」，不做常驻特效。
+const ATTACK_HIT_FRAMES := 2
 const TILE_INDEX := {
 	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
 	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
@@ -1322,6 +1324,11 @@ func _build_inventory_ui() -> void:
 	_inventory_layer.add_child(_inventory_panel_root)
 
 
+func _hide_attack_flash() -> void:
+	if _attack_visual != null:
+		_attack_visual.visible = false
+
+
 func _build_attack_visual() -> void:
 	_attack_visual = Polygon2D.new()
 	_attack_visual.name = "AttackArc"
@@ -1512,11 +1519,16 @@ func _drop_selected_item() -> void:
 
 
 func _perform_attack() -> void:
+	# 可重入锁：一次挥击的 0.75s 里忽略新输入（不排队、不打断、不重复结算伤害）。
+	if _attack_frames > 0:
+		return
 	_attacks += 1
 	_attack_frames = ATTACK_FRAMES
 	_attack_anim_t = 0.0
-	_attack_visual.visible = true
 	_update_attack_visual()
+	# 白光只标命中帧：亮 2 帧就灭，不再跟着整段动作常驻。
+	_attack_visual.visible = true
+	get_tree().create_timer(float(ATTACK_HIT_FRAMES) / 60.0).timeout.connect(_hide_attack_flash)
 	var damage := 1
 	var noise := 0
 	var reach := MELEE_REACH
