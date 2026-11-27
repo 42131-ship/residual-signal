@@ -53,7 +53,9 @@ func _ready() -> void:
 		_view = "consent"
 		_index = 0
 	# 手机：菜单同样要能点。触摸层只补「上/下/确认/返回」四个键的事件（见 design/MOBILE.md）。
-	_mobile = MobileSupport.attach(self)
+	# 主界面不挂游戏触控层：未进游戏前不该露出「背包/≡/蹲下/手电筒/奔跑/攻击」。
+	# 菜单的点选走下面 _input 的按行命中，不需要任何常驻按钮；进游戏后由走廊自己挂。
+	_mobile = null
 	_render()
 
 
