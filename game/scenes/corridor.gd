@@ -798,6 +798,18 @@ func _inspectable_prop_count() -> int:
 	return count
 
 
+## HUD 单行：DAY · 地点 · 体力 · 伤口（无伤不占位）。行高按内容走，不铺满屏。
+func _hud_line() -> String:
+	var building := ""
+	if _travel != null and _travel.has_building(_current_building):
+		building = _travel.label_of(_current_building)
+	var text := "DAY %d · %s · 体力 %d" % [int(_run.day) + 1, building, int(round(_health * 100.0))]
+	var status_text := _status.summary() if _status != null else ""
+	if not status_text.is_empty():
+		text += " · " + status_text
+	return text
+
+
 ## 物资档位词：只在玩家能感知的三档里说话，不报精确百分比。
 func _supplies_word() -> String:
 	var value := _get_supplies()
@@ -1265,9 +1277,7 @@ func _build_hud() -> void:
 	var dim := Color("#354b60")
 	var day3_mark := Color("#0b1119")
 	var frame_color := Color("#635e57")
-	_draw_hud_outlined(layer, "DAY %d" % (int(_run.day) + 1), Vector2(8, 8), HUD_INK)
-	if _travel != null and _travel.has_building(_current_building):
-		_draw_hud_outlined(layer, _travel.label_of(_current_building), Vector2(8, 22), Color("#8c8378"))
+	# HUD 压成单行（③-2）：DAY · 地点 · 体力 · 伤口，统一由 _refresh_hud_stats 的 _hud_line() 画。
 	_build_hud_stats_root(layer)
 
 	var widths := [44, 36, 28, 44, 24, 40]
@@ -1275,6 +1285,8 @@ func _build_hud() -> void:
 		var bar := ColorRect.new()
 		var column_x := 276 if index < 3 else 332
 		bar.position = Vector2(column_x, 12 + (index % 3) * 7)
+		# 顶部那两组无标签蓝条已从 HUD 撤掉（玩家读不出它们是什么），只留这里的位置占位注释。
+		bar.visible = false
 		bar.size = Vector2(widths[index], 3)
 		bar.color = day3_mark if index == 2 else dim
 		layer.add_child(bar)
@@ -1340,8 +1352,8 @@ func _refresh_hud_stats() -> void:
 	if _status != null and _player != null:
 		_player.status_speed_scale = _status.speed_multiplier()
 		_refresh_status_fx()
-	# 物资不再上 HUD：它是系统变量，不是玩家该读的仪表（只保留体力与状态）。
-	_draw_hud_outlined(_hud_stats_root, "体力 %d" % int(round(_health * 100.0)), Vector2(8, 42), HUD_INK)
+	# HUD 压成单行（③-2）：DAY · 地点 · 体力 · 伤口；伤口来自状态摘要，无伤则省略。
+	_draw_hud_outlined(_hud_stats_root, _hud_line(), Vector2(8, 8), HUD_INK)
 	var weapon_text := "空手"
 	if not _equipped.is_empty():
 		weapon_text = _loot.item_name(_equipped)
@@ -1349,7 +1361,7 @@ func _refresh_hud_stats() -> void:
 			weapon_text += " 耐久 %d" % _weapon_durability
 		elif _weapon_magazine > 0:
 			weapon_text += " 弹 %d/%d" % [_magazine, _weapon_magazine]
-	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 72), HUD_INK)
+	PixelFont.draw(_hud_stats_root, weapon_text, Vector2(8, 30), HUD_INK)
 	# 敌人数量不暴露（玩家不该拥有「还剩几只」这种上帝视角仪表）。
 	var status_text := _status.summary() if _status != null else ""
 	if not status_text.is_empty():
