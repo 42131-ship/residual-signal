@@ -35,6 +35,7 @@ func _run() -> void:
 	_check_ids()
 	var report := _check_geometry()
 	_check_context_key()
+	await _check_search_hold()
 	_check_joystick()
 	_check_menu()
 	var contrast := _check_contrast()
@@ -143,6 +144,22 @@ func _check_context_key() -> void:
 	_check(_layer.button_visible("search"), "search visual must appear when context is available")
 	_layer.set_search_available(false)
 	_check(not _layer.button_visible("search"), "search visual must disappear when context ends")
+
+
+## 「搜」必须是按住态：走廊靠 pickup 的 action 状态推进搜索进度。
+## 只发一次 tap（按下即松开）会让手机上的搜索在下一帧就被判成「松手中断」——进度永远走不完。
+func _check_search_hold() -> void:
+	_layer.set_search_available(true)
+	_layer._on_pressed("search")
+	_check(Input.is_action_pressed("pickup"), "holding 搜 must keep pickup pressed")
+	_check(not _layer._held.is_empty(), "held table must remember the search key")
+	for _frame in range(3):
+		await process_frame
+		_check(Input.is_action_pressed("pickup"), "pickup must stay pressed across frames")
+	_layer._on_released("search")
+	_check(not Input.is_action_pressed("pickup"), "releasing 搜 must release pickup")
+	_check(_layer._held.is_empty(), "held table must forget the search key")
+	_layer.set_search_available(false)
 
 
 func _check_joystick() -> void:

@@ -43,8 +43,12 @@ func room_of(id: String) -> String:
 	return str(_containers.get(id, {}).get("room", ""))
 
 
-## 搜索这个容器要按住多久（秒）。数据在 containers.json 的 tiers[*].search_seconds。
+## 搜索这个容器要按住多久（秒）。容器自己的 search_seconds 优先，
+## 没写就落回 containers.json 的 tiers[*].search_seconds（数据驱动，不在代码里硬编码）。
 func search_seconds_of(id: String) -> float:
+	var row: Dictionary = _containers.get(id, {})
+	if row.has("search_seconds"):
+		return maxf(0.0, float(row["search_seconds"]))
 	var tier: Dictionary = _tiers.get(tier_of(id), {})
 	return maxf(0.0, float(tier.get("search_seconds", 0.0)))
 

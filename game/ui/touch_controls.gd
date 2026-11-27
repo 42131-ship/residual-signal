@@ -21,10 +21,11 @@ signal emitted(id: String)
 const DESIGN := Vector2i(384, 216)
 
 ## 触控键表。id / 动作 / 尺寸(mm) / 语义 / 合成的键
-## kind: hold=按住即动作状态；tap=发一次事件；toggle=开关（跑）
+## kind: hold=按住即动作状态；hold_key=按住动作状态 + 发一次真按键事件（起手交给走廊）；
+##       tap=发一次事件；toggle=开关（跑）
 const KEYS := {
 	"attack": {"size_mm": 11.0, "label": "攻击", "kind": "tap", "key": -1, "action": "attack"},
-	"search": {"size_mm": 10.0, "label": "搜", "kind": "tap", "key": 69, "action": "pickup"},
+	"search": {"size_mm": 10.0, "label": "搜", "kind": "hold_key", "key": 69, "action": "pickup"},
 	"lamp": {"size_mm": 11.0, "label": "手电筒", "kind": "tap", "key": 70, "action": "toggle_light"},
 	"run": {"size_mm": 11.0, "label": "奔跑", "kind": "hold", "key": 0, "action": "sprint"},
 	"crouch": {"size_mm": 11.0, "label": "蹲下", "kind": "hold", "key": 0, "action": "crouch"},
@@ -526,7 +527,16 @@ func _on_pressed(id: String) -> void:
 	if spec.is_empty():
 		return
 	if spec["kind"] == "hold":
-		print("[TOUCH] hold ", id, " -> ", spec["action"], " ok=", InputMap.has_action(StringName(spec["action"])))
+		Input.action_press(StringName(spec["action"]))
+		_held[id] = spec["action"]
+		_apply_rects()
+		last_emitted = id
+		emitted.emit(id)
+		return
+	# 搜：既要有真按键事件（走廊靠它起手开搜/开关门），又要一直按住（搜索进度靠 pickup 状态推进）。
+	# 以前只有一次 tap，按下和松开在同一帧，「按住的搜索」在手机上永远走不完。
+	if spec["kind"] == "hold_key":
+		_send_key_state(int(spec["key"]), true)
 		Input.action_press(StringName(spec["action"]))
 		_held[id] = spec["action"]
 		_apply_rects()
@@ -566,6 +576,10 @@ func _on_released(id: String) -> void:
 	if spec["kind"] == "hold":
 		Input.action_release(StringName(spec["action"]))
 		_held.erase(id)
+	elif spec["kind"] == "hold_key":
+		Input.action_release(StringName(spec["action"]))
+		_held.erase(id)
+		_send_key_state(int(spec["key"]), false)
 	_apply_rects()
 
 
@@ -642,10 +656,15 @@ func _tap_key(keycode: int, action: String) -> void:
 func _send_key(keycode: int) -> void:
 	last_key = keycode
 	for pressed: bool in [true, false]:
-		var event := InputEventKey.new()
-		event.physical_keycode = keycode
-		event.pressed = pressed
-		Input.parse_input_event(event)
+		_send_key_state(keycode, pressed)
+
+
+## 只发一个方向的按键事件（按住类按键用：按下发 down，松手发 up）。
+func _send_key_state(keycode: int, pressed: bool) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = keycode
+	event.pressed = pressed
+	Input.parse_input_event(event)
 
 
 func _send_mouse_left() -> void:

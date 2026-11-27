@@ -163,8 +163,9 @@
       "label": "储物柜",
       "building": "school",
       "tier": "common",
+      "search_seconds": 1.6,
       "room": "A",
-      "note": "A 区（走廊入口）的常见容器，只出日用品。"
+      "note": "A 区（走廊入口）的常见容器，只出日用品。search_seconds 是本容器覆盖值（缺省落回档位）。"
     },
     {
       "id": "trash_bin",

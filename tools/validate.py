@@ -1626,6 +1626,15 @@ def r47(ctx: Ctx):
         if tier_id == "treasure":
             building = str(row.get("building", ""))
             treasure_per_building[building] = treasure_per_building.get(building, 0) + 1
+        # ②-1：容器可以覆盖自己的搜索时长（秒）。写坏了就是「按下去立刻搜完」或「永远搜不完」。
+        if "search_seconds" in row:
+            try:
+                own = float(row["search_seconds"])
+            except (TypeError, ValueError):
+                yield bad("R47", rel, f"容器 {cid} 的 search_seconds 不是数字")
+                own = -1.0
+            if own <= 0.0 or own > 10.0:
+                yield bad("R47", rel, f"容器 {cid} 的 search_seconds 必须在 (0, 10] 秒内")
     for building, count in treasure_per_building.items():
         if count != 1:
             yield bad("R47", rel, f"建筑 {building} 有 {count} 个高珍惜容器，必须恰好 1 个")

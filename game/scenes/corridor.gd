@@ -161,11 +161,16 @@ var _map: Node2D
 const ADDICTIVE_ITEMS := ["painkillers", "sleeping_pills"]
 ## 面板当前内容（测试与调试用，不参与渲染）。
 var _panel_title := ""
-## 按住 E 搜索：id / 已按秒数 / 需要的秒数（来自 tiers.search_seconds）。
+## 按住 E 搜索：id / 已按秒数 / 需要的秒数（容器自己的 search_seconds，缺省落回档位）。
 var _search_id := ""
 var _search_elapsed := 0.0
 var _search_required := 0.0
 var _search_ui_root: Node2D
+## ②-3：搜索的噪声代价。每 0.5s 记 1 点（翻完一个柜子 ≈ 3 点），不是每帧刷。
+var _search_noise_acc := 0.0
+## ②-1：起手就按着的那根手指不算「想走」——按下搜索前一直在走是常态，
+## 必须等它松开一次再按才算打断，否则手机上「边走边按搜」会立刻自己取消。
+var _search_move_ignored: Array[StringName] = []
 ## 状态的危险视觉：四边框，厚度随最重状态走（0 = 干净，看不见）。
 var _status_fx_layer: CanvasLayer
 var _status_fx_bars: Array[ColorRect] = []
@@ -1030,6 +1035,9 @@ func _search_container(id: String) -> void:
 
 ## 一次搜索折算多少游戏小时：1 秒 = 1 小时（数值旋钮，调它就能改状态推进速度）。
 const SEARCH_SECONDS_PER_GAME_HOUR := 1.0
+## ②-3：搜索时每隔多久记 1 点噪声。0.5s → 1.6s 的柜子 ≈ 3 点，
+## 够让「搜刮是会被听见的」，又不至于把一天的噪声预算（14）一次性烧光。
+const SEARCH_NOISE_INTERVAL := 0.5
 
 
 func _begin_search(id: String) -> void:
@@ -1042,6 +1050,12 @@ func _begin_search(id: String) -> void:
 	_search_id = id
 	_search_elapsed = 0.0
 	_search_required = required
+	_search_noise_acc = 0.0
+	# 起手时已经按着的方向键记住，松手前不算「想走」（见 _search_move_ignored 注释）。
+	_search_move_ignored.clear()
+	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down"]:
+		if InputMap.has_action(action) and Input.is_action_pressed(action):
+			_search_move_ignored.append(action)
 	_player._movement_locked = true
 	_refresh_search_progress()
 
@@ -1052,6 +1066,8 @@ func _cancel_search(reason: String) -> void:
 	_search_id = ""
 	_search_elapsed = 0.0
 	_search_required = 0.0
+	_search_noise_acc = 0.0
+	_search_move_ignored.clear()
 	_player._movement_locked = false
 	_refresh_search_progress()
 	if not reason.is_empty():
@@ -1064,6 +1080,8 @@ func _finish_search() -> void:
 	_search_id = ""
 	_search_elapsed = 0.0
 	_search_required = 0.0
+	_search_noise_acc = 0.0
+	_search_move_ignored.clear()
 	_player._movement_locked = false
 	_refresh_search_progress()
 	_search_container(id)
@@ -1093,12 +1111,59 @@ func _refresh_search_progress() -> void:
 	if _search_id.is_empty():
 		return
 	var progress := clampf(_search_elapsed / maxf(0.001, _search_required), 0.0, 1.0)
-	var bar_x := 8.0
-	var bar_y := 146.0
-	var bar_w := 120.0
+	# ②-1：条贴在被搜物件上方，不再固定钉在屏幕左下 (8,146)——
+	# 那条旧位置要求玩家在走廊另一头也知道「这台柜子在响」，因果和手感都丢了。
+	# HUD 是视口坐标，所以世界坐标先过一遍 canvas_transform（和手电筒同一套换算）。
+	var canvas := ScreenLayout.canvas_of(self)
+	var anchor := _search_anchor_screen(_search_id)
+	var text := "搜索中 %d" % int(round(progress * 100.0))
+	var text_w := float(PixelFont.width_of(text))
+	var bar_w := maxf(text_w, 40.0)
+	var label_x := clampf(anchor.x - text_w * 0.5, 3.0, maxf(3.0, float(canvas.x) - text_w - 3.0))
+	var bar_x := clampf(anchor.x - bar_w * 0.5, 3.0, maxf(3.0, float(canvas.x) - bar_w - 3.0))
+	# anchor 已经是「物件上方 2px」，条贴着它画，文字再抬一行。
+	var bar_y := clampf(anchor.y - 2.0, 12.0, maxf(12.0, float(canvas.y) - 8.0))
+	var label_y := clampf(bar_y - 14.0, 2.0, maxf(2.0, float(canvas.y) - 12.0))
 	_add_rect_polygon(_search_ui_root, "SearchBg", Vector2(bar_x, bar_y), Vector2(bar_w, 5), Color("#0b1119"))
-	_add_rect_polygon(_search_ui_root, "SearchFill", Vector2(bar_x + 1, bar_y + 1), Vector2(maxf(0.0, (bar_w - 2) * progress), 3), Color("#9fb2bd"))
-	PixelFont.draw(_search_ui_root, "搜索中 %d" % int(round(progress * 100.0)), Vector2(bar_x, bar_y - 16), Color("#f6f6f0"))
+	_add_rect_polygon(_search_ui_root, "SearchFill", Vector2(bar_x + 1, bar_y + 1),
+		Vector2(maxf(0.0, (bar_w - 2) * progress), 3), Color("#9fb2bd"))
+	PixelFont.draw(_search_ui_root, text, Vector2(label_x, label_y), Color("#f6f6f0"))
+
+
+## 被搜物件「正上方」在屏幕上的位置（HUD 用视口坐标）。
+## 注意：不能用 _inspection_anchor()——那个锚点会被夹进走道（柜子在墙上，锚点落在地上），
+## 条跟着它画就会压到人脚边，读不出「是这个柜子在响」。道具节点找不到时退回玩家头顶。
+func _search_anchor_screen(id: String) -> Vector2:
+	var prop := $Props.get_node_or_null(NodePath(id)) as Sprite2D
+	var world := Vector2.ZERO
+	var resolved := false
+	if is_instance_valid(prop):
+		var record: Dictionary = _inspection_records.get(id, {})
+		var top := prop.global_position.y
+		if prop.centered and prop.texture != null:
+			top -= float(prop.texture.get_height()) * 0.5
+		world = Vector2(prop.global_position.x + float(record.get("focus_offset_x", 0.0)), top - 2.0)
+		resolved = true
+	if not resolved and _player != null:
+		world = _player.global_position + Vector2(0, -48)
+	if not is_inside_tree():
+		return world
+	return get_viewport().get_canvas_transform() * world
+
+
+## 现在是不是「玩家自己想走」。摇杆会把方向合成成 move_* 动作，所以一处判够。
+func _search_move_pressed() -> bool:
+	for action: StringName in [&"move_left", &"move_right", &"move_up", &"move_down"]:
+		if not InputMap.has_action(action):
+			continue
+		if not Input.is_action_pressed(action):
+			# 松开一次就重新武装：之后按下去才算想走。
+			_search_move_ignored.erase(action)
+			continue
+		if _search_move_ignored.has(action):
+			continue
+		return true
+	return false
 
 
 func _build_search_ui(parent: Node) -> void:
@@ -1175,13 +1240,19 @@ func _update_search(delta: float) -> void:
 	# 搜索是背对走廊的动作：敌人贴近就打断，并吃一记抓伤。
 	var threat := _nearest_enemy_distance()
 	if threat >= 0.0 and threat <= SEARCH_THREAT_RANGE:
-		_cancel_search("搜索被打断了")
+		_cancel_search("搜索被打断")
 		_on_enemy_attacked(1)
 		return
-	if not InputMap.has_action("pickup") or not Input.is_action_pressed("pickup"):
-		_cancel_search("搜索被打断")
+	# 松手、或者想走，都立刻中断：进度归零、零产出（不给人「边搜边退」的免费午餐）。
+	if _search_move_pressed() or not InputMap.has_action("pickup") or not Input.is_action_pressed("pickup"):
+		_cancel_search("搜索被打断了")
 		return
 	_search_elapsed += delta
+	# ②-3：翻箱倒柜本身就吵。按秒累计再结算，别每帧刷噪声（那样一秒就烧光一天的预算）。
+	_search_noise_acc += delta
+	while _search_noise_acc >= SEARCH_NOISE_INTERVAL:
+		_search_noise_acc -= SEARCH_NOISE_INTERVAL
+		_emit_noise(1)
 	_refresh_search_progress()
 	if _search_elapsed >= _search_required:
 		_finish_search()

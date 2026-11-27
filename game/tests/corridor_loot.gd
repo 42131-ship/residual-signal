@@ -38,12 +38,22 @@ func _run() -> void:
 		_finish()
 		return
 
+	# ⓪ ②-1/②-3：时长来自数据、条贴在被搜物件上方、想走/受击立刻归零、搜索全程闹。
+	await _check_search_bar_and_interrupts()
+	if not _failures.is_empty():
+		_finish()
+		return
+
 	# ① 两个容器都能搜：面板标题正确、锁移动、有随机物品与件数，并截图。
 	for id: String in CONTAINERS:
 		var spec: Dictionary = CONTAINERS[id]
 		await _place(float(spec["x"]), float(spec["y"]))
 		_check(_corridor._nearest_inspection_id() == id, "%s is not the nearest target" % id)
+		var noise_before: int = _corridor._noise
 		await _search(id)
+		# ②-3：翻完一整个柜子要留下噪声痕迹（1.6s / 0.5s ≈ 3 点起）。
+		_check(_corridor._noise > noise_before,
+			"%s search must cost noise (before=%d after=%d)" % [id, noise_before, _corridor._noise])
 		_check(_corridor._inspection_open, "%s search did not open a panel" % id)
 		_check(str(_corridor._inspection_panel_root.get_meta("inspection_id", "")) == id,
 			"%s panel shows the wrong container" % id)
@@ -73,6 +83,72 @@ func _run() -> void:
 	await _press(KEY_E)
 	_check(not _corridor._inspection_open, "E should also close the panel")
 	_finish()
+
+
+## ②-1/②-3 验收：时长来自数据、条贴在被搜物件上方、想走/被贴近立刻归零零产出。
+func _check_search_bar_and_interrupts() -> void:
+	var spec: Dictionary = CONTAINERS["locker_bank"]
+	# 时长必须来自数据：储物柜自己覆盖 1.6s；垃圾桶没覆盖，落回档位 2s。
+	_check(is_equal_approx(_corridor._loot.search_seconds_of("locker_bank"), 1.6),
+		"locker search_seconds should come from data (1.6), got %.2f"
+		% _corridor._loot.search_seconds_of("locker_bank"))
+	_check(is_equal_approx(_corridor._loot.search_seconds_of("trash_bin"), 2.0),
+		"trash_bin should fall back to tier seconds (2.0), got %.2f"
+		% _corridor._loot.search_seconds_of("trash_bin"))
+
+	await _place(float(spec["x"]), float(spec["y"]))
+	var anchor_screen: Vector2 = _corridor._search_anchor_screen("locker_bank")
+	_corridor._begin_search("locker_bank")
+	# 起手同一帧就得有：进度反馈不许等下一帧（旧实现只在 _process 里刷）。
+	var bar := _corridor._search_ui_root.get_node_or_null("SearchBg") as Polygon2D
+	_check(bar != null, "search bar must appear on the same frame the search starts")
+	if bar != null:
+		# 条宽 40 起，期望条中心落在物件锚点 ±40px 内（旧实现钉死在屏幕左下 8,146）。
+		_check(absf(bar.position.x + 20.0 - anchor_screen.x) <= 40.0,
+			"search bar must sit above the searched container (bar_x=%.0f anchor_x=%.0f)"
+			% [bar.position.x, anchor_screen.x])
+	# 进度过半截一张：条要贴柜子，不是贴在屏幕角落（截图进 design/previews）。
+	Input.action_press("pickup")
+	_corridor._update_search(0.8)
+	await _capture("%s_bar" % _prefix)
+	Input.action_release("pickup")
+	_corridor._cancel_search("")
+
+	# 打断 10 次：每次都要归零、解锁，且一件产出都不许漏。
+	var before: Array = _corridor._inventory.ids()
+	for round_index in range(10):
+		_corridor._begin_search("locker_bank")
+		Input.action_press("pickup")
+		_corridor._update_search(0.2)
+		Input.action_press("move_left")
+		_corridor._update_search(0.1)
+		Input.action_release("move_left")
+		Input.action_release("pickup")
+		_check(_corridor._search_id.is_empty(),
+			"walking must interrupt the search (round %d)" % round_index)
+		_check(is_equal_approx(_corridor._search_elapsed, 0.0), "interrupt must zero the progress")
+		_check(not _actor._movement_locked, "interrupt must unlock movement")
+	await process_frame
+	_check(_corridor._inventory.ids() == before,
+		"10 interrupts must yield zero loot, got %s" % str(_corridor._inventory.ids()))
+
+	# 被贴近 = 中断 + 吃一抓（同一个出口，不是两套取消逻辑）。
+	_corridor._begin_search("locker_bank")
+	Input.action_press("pickup")
+	_corridor._update_search(0.1)
+	var health_before: float = _corridor._health
+	var intruder: Enemy = _corridor._enemies[0]
+	intruder.global_position = _actor.global_position + Vector2(18.0, 0.0)
+	_corridor._update_search(0.1)
+	Input.action_release("pickup")
+	_check(_corridor._search_id.is_empty(), "a nearby enemy must interrupt the search")
+	_check(_corridor._health < health_before, "the interruption must cost a scratch")
+	intruder.global_position = Vector2(300.0, 168.0)
+	# 这一抓是为验证「同一个出口」，不能把它带进后面的搜索：
+	# 伤口每小时掉体力，三趟搜索推进的游戏小时足以把玩家打到「倒下」，面板就被结算抢占。
+	_corridor._status.cure("wound")
+	_corridor._health = 1.0
+	_corridor._refresh_hud_stats()
 
 
 func _place(x: float, y: float) -> void:
