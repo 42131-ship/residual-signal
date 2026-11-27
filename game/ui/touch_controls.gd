@@ -526,6 +526,7 @@ func _on_pressed(id: String) -> void:
 	if spec.is_empty():
 		return
 	if spec["kind"] == "hold":
+		print("[TOUCH] hold ", id, " -> ", spec["action"], " ok=", InputMap.has_action(StringName(spec["action"])))
 		Input.action_press(StringName(spec["action"]))
 		_held[id] = spec["action"]
 		_apply_rects()

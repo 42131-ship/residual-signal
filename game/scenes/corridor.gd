@@ -448,7 +448,12 @@ func _update_doors() -> void:
 	_nearest_door = -1
 	if _player != null:
 		for index: int in _doors.size():
-			if absf(_player.global_position.x - float(_doors[index]["center_x"])) <= DOOR_REACH_X:
+			var door: Dictionary = _doors[index]
+			var dx := absf(_player.global_position.x - float(door["center_x"]))
+			# 门也要看纵深：只比 x 会让「在另一条走道」的玩家把门开掉（真机反馈：离 3-A 很远却开门）。
+			var leaf := door.get("leaf") as Node2D
+			var dy := absf(_player.global_position.y - leaf.global_position.y) if leaf != null else 0.0
+			if dx <= DOOR_REACH_X and dy <= INTERACT_DEPTH_TOLERANCE:
 				_nearest_door = index
 				break
 	if _nearest_door != previous:
