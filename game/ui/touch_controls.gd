@@ -26,8 +26,8 @@ const KEYS := {
 	"attack": {"size_mm": 11.0, "label": "攻击", "kind": "tap", "key": -1, "action": "attack"},
 	"search": {"size_mm": 10.0, "label": "搜", "kind": "tap", "key": 69, "action": "pickup"},
 	"lamp": {"size_mm": 11.0, "label": "手电筒", "kind": "tap", "key": 70, "action": "toggle_light"},
-	"run": {"size_mm": 11.0, "label": "奔跑", "kind": "toggle", "key": 0, "action": "sprint"},
-	"crouch": {"size_mm": 11.0, "label": "蹲下", "kind": "toggle", "key": 0, "action": "crouch"},
+	"run": {"size_mm": 11.0, "label": "奔跑", "kind": "hold", "key": 0, "action": "sprint"},
+	"crouch": {"size_mm": 11.0, "label": "蹲下", "kind": "hold", "key": 0, "action": "crouch"},
 	"bag": {"size_mm": 11.0, "label": "背包", "kind": "tap", "key": 4194306, "action": "inventory"},
 	"menu": {"size_mm": 11.0, "label": "", "kind": "menu", "key": 0, "action": ""},
 }
@@ -58,6 +58,8 @@ var _search_available := false
 var _run_on := false
 var _gait_index := 0
 var _held: Dictionary = {}
+## 手指 index -> 按钮 id：按下即响应，抬起按同一 index 释放（不依赖 TouchScreenButton 拾取）
+var _touch_owner: Dictionary = {}
 
 # 浮动摇杆
 var _stick: Node2D
@@ -172,8 +174,7 @@ func _build() -> void:
 		shape.size = Vector2.ONE
 		button.shape = shape
 		button.passby_press = false
-		button.pressed.connect(_on_pressed.bind(id))
-		button.released.connect(_on_released.bind(id))
+		# 不再连 pressed/released：按下即在 _input 里按矩形命中派发，避免「点多次才灵」与双触发。
 		root.add_child(button)
 		_buttons[id] = button
 		_visuals[id] = _build_visual(root, id)
@@ -485,9 +486,20 @@ func _input(event: InputEvent) -> void:
 				if not hit.is_empty():
 					_on_menu_choice(hit)
 				return
+			# 按下即响应：先按矩形命中直接派发，不等 TouchScreenButton 的拾取（真机反馈「点多次才灵」）。
+			var target := _button_at(touch.position)
+			if not target.is_empty():
+				_touch_owner[touch.index] = target
+				_on_pressed(target)
+				return
 			_stick_begin(touch.position, touch.index)
-		elif touch.index == _stick_touch:
-			_stick_end()
+		else:
+			var owned: String = _touch_owner.get(touch.index, "")
+			if not owned.is_empty():
+				_touch_owner.erase(touch.index)
+				_on_released(owned)
+			elif touch.index == _stick_touch:
+				_stick_end()
 		return
 	if event is InputEventScreenDrag:
 		var drag := event as InputEventScreenDrag
@@ -496,9 +508,29 @@ func _input(event: InputEvent) -> void:
 		return
 
 
+## 触点落在哪颗键上（按可见性与上下文键的可用性过滤）。
+func _button_at(point: Vector2) -> String:
+	var table := rects()
+	for id: String in table.keys():
+		if id == "search" and not _search_available:
+			continue
+		if not button_visible(id):
+			continue
+		if (table[id] as Rect2).has_point(point):
+			return id
+	return ""
+
+
 func _on_pressed(id: String) -> void:
 	var spec: Dictionary = KEYS.get(id, {})
 	if spec.is_empty():
+		return
+	if spec["kind"] == "hold":
+		Input.action_press(StringName(spec["action"]))
+		_held[id] = spec["action"]
+		_apply_rects()
+		last_emitted = id
+		emitted.emit(id)
 		return
 	if spec["kind"] == "menu":
 		if _menu_open:
@@ -527,8 +559,12 @@ func _on_pressed(id: String) -> void:
 
 
 func _on_released(id: String) -> void:
-	if id == "run":
+	var spec: Dictionary = KEYS.get(id, {})
+	if spec.is_empty():
 		return
+	if spec["kind"] == "hold":
+		Input.action_release(StringName(spec["action"]))
+		_held.erase(id)
 	_apply_rects()
 
 
