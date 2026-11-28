@@ -51,6 +51,11 @@ func _run() -> void:
 	_check(str(intro.phase) == "bell", "intro must start on the bell, got %s" % str(intro.phase))
 	await _capture("INTRO_bell")
 	await _advance_to(intro, "overview")
+	# 手机画布 555×256 而地图只有 384 宽：地图拍必须有一层不透明底，否则四周漏出走廊和触控键。
+	_check(float(intro._fade.color.a) >= 0.99,
+		"map beats need an opaque backdrop, alpha=%.2f" % float(intro._fade.color.a))
+	_check(intro._map_holder.get_index() > intro._fade.get_index(),
+		"the campus map must draw above the backdrop (child order)")
 	await _capture("INTRO_overview")
 	await _advance_to(intro, "toilet")
 	await _capture("INTRO_toilet")

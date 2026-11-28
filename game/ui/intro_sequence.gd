@@ -98,6 +98,17 @@ func _load_beats() -> Array:
 
 
 func _build_layers() -> void:
+	# 图层顺序（手机画布 555×256 上尤其重要）：
+	#   底色黑场（盖住走廊与触控键）→ 地图（384×216 居中，两边留黑）→ 形状 → 文字 → 信箱条。
+	# 之前把地图放在黑场下面，结果黑场一透明（地图拍）四周就把走廊和按钮漏出来了。
+	_fade = ColorRect.new()
+	_fade.name = "Fade"
+	_fade.color = Color(0, 0, 0, 1)
+	_fade.position = Vector2.ZERO
+	_fade.size = _canvas
+	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fade)
+
 	_map_holder = Node2D.new()
 	_map_holder.name = "MapHolder"
 	add_child(_map_holder)
@@ -106,16 +117,6 @@ func _build_layers() -> void:
 	_map_holder.add_child(_map)
 	_map.load_for(MAP_ID)
 	_map_holder.position = _origin
-
-	# 图层顺序很重要：地图 → 黑场 → 形状 → 文字 → 信箱条。
-	# 黑场必须压在地图上面（盖住走廊和地图），但要在形状/文字下面，否则「黑场 + 铃声」的拍子什么都看不见。
-	_fade = ColorRect.new()
-	_fade.name = "Fade"
-	_fade.color = Color(0, 0, 0, 1)
-	_fade.position = Vector2.ZERO
-	_fade.size = _canvas
-	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_fade)
 
 	_stage = Stage.new()
 	_stage.name = "Stage"
@@ -160,7 +161,8 @@ func _configure_camera(beat: Dictionary) -> void:
 			_map_holder.visible = true
 			_map_holder.scale = Vector2.ONE
 			_map_holder.position = _origin
-			_fade.color.a = 0.0
+			# 底色保持不透明：地图只有 384 宽，手机画布 555 宽，四周必须被黑吃掉。
+			_fade.color.a = 1.0
 		"map_zoom":
 			_map_holder.visible = true
 			var focus: Array = beat.get("focus", [110, 58])
@@ -169,7 +171,7 @@ func _configure_camera(beat: Dictionary) -> void:
 			_map_holder.scale = Vector2(zoom, zoom)
 			# 让 focus 点落在画布中心：pos = 中心 - focus*zoom（再扣掉居中偏移）。
 			_map_holder.position = _origin + (_canvas * 0.5 - focus_point * zoom)
-			_fade.color.a = 0.0
+			_fade.color.a = 1.0
 		"corridor_push":
 			_map_holder.visible = false
 			_fade.color.a = 0.0
