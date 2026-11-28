@@ -1654,6 +1654,111 @@ def r47(ctx: Ctx):
                 yield bad("R47", "data/loot/items.json", f"{iid} 的效果键 {key} 不合法")
 
 
+@rule("R48", "校园图：区块在画布内 + id 唯一 + 楼有层数/入口 + route 覆盖可玩区块 + 开场拍子固定")
+def r48(ctx: Ctx):
+    """学校不再是「一间走廊换五套皮」，而是一整张校园图（data/campus/<id>.json）。
+
+    这张图同时是开场旁白的略缩图、敌人与容器的分布表、以及线性叙事的顺序表；
+    任何一项写错，玩家走的路就和图上画的不是一回事了，所以全部当硬错误。
+    """
+    import glob as _glob
+
+    paths = sorted(_glob.glob(str(ctx.root / "data/campus" / "*.json")))
+    if not paths:
+        yield bad("R48", "data/campus/", "校园图目录为空（至少要有 school.json）")
+        return
+    required_ids = {
+        "main_building", "west_wing", "grandstand", "track_field", "plaza",
+        "dorm", "canteen", "corner_building", "gate", "parking",
+    }
+    for path in paths:
+        import json as _json
+
+        rel = f"data/campus/{Path(path).name}"
+        try:
+            doc = _json.loads(Path(path).read_text(encoding="utf-8"))
+        except Exception as exc:  # noqa: BLE001 - 报告原始解析失败信息
+            yield bad("R48", rel, f"解析失败：{exc}")
+            continue
+        if not isinstance(doc, dict) or doc.get("schema") != "campus-map.v1":
+            yield bad("R48", rel, "schema 必须是 campus-map.v1")
+            continue
+        canvas = doc.get("canvas")
+        if not (isinstance(canvas, list) and len(canvas) == 2 and all(isinstance(v, (int, float)) for v in canvas)):
+            yield bad("R48", rel, "canvas 必须是 [宽, 高]")
+            canvas = [384, 216]
+        width, height = float(canvas[0]), float(canvas[1])
+        regions = _doc_list(doc, "regions")
+        if len(regions) < len(required_ids):
+            yield bad("R48", rel, f"区块只有 {len(regions)} 个，学校至少要 {len(required_ids)} 个")
+        seen: set[str] = set()
+        for row in regions:
+            rid = str(row.get("id", ""))
+            if not rid:
+                yield bad("R48", rel, "区块缺 id")
+                continue
+            if rid in seen:
+                yield bad("R48", rel, f"区块 id 重复：{rid}")
+            seen.add(rid)
+            rect = row.get("rect")
+            if not (isinstance(rect, list) and len(rect) == 4):
+                yield bad("R48", rel, f"{rid} 的 rect 必须是 [x, y, w, h]")
+                continue
+            x, y, w, h = (float(v) for v in rect)
+            if w <= 0 or h <= 0:
+                yield bad("R48", rel, f"{rid} 的 rect 宽高必须为正")
+            if x < 0 or y < 0 or x + w > width or y + h > height:
+                yield bad("R48", rel, f"{rid} 的 rect 出了画布 {width:g}x{height:g}")
+            if row.get("kind") == "building":
+                if int(row.get("floors", 0)) < 1:
+                    yield bad("R48", rel, f"{rid} 是楼但没有层数")
+                entrance = row.get("entrance")
+                if not (isinstance(entrance, list) and len(entrance) == 2):
+                    yield bad("R48", rel, f"{rid} 缺 entrance 点")
+                else:
+                    ex, ey = float(entrance[0]), float(entrance[1])
+                    if not (x - 8 <= ex <= x + w + 8 and y - 8 <= ey <= y + h + 8):
+                        yield bad("R48", rel, f"{rid} 的入口不在楼体边缘（{ex:g},{ey:g}）")
+        missing = sorted(required_ids - seen)
+        if missing:
+            yield bad("R48", rel, "学校图缺这些区块：" + "、".join(missing))
+
+        route = doc.get("route")
+        if not (isinstance(route, list) and len(route) >= 6):
+            yield bad("R48", rel, "route 至少要串起 6 个区块（线性叙事要有路）")
+            route = []
+        for stop in route:
+            if str(stop) not in seen:
+                yield bad("R48", rel, f"route 指向不存在的区块：{stop}")
+        safehouse = str(doc.get("safehouse", ""))
+        if safehouse not in seen:
+            yield bad("R48", rel, f"safehouse 不是区块：{safehouse}")
+        elif route and str(route[0]) != safehouse:
+            yield bad("R48", rel, f"route 必须从安全屋出发，实际是 {route[0]}")
+
+        slots = _doc_list(doc, "enemy_slots")
+        if len(slots) < 4:
+            yield bad("R48", rel, f"敌人只分布在 {len(slots)} 个区块，太少（要 ≥4）")
+        for slot in slots:
+            region = str(slot.get("region", ""))
+            if region not in seen:
+                yield bad("R48", rel, f"敌人挂在未知区块：{region}")
+            if int(slot.get("count", 0)) < 1:
+                yield bad("R48", rel, f"{region} 的敌人数量必须 ≥1")
+
+        intro = doc.get("intro") if isinstance(doc.get("intro"), dict) else {}
+        beats = intro.get("beats") if isinstance(intro.get("beats"), list) else []
+        expected = ["bell", "overview", "toilet", "alarm", "zoom"]
+        if [str(b.get("id", "")) for b in beats] != expected:
+            got = "、".join(str(b.get("id", "")) for b in beats)
+            yield bad("R48", rel, f"开场拍子必须是 {'→'.join(expected)}，实际 {got}")
+        for beat in beats:
+            if float(beat.get("seconds", 0)) <= 0:
+                yield bad("R48", rel, f"开场拍子 {beat.get('id', '')} 缺时长")
+            if not (isinstance(beat.get("lines"), list) and beat.get("lines")):
+                yield bad("R48", rel, f"开场拍子 {beat.get('id', '')} 缺旁白")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="残余信号 校验器 R01-R30")
     ap.add_argument("--root", default=".", help="仓库根目录（默认当前目录）")

@@ -9,9 +9,9 @@
 ## 1. 一句话现状
 
 Godot 4.7 像素横版生存（384×216 设计空间 / 手机画布 555×256），Android 横屏优先、离线。
-主线闭环、41 条 Godot 门禁全绿、47 条数据规则 `ERROR 0`、TapTap CLI 已登录（developerId 489018）。
-**真机可装可玩**；本轮修掉「开门后过不去」的真根因，把搜索做成「有进度、有代价、按住才算」的动作，
-并让感染体各守一段走廊（不再 10 秒围死）。
+主线闭环、42 条 Godot 门禁全绿、48 条数据规则 `ERROR 0`、TapTap CLI 已登录（developerId 489018）。
+**真机可装可玩**；学校模板已从「一间走廊换五套皮」改成**一整张校园图**（[`CAMPUS_SCHOOL.md`](CAMPUS_SCHOOL.md)），
+搜索是有进度有代价的按住动作，感染体各守一段走廊（不再 10 秒围死）。
 
 ## 2. 上一轮（2026-11-27 夜 → 11-28 凌晨）实际改了什么
 
@@ -25,6 +25,7 @@ Godot 4.7 像素横版生存（384×216 设计空间 / 手机画布 555×256）�
 | `08503a8` | **修「开门后过不去」**：纵深锚点改走道中线；开合补 `set_deferred` | ✅ 门禁转绿 |
 | `1490b2b` | **②-1 搜索条贴物件 + 按住才算数 + 搜索有噪声**；手机「搜」改按住态 | ✅ 门禁转绿 |
 | `8e19d5f` | **感染体区块拴绳 + 受击无敌帧**；倒下不再「一天只放行一次」（回巢脱战） | ✅ 真机复验 |
+| `campus` | **学校模板 = 一整张校园图**（10 区块 / 4 条路 / 14 个感染体位 / 开场四拍），数据 + 俯视渲染 + 门禁 + `R48` | ✅ 42/42 门禁 |
 
 ### 2.1 「开门后过不去」的真根因（别再猜了）
 
@@ -84,7 +85,22 @@ const WALK_TOP := 128.0 / WALK_BOTTOM := 216.0 / WALK_LEFT := 14.0 / WALK_RIGHT 
   门禁 `corridor-combat` ⑤⑥⑦：B 区守卫**证明会追**但进不了 A 区 / 0.7s 内第二下无效 / 倒下后回巢脱战。
   真机复验：在 A 区柜子前站着操作 30 秒以上，体力全程 100。
 
-## 4. 下一步：②-2 容器面板 + ④ 死亡三态
+## 4. 下一步：把校园图接成可玩房间 + 播开场
+
+### 4.1 区块 = 房间（先做，这是「布置和丧尸不再一样」的真正落点）
+- `corridor.gd` 加 `_current_region`：房间的参数（props / 敌人 / 容器 / 灯光档）全从
+  `data/campus/school.json` 的区块读，删掉 `ENEMY_SPAWNS`、`ROOM_PARTITION_TILES` 这类硬编码；
+- 进出靠区块的 `entrance` 点；`interior.rooms` 决定这间房挂哪些道具；
+- 验收：主楼与角楼两张截图的道具/敌人分布**必须不同**（新门禁或扩 `building-theme`）。
+
+### 4.2 开场过场
+- 新建 `game/ui/intro_sequence.gd`：按 `intro.beats` 五拍播（bell → overview → toilet → alarm → zoom），
+  镜头用 `camera` 字段（`black` / `map_fit` / `map_zoom` / `player`），输入锁到最后一拍；
+- 项目里**还没有任何音频资产**（`data/audio/sounds.json` 全是 planned），铃声用视觉替代（字 + 抖动 + 红闪）；
+- 验收：门禁断言五拍顺序、每拍时长、结束时 `_movement_locked == false`。
+
+### 4.3 ②-2 容器面板（原计划，顺延）
+- 左容器 / 右背包、≤40% 屏宽、不暂停世界；空容器给「咔哒 + 一格空槽」。
 
 ### ②-2 容器面板（下一个做）
 - 新建 `game/ui/container_panel.gd`：左容器 / 右背包、≤40% 屏宽、居中偏右、暗底 + 1px 描边、**不暂停世界**；
@@ -103,7 +119,9 @@ const WALK_TOP := 128.0 / WALK_BOTTOM := 216.0 / WALK_LEFT := 14.0 / WALK_RIGHT 
 |---|---|
 | PowerShell 拼 GDScript 字符串把 `""` 写成反引号 → 连续三次改坏 | **只用 `edit`/`write` 工具改 `.gd`**；PowerShell 只用来跑命令 |
 | `edit` 的 `old_string` 少写/多写一个换行 → 代码粘成一行 `func _place(...):	_actor...`，报 `Unexpected "Indent"` | 改完立刻单跑那条门禁；看到 Parse Error 先搜 `):\t` 这种粘连 |
-| 字库缺字静默跳过（「攻」变成只剩「击」） | 新文案先 `python tools/font_build.py --check`，缺字就重建 + **再 `--import`** |
+| 字库缺字静默跳过（「攻」变成只剩「击」） | 新文案先 `python tools/font_build.py --check`，缺字就重建 + **再让 Godot 重新导入** |
+| **字库改了但 `.godot` 里还是旧 ctex**（本轮踩到：磁盘 1344 高、导入缓存 1312 高）→ `region` 全指错格子，字会画成**隔壁格子的字**（「宿舍」被画成一个黑框） | 删 `.godot/imported/PF-02_cjk_12*` 再 `Godot --headless --path . --editor --quit` 重新导入；`campus-map` 门禁已加尺寸自检 |
+| 新脚本用 `class_name` 后直接跑 `--script` 会报「未声明类型」 | 门禁里 `preload("res://…/x.gd").new()`，别等 `.godot` 缓存 |
 | UI 按 `VIEW_SIZE(384×216)` 画 | 手机画布是 `555×256`：一律用 `ScreenLayout.canvas_of(self)`；世界坐标投屏幕用 `get_viewport().get_canvas_transform()` |
 | 拿「交互锚点」当「物件位置」画 UI | `_inspection_anchor()` 会把 y 夹进走道（柜子在墙上），贴条要用道具自身位置 ± 贴图高度 |
 | adb 通过 PowerShell 管道会挂着 | 一律 `cmd /c "adb … > file 2>&1"` 再读文件 |

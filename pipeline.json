@@ -370,6 +370,13 @@
       "gate": "hard",
       "status": "ready",
       "note": "首 10 分钟引导：三步顺序不可跳 / 键盘与触摸两套文案 / tutorial_step 存档往返与老档缺键 / corridor 三处 hook 已接。headless 可跑"
+    },
+    {
+      "name": "campus-map",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/campus_map.gd -- CAMPUS",
+      "gate": "hard",
+      "status": "ready",
+      "note": "学校模板的整张校园图（data/campus/school.json → 俯视渲染）：区块在画布内 / 楼有层数入口 / route 覆盖可玩区块 / 开场四拍顺序 / 敌人按区块分布 / 出图 design/previews/CAMPUS_school_map.png。要真渲染，不能加 --headless。"
     }
   ],
   "forbidden": [

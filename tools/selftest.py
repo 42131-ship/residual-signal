@@ -203,12 +203,28 @@ FIXTURE: dict[str, object] = {
     "data/loot/items.json": {
         "items": [{"id": "water", "name": "水", "category": "food", "effect": {"value": 3}}],
     },
+    # 校园图：区块出画布 + 缺楼入口 + 开场拍子顺序错（R48 三处都该开火）
+    "data/campus/school.json": {
+        "schema": "campus-map.v1",
+        "id": "school",
+        "canvas": [384, 216],
+        "regions": [
+            {"id": "main_building", "label": "主楼", "kind": "building", "rect": [16, 16, 196, 38],
+             "floors": 0, "entrance": [400, 400]},
+            {"id": "offscreen", "label": "出界", "kind": "lot", "rect": [370, 200, 80, 60]},
+        ],
+        "route": ["main_building"],
+        "safehouse": "gate",
+        "enemy_slots": [{"region": "main_building", "count": 1}],
+        "intro": {"beats": [{"id": "overview", "seconds": 0, "lines": []},
+                            {"id": "bell", "seconds": 3, "lines": ["铃"]}]},
+    },
 }
 
 EXPECTED_ERRORS = {
     "R02", "R07", "R09", "R10", "R14", "R15", "R17", "R18", "R20",
     "R22", "R23", "R24", "R25", "R26", "R27", "R28", "R29", "R30", "R32",
-    "R33", "R35", "R44", "R45", "R46", "R47",
+    "R33", "R35", "R44", "R45", "R46", "R47", "R48",
 }
 
 

@@ -1,0 +1,588 @@
+{
+  "schema": "campus-map.v1",
+  "id": "school",
+  "label": "学校",
+  "canvas": [
+    384,
+    216
+  ],
+  "note": "学校的整张地图。俯视、北在上，坐标就是 384×216 设计空间。参照「校园鸟瞰图」摆位：长条主教学楼在北、操场在其南、看台在操场东北、广场夹在教学楼与角楼之间、宿舍与食堂在东侧、L 形角楼占着东南路口、校门与传达室在西南。一个模板 = 一张图，叙事沿 route 线性推进，不再是一间走廊换五套皮。",
+  "ground": "#0d1218",
+  "roads": [
+    {
+      "id": "south_road",
+      "label": "南侧道路",
+      "rect": [
+        0,
+        196,
+        384,
+        16
+      ]
+    },
+    {
+      "id": "east_road",
+      "label": "东侧道路",
+      "rect": [
+        356,
+        16,
+        26,
+        180
+      ]
+    },
+    {
+      "id": "driveway",
+      "label": "中央车道",
+      "rect": [
+        198,
+        132,
+        18,
+        64
+      ]
+    },
+    {
+      "id": "west_lane",
+      "label": "西门小路",
+      "rect": [
+        0,
+        132,
+        16,
+        80
+      ]
+    }
+  ],
+  "regions": [
+    {
+      "id": "main_building",
+      "label": "主教学楼",
+      "kind": "building",
+      "rect": [
+        16,
+        16,
+        196,
+        38
+      ],
+      "floors": 5,
+      "faces": "south",
+      "entrance": [
+        110,
+        58
+      ],
+      "tone": "#26333f",
+      "story": "五层长条楼。一层走廊是你最熟的地方：教室1、教室2、教室3、实验室都在东侧楼梯口那一带。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "教室1",
+          "教室2",
+          "教室3",
+          "实验室"
+        ],
+        "stair": "east"
+      },
+      "map_label": "主楼"
+    },
+    {
+      "id": "west_wing",
+      "label": "西副楼",
+      "kind": "building",
+      "rect": [
+        16,
+        58,
+        38,
+        26
+      ],
+      "floors": 3,
+      "faces": "east",
+      "entrance": [
+        58,
+        72
+      ],
+      "tone": "#3d3323",
+      "story": "黄色立面的旧副楼，教务与器材室在这。器材室钥匙是学校模板的身份物。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "器材室",
+          "教务"
+        ],
+        "stair": "none"
+      }
+    },
+    {
+      "id": "grandstand",
+      "label": "看台",
+      "kind": "building",
+      "rect": [
+        214,
+        58,
+        42,
+        20
+      ],
+      "floors": 1,
+      "faces": "south",
+      "entrance": [
+        236,
+        80
+      ],
+      "tone": "#4a2626",
+      "story": "红顶看台，正对操场。报警铃响的时候，体育器材还散在这里。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "看台"
+        ],
+        "stair": "none"
+      }
+    },
+    {
+      "id": "track_field",
+      "label": "操场",
+      "kind": "field",
+      "rect": [
+        40,
+        86,
+        168,
+        100
+      ],
+      "field": {
+        "center": [
+          124,
+          136
+        ],
+        "outer": [
+          78,
+          44
+        ],
+        "inner": [
+          56,
+          26
+        ]
+      },
+      "story": "红色跑道加中间草地。最大的空地，也最容易被看见——从这里横穿是捷径，也是赌命。",
+      "interior": null,
+      "map_label": "操场"
+    },
+    {
+      "id": "plaza",
+      "label": "广场",
+      "kind": "plaza",
+      "rect": [
+        214,
+        84,
+        46,
+        28
+      ],
+      "planters": [
+        [
+          222,
+          92,
+          10,
+          10
+        ],
+        [
+          242,
+          92,
+          10,
+          10
+        ],
+        [
+          222,
+          106,
+          10,
+          8
+        ],
+        [
+          242,
+          106,
+          10,
+          8
+        ]
+      ],
+      "story": "教学楼与角楼之间的铺装广场。四个方形花坛是唯一的掩体。",
+      "interior": null
+    },
+    {
+      "id": "dorm",
+      "label": "宿舍楼",
+      "kind": "building",
+      "rect": [
+        268,
+        22,
+        44,
+        46
+      ],
+      "floors": 4,
+      "faces": "south",
+      "entrance": [
+        290,
+        70
+      ],
+      "tone": "#26333f",
+      "story": "四层宿舍。爆发那晚有人把门从里面顶住了，第二天早上门还顶着。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "宿舍走廊",
+          "水房"
+        ],
+        "stair": "middle"
+      },
+      "map_label": "宿舍"
+    },
+    {
+      "id": "canteen",
+      "label": "食堂",
+      "kind": "building",
+      "rect": [
+        318,
+        22,
+        52,
+        46
+      ],
+      "floors": 2,
+      "faces": "west",
+      "entrance": [
+        316,
+        44
+      ],
+      "tone": "#2b3529",
+      "story": "两层食堂，后厨连着东侧道路的卸货口。噪音最容易在这里堆起来。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "就餐区",
+          "后厨"
+        ],
+        "stair": "west"
+      },
+      "map_label": "食堂"
+    },
+    {
+      "id": "corner_building",
+      "label": "角楼",
+      "kind": "building",
+      "rect": [
+        238,
+        118,
+        118,
+        64
+      ],
+      "parts": [
+        [
+          238,
+          118,
+          118,
+          36
+        ],
+        [
+          238,
+          118,
+          40,
+          64
+        ]
+      ],
+      "tower": [
+        238,
+        150,
+        40,
+        32
+      ],
+      "floors": 5,
+      "faces": "west",
+      "entrance": [
+        258,
+        182
+      ],
+      "tone": "#232c3a",
+      "story": "L 形角楼，玻璃转角正对路口。五层，视野最好，也是这条线的最后一栋。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "门厅",
+          "东廊",
+          "楼梯间"
+        ],
+        "stair": "corner"
+      },
+      "map_label": "角楼"
+    },
+    {
+      "id": "gate",
+      "label": "校门",
+      "kind": "gate",
+      "rect": [
+        24,
+        166,
+        62,
+        30
+      ],
+      "floors": 1,
+      "entrance": [
+        55,
+        196
+      ],
+      "tone": "#3a2c1e",
+      "story": "校门与传达室。传达室的门能从里面锁上——学校的「安全屋」就是这间。",
+      "interior": {
+        "scene": "corridor",
+        "rooms": [
+          "传达室"
+        ],
+        "stair": "none"
+      },
+      "map_label": "校门"
+    },
+    {
+      "id": "parking",
+      "label": "停车区",
+      "kind": "lot",
+      "rect": [
+        16,
+        138,
+        62,
+        24
+      ],
+      "slots": [
+        [
+          22,
+          144,
+          10,
+          16
+        ],
+        [
+          36,
+          144,
+          10,
+          16
+        ],
+        [
+          50,
+          144,
+          10,
+          16
+        ],
+        [
+          64,
+          144,
+          10,
+          16
+        ]
+      ],
+      "story": "校车和几辆私家车。车门有的开着，有的锁死。",
+      "interior": null
+    }
+  ],
+  "trees": [
+    [
+      8,
+      88,
+      5
+    ],
+    [
+      8,
+      104,
+      4
+    ],
+    [
+      8,
+      120,
+      5
+    ],
+    [
+      8,
+      152,
+      4
+    ],
+    [
+      8,
+      170,
+      5
+    ],
+    [
+      94,
+      74,
+      4
+    ],
+    [
+      140,
+      72,
+      5
+    ],
+    [
+      186,
+      74,
+      4
+    ],
+    [
+      204,
+      96,
+      4
+    ],
+    [
+      204,
+      120,
+      5
+    ],
+    [
+      214,
+      150,
+      5
+    ],
+    [
+      228,
+      176,
+      4
+    ],
+    [
+      330,
+      176,
+      5
+    ],
+    [
+      344,
+      120,
+      4
+    ],
+    [
+      262,
+      78,
+      5
+    ],
+    [
+      300,
+      78,
+      4
+    ],
+    [
+      348,
+      82,
+      5
+    ]
+  ],
+  "enemy_slots": [
+    {
+      "region": "main_building",
+      "count": 4
+    },
+    {
+      "region": "corner_building",
+      "count": 3
+    },
+    {
+      "region": "track_field",
+      "count": 2
+    },
+    {
+      "region": "canteen",
+      "count": 1
+    },
+    {
+      "region": "dorm",
+      "count": 1
+    },
+    {
+      "region": "plaza",
+      "count": 1
+    },
+    {
+      "region": "west_wing",
+      "count": 1
+    },
+    {
+      "region": "gate",
+      "count": 1
+    }
+  ],
+  "containers": [
+    {
+      "id": "locker_bank",
+      "region": "main_building",
+      "label": "储物柜"
+    },
+    {
+      "id": "first_aid_cabinet",
+      "region": "main_building",
+      "label": "急救柜"
+    },
+    {
+      "id": "trash_bin",
+      "region": "canteen",
+      "label": "垃圾桶"
+    }
+  ],
+  "safehouse": "gate",
+  "route": [
+    "gate",
+    "main_building",
+    "west_wing",
+    "track_field",
+    "grandstand",
+    "plaza",
+    "dorm",
+    "canteen",
+    "corner_building"
+  ],
+  "intro": {
+    "note": "开场四拍 + 交还控制权。地图这一段就是这张鸟瞰图本身：先让玩家记住布局，再把人按进教学楼的走廊。",
+    "beats": [
+      {
+        "id": "bell",
+        "label": "上课铃",
+        "seconds": 4.0,
+        "camera": "black",
+        "lines": [
+          "上课铃响了。第三遍。",
+          "走廊上的人开始往教室走。"
+        ]
+      },
+      {
+        "id": "overview",
+        "label": "鸟瞰",
+        "seconds": 6.0,
+        "camera": "map_fit",
+        "lines": [
+          "整座学校在灰光里摊开。",
+          "记住这条路：校门 → 主教学楼 → 操场 → 角楼。"
+        ]
+      },
+      {
+        "id": "toilet",
+        "label": "厕所",
+        "seconds": 9.0,
+        "camera": "map_fit",
+        "lines": [
+          "一楼男厕。三个学生在骂骂咧咧。",
+          "有人把烟头弹进最后一个坑位。"
+        ]
+      },
+      {
+        "id": "alarm",
+        "label": "铃声戛然而止",
+        "seconds": 5.0,
+        "camera": "map_zoom",
+        "focus": [
+          110,
+          58
+        ],
+        "lines": [
+          "铃声戛然而止。",
+          "半秒后，急促的报警铃压了下来。"
+        ]
+      },
+      {
+        "id": "zoom",
+        "label": "聚焦到角色",
+        "seconds": 3.0,
+        "camera": "player",
+        "focus": [
+          110,
+          58
+        ],
+        "lines": [
+          "镜头落在他身上。",
+          "从现在起，走廊由你走。"
+        ]
+      }
+    ]
+  }
+}
