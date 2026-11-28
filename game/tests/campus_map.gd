@@ -10,8 +10,8 @@ extends SceneTree
 const CAMPUS_ID := "school"
 ## 新脚本的 class_name 不在 .godot 缓存里时会报「未声明类型」，所以这里 preload 拿脚本本体。
 const MAP_SCRIPT := preload("res://game/ui/campus_map.gd")
-## 排好的叙事拍子：顺序错一个，开场就不是「铃—鸟瞰—厕所—报警—聚焦」了。
-const BEAT_ORDER: Array[String] = ["bell", "overview", "toilet", "alarm", "zoom"]
+## 排好的叙事拍子：顺序错一个，开场就不是「铃—鸟瞰—厕所—报警—聚焦—走出厕所」了。
+const BEAT_ORDER: Array[String] = ["bell", "overview", "toilet", "alarm", "zoom", "walkout"]
 ## 地图上必须存在的区块（少一块就不算「整张校园」）。
 const REQUIRED: Array[String] = [
 	"main_building", "west_wing", "grandstand", "track_field", "plaza",

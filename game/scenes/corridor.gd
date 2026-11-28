@@ -23,6 +23,11 @@ const INVENTORY_CAPACITY := 10
 const ATTACK_FRAMES := 45
 ## 命中帧白光只亮 2 帧，用来标「这一下打实了」，不做常驻特效。
 const ATTACK_HIT_FRAMES := 2
+## 开场过场脚本（新脚本的 class_name 不一定在 .godot 缓存里，preload 拿本体最稳）。
+const INTRO_SCRIPT := preload("res://game/ui/intro_sequence.gd")
+## 熄灯时的环境亮度乘数：不是纯黑，玩家还能看出走廊轮廓，但要靠手电才敢走。
+const LIGHTS_OUT_SCALE := 0.34
+var _intro: Node = null
 const TILE_INDEX := {
 	"void": 0, "wall": 1, "dado": 2, "cracked": 3,
 	"base": 4, "floor": 5, "wet": 6, "scuff": 7,
@@ -203,6 +208,11 @@ var _flash_targets: Array[Enemy] = []
 ## 受击无敌帧 / 倒下锁 / 倒下后的脱战窗口（都在 _process 顶部无条件倒计时）。
 var _hurt_immune := 0.0
 var _down_lockout := 0.0
+## 开场过场：过场期间走廊不吃输入（触屏合成的是 action，摇杆照样会被按住，
+## 所以光靠 _movement_locked 不够，输入层也要关）。
+var _intro_active := false
+## 熄灯：开场最后一拍「灯全灭了」之后一直保持，直到玩家自己开手电。
+var _lights_out := false
 ## 主角动作状态（walk/idle/hurt）与计时；受击后 0.22 秒锁在 hurt 帧。
 var _player_anim_time := 0.0
 var _player_anim_id := "idle"
@@ -287,6 +297,40 @@ func _ready() -> void:
 	_mobile = MobileSupport.attach(self)
 	_refresh_hud_stats()
 	Analytics.track("run_enter", {"mode": "story", "day": int(_run.day), "building": _current_building})
+	_maybe_start_intro()
+
+
+## 主菜单「新游戏」会拿一次开场票；没有票（继续 / 门禁 / 复跑）就一个字都不放。
+## 过场在走廊里播、不换场景，播完把控制权交回来（见 game/ui/intro_sequence.gd）。
+func _maybe_start_intro() -> void:
+	if not IntroFlag.consume():
+		return
+	_intro = INTRO_SCRIPT.new()
+	add_child(_intro)
+	_intro.finished.connect(_on_intro_finished)
+	_intro.begin(self, _player)
+	_dim_touch(true)
+
+
+func _on_intro_finished() -> void:
+	_intro = null
+	_dim_touch(false)
+	_refresh_hud_stats()
+
+
+## 灯全灭：关手电 + 环境亮度压到 LIGHTS_OUT_SCALE（不是纯黑，走廊轮廓还得看得见）。
+func set_lights_out(value: bool) -> void:
+	_lights_out = value
+	_set_flashlight(not value)
+
+
+## 过场/过场结束时开关 HUD（过场里 HUD 一直在上面飘着，像没做完）。
+func set_hud_visible(value: bool) -> void:
+	var hud := get_node_or_null("HUD")
+	if hud != null:
+		hud.visible = value
+	if _inspection_prompt_layer != null:
+		_inspection_prompt_layer.visible = value
 
 
 func _place_tile(tile_name: String, tile_x: int, tile_y: int, from_x := 0, width := TILE_SIZE) -> void:
@@ -2406,6 +2450,9 @@ func _update_depth_order() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _inspection_ui_enabled:
 		return
+	# 开场过场期间走廊完全不吃输入：这一段是"看"，不是"玩"。
+	if _intro_active:
+		return
 	# 旅行图是模态的：按键由走廊统一转发给地图，别让下面搜索/门/攻击抢走。
 	if _map_open:
 		if event is InputEventKey and not event.is_echo() and event.is_pressed():
@@ -2529,6 +2576,9 @@ func _update_flashlight() -> void:
 	var zone_target: float = ROOM_LIGHT_LEVELS[_current_room_index()] * _theme_ambient
 	_light_zone = lerpf(_light_zone, zone_target, 0.15)
 	var tint := LIGHT_OUTSIDE_BASE * _light_zone
+	# 熄灯：整体再压到 1/3。不是把遮罩隐藏（那是反的），是让 outside_tint 暗下来。
+	if _lights_out:
+		tint *= LIGHTS_OUT_SCALE
 	_light_material.set_shader_parameter("outside_tint", Vector4(tint.x, tint.y, tint.z, 1.0))
 
 

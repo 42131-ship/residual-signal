@@ -1748,7 +1748,7 @@ def r48(ctx: Ctx):
 
         intro = doc.get("intro") if isinstance(doc.get("intro"), dict) else {}
         beats = intro.get("beats") if isinstance(intro.get("beats"), list) else []
-        expected = ["bell", "overview", "toilet", "alarm", "zoom"]
+        expected = ["bell", "overview", "toilet", "alarm", "zoom", "walkout"]
         if [str(b.get("id", "")) for b in beats] != expected:
             got = "、".join(str(b.get("id", "")) for b in beats)
             yield bad("R48", rel, f"开场拍子必须是 {'→'.join(expected)}，实际 {got}")

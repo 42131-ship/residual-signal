@@ -10,7 +10,7 @@
     "vertical_slice": {
       "status": "done",
       "pct": 100,
-      "evidence": "学校走廊可玩闭环；42 条 Godot 门禁全绿（2026-11-28）"
+      "evidence": "学校走廊可玩闭环；43 条 Godot 门禁全绿（2026-11-28）"
     },
     "data_rules_gate": {
       "status": "done",
@@ -74,9 +74,9 @@
     }
   },
   "gates": {
-    "pipeline_steps": 55,
-    "godot_gates": 42,
-    "green": 42,
+    "pipeline_steps": 56,
+    "godot_gates": 43,
+    "green": 43,
     "broken": [],
     "last_run": "2026-11-28",
     "wall_clock_seconds": 150
@@ -92,5 +92,5 @@
   "rules_ci_green": true,
   "rules_ci_note": "2026-11-26 首跑即绿（.github/workflows/rules.yml：validate 47 条 + selftest 25 夹具 + gd_sanity 结构）；badge = passing",
   "interruption_test_pass": true,
-  "next_focus": "学校模板现为整张校园图（data/campus/school.json，10 区块 / 14 感染体位 / 开场四拍）：下一刀把区块接成可玩房间 + 播开场过场；之后回到 W1 余项（mode/ModePolicy、L0 Fact/Assertion）"
+  "next_focus": "开场过场已接上（六拍 + 走出厕所熄灯 + 任意键跳过）；下一刀把校园图的区块接成可玩房间（props/敌人/容器从区块读，主楼与角楼必须长得不一样）"
 }

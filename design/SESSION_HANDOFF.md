@@ -85,19 +85,22 @@ const WALK_TOP := 128.0 / WALK_BOTTOM := 216.0 / WALK_LEFT := 14.0 / WALK_RIGHT 
   门禁 `corridor-combat` ⑤⑥⑦：B 区守卫**证明会追**但进不了 A 区 / 0.7s 内第二下无效 / 倒下后回巢脱战。
   真机复验：在 A 区柜子前站着操作 30 秒以上，体力全程 100。
 
-## 4. 下一步：把校园图接成可玩房间 + 播开场
+## 4. 下一步：把校园图接成可玩房间
 
-### 4.1 区块 = 房间（先做，这是「布置和丧尸不再一样」的真正落点）
+### 4.1 区块 = 房间（下一步，这是「布置和丧尸不再一样」的真正落点）
 - `corridor.gd` 加 `_current_region`：房间的参数（props / 敌人 / 容器 / 灯光档）全从
   `data/campus/school.json` 的区块读，删掉 `ENEMY_SPAWNS`、`ROOM_PARTITION_TILES` 这类硬编码；
 - 进出靠区块的 `entrance` 点；`interior.rooms` 决定这间房挂哪些道具；
 - 验收：主楼与角楼两张截图的道具/敌人分布**必须不同**（新门禁或扩 `building-theme`）。
 
-### 4.2 开场过场
-- 新建 `game/ui/intro_sequence.gd`：按 `intro.beats` 五拍播（bell → overview → toilet → alarm → zoom），
-  镜头用 `camera` 字段（`black` / `map_fit` / `map_zoom` / `player`），输入锁到最后一拍；
-- 项目里**还没有任何音频资产**（`data/audio/sounds.json` 全是 planned），铃声用视觉替代（字 + 抖动 + 红闪）；
-- 验收：门禁断言五拍顺序、每拍时长、结束时 `_movement_locked == false`。
+### 4.2 开场过场（**已完成** 2026-11-28）
+- `game/ui/intro_sequence.gd` 挂在走廊里当覆盖层（不换场景），按 `data/campus/school.json`
+  的 `intro.beats` 播六拍：铃 → 鸟瞰（叠路线虚线）→ 厕所小景 → 报警 → 聚焦角色 → **走出厕所**；
+- 第六拍：角色被自动向右推 76px 走出厕所，**这一下熄灯**（手电熄掉 + 环境压到 0.34），
+  走完交还控制权；灯不会自己回来，玩家的第一件事就是按手电；
+- 主菜单「新游戏」领票（`IntroFlag.request()`），走廊 `consume()` 决定播不播；任意键可跳过；
+- 门禁 `intro`（pipeline 第 56 步）：六拍顺序、过场锁输入、`zoom` 时灯还亮、`walkout` 灯灭且角色真位移、
+  播完解锁、没票不重播；出图 `design/previews/INTRO_{bell,overview,toilet,walkout}.png`。
 
 ### 4.3 ②-2 容器面板（原计划，顺延）
 - 左容器 / 右背包、≤40% 屏宽、不暂停世界；空容器给「咔哒 + 一格空槽」。

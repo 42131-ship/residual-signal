@@ -377,6 +377,13 @@
       "gate": "hard",
       "status": "ready",
       "note": "学校模板的整张校园图（data/campus/school.json → 俯视渲染）：区块在画布内 / 楼有层数入口 / route 覆盖可玩区块 / 开场四拍顺序 / 敌人按区块分布 / 出图 design/previews/CAMPUS_school_map.png。要真渲染，不能加 --headless。"
+    },
+    {
+      "name": "intro",
+      "cmd": ".tools/Godot_v4.7-stable_win64_console.exe --path . --fixed-fps 60 --script res://game/tests/intro.gd -- INTRO",
+      "gate": "hard",
+      "status": "ready",
+      "note": "开场过场：新游戏领票 → 走廊播六拍（铃/鸟瞰/厕所/报警/聚焦/走出厕所）→ 最后一拍灯全灭并把角色往右推出厕所 → 交还控制权。断言：领票才播、六拍顺序、过场中锁输入、walkout 真位移、播完解锁且记住看过、没票不重播。要真渲染，出图 design/previews/INTRO_*.png。"
     }
   ],
   "forbidden": [

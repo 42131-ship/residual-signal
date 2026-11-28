@@ -392,6 +392,8 @@ func confirm() -> void:
 	match _index:
 		0:
 			_run = RunState.start_new()
+			# 新游戏 → 领一张开场票：走廊那次 _ready 会播一段过场（见 game/ui/intro_sequence.gd）。
+			IntroFlag.request()
 			Analytics.track("run_start", {"mode": "story", "from_save": 0, "day": 0})
 			_flash("新的一天。")
 			_enter_game()
